@@ -884,11 +884,13 @@ async function buy(id){
 }
 async function equip(slot,id){const c=activeCat();if(!c)return;await catTx(c.id,c=>{if(id)c.eq[slot]=id;else delete c.eq[slot]});schedule();setTimeout(openDeco,80)}
 async function setRoom(slot,val){await Store.tx('users/'+S.me+'/room',r=>{r=r||{};if(slot==='bg')r.bg=val;else r[slot]=val;return r});setTimeout(openDeco,80)}
-async function dyeCat(target,color){
-  const c=activeCat();if(!c)return;
-  if(!(await useItem('dye')))return toast('염색약이 없어요');
-  await catTx(c.id,c=>{c.look[target]=color});
-  log(`${title(c)}${iGa(c.name).slice(-1)} 새 색으로 염색했어요.`);toast('염색 완료!');closeSheet();schedule();
+function dyePick(color){S.dyePick=S.dyePick||{};S.dyePick[S.dyeT==='pcolor'?'pcolor':'coat']=color;S.dyeConfirm=false;openDeco()}
+async function dyeApply(){
+  const c=activeCat();const pick=S.dyePick;if(!c||!pick)return;
+  if(!(await useItem('dye'))){S.dyeConfirm=false;openDeco();return toast('염색약이 없어요. 상점에서 살 수 있어요')}
+  await catTx(c.id,c=>{for(const k in pick)c.look[k]=pick[k]});
+  log(`${title(c)}${iGa(c.name).slice(-1)} 새 색으로 염색했어요.`);
+  S.dyePick=null;S.dyeConfirm=false;toast('염색 완료! 염색약 1개를 사용했어요');schedule();setTimeout(openDeco,120);
 }
 
 /* ================= social ================= */
@@ -1026,14 +1028,19 @@ function openDeco(){
       return`<div class="opt"><h3>${lab}</h3>${own.length?`<div class="ch">${own.map(k=>`<button class="${c.eq[s]===k?'on':''}" data-a="equip" data-s="${s}" data-v="${c.eq[s]===k?'':k}">${ITEMS[k].n}</button>`).join('')}</div>`:`<p class="grow">아직 없어요. 상점에서 사 오세요.</p>`}</div>`}).join('');
   }else if(tab==='dye'){
     const n=inv.dye||0;
-    body=`<p class="lead">염색약 ${n}개 · 하나 쓰면 색이 바뀌어요.</p>${n?`<div class="opt"><h3>어디를 염색할까요?</h3><div class="ch"><button class="${S.dyeT!=='pcolor'?'on':''}" data-a="dyet" data-v="coat">털 색</button><button class="${S.dyeT==='pcolor'?'on':''}" data-a="dyet" data-v="pcolor">무늬 색</button></div></div><div class="opt"><h3>색 고르기</h3><div class="sw">${[...DYES,...COATS].map(([nm,h])=>`<button style="background:${h}" title="${nm}" aria-label="${nm}" data-a="dye" data-v="${h}"></button>`).join('')}<label class="custom" title="직접 고르기"><input type="color" id="dyec" aria-label="직접 고르기"></label></div></div>`:`<button class="btn block" data-a="go" data-v="shop">상점에서 염색약 사기</button>`}`;
+    const pk=S.dyePick||{},tg=S.dyeT==='pcolor'?'pcolor':'coat',cur=pk[tg]||c.look[tg];
+    const sw1=(lab,k)=>pk[k]?`<span class="row" style="gap:6px"><b style="font-family:var(--display);font-weight:400">${lab}</b><i style="width:22px;height:22px;border-radius:50%;background:${c.look[k]};box-shadow:0 0 0 1.5px var(--line);display:inline-block"></i>→<i style="width:22px;height:22px;border-radius:50%;background:${pk[k]};box-shadow:0 0 0 2px var(--pink-d);display:inline-block"></i></span>`:'';
+    const picked=pk.coat||pk.pcolor;
+    body=`<p class="lead">염색약 ${n}개 · 색을 눌러 미리 본 다음 <b>저장</b>을 누르면 염색돼요.</p>${n?`<div class="opt"><h3>어디를 염색할까요?</h3><div class="ch"><button class="${tg==='coat'?'on':''}" data-a="dyet" data-v="coat">털 색</button><button class="${tg==='pcolor'?'on':''}" data-a="dyet" data-v="pcolor">무늬 색</button></div></div><div class="opt"><h3>색 고르기 (눌러서 미리 보기)</h3><div class="sw">${[...DYES,...COATS].map(([nm,h])=>`<button style="background:${h}" class="${pk[tg]===h?'on':''}" title="${nm}" aria-label="${nm}" data-a="dye" data-v="${h}"></button>`).join('')}<label class="custom" title="직접 고르기"><input type="color" id="dyec" aria-label="직접 고르기" value="${cur}"></label></div></div>
+    ${picked?`<div class="panel stack" style="background:var(--pink-l);border-color:#ffd0dc">${S.dyeConfirm?`<b style="font-family:var(--display);font-weight:400;font-size:1.1rem">이 색으로 염색할까요?</b><div class="row">${sw1('털','coat')}${sw1('무늬','pcolor')}</div><p class="grow" style="margin:0">염색약 <b>1개</b>가 사용돼요 (지금 ${n}개 → ${n-1}개)</p><div class="row"><button class="btn" data-a="dyeok">염색하기</button><button class="btn ghost" data-a="dyecancel">취소</button></div>`:`<div class="row">${sw1('털','coat')}${sw1('무늬','pcolor')}</div><div class="row"><button class="btn" data-a="dyesave">저장</button><button class="btn ghost" data-a="dyereset">원래대로</button></div>`}</div>`:''}`:`<button class="btn block" data-a="go" data-v="shop">상점에서 염색약 사기</button>`}`;
   }else{
     const bgs=['basic','sakura','night','beach','cafe','forest','space'];
     body=`<div class="opt"><h3>배경</h3><div class="ch">${bgs.map(b=>{const own=b==='basic'||inv['bg_'+b];return`<button class="${(room.bg||'basic')===b?'on':''}" data-a="room" data-s="bg" data-v="${b}" ${own?'':'disabled'}>${b==='basic'?'기본 방':ITEMS['bg_'+b].n}</button>`}).join('')}</div></div>
     <div class="opt"><h3>가구</h3><div class="ch">${['tower','cushion','plant','fishbowl','rug','frame','lamp','scratcher'].map(k=>`<button class="${room[k]?'on':''}" data-a="room" data-s="${k}" data-v="${room[k]?'':'1'}" ${inv[k]?'':'disabled'}>${ITEMS[k].n}${inv[k]?'':' (미보유)'}</button>`).join('')}</div></div>`;
   }
-  openSheet(`<h2>꾸미기</h2><div class="creator"><div class="preview" style="padding:4px">${catSVG(c,{still:true})}</div></div><div class="tabs" style="margin-top:10px">${[['wear','착용'],['dye','염색'],['room','방 꾸미기']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="decotab" data-v="${k}">${l}</button>`).join('')}</div><div class="stack">${body}</div>`);
-  const dc=$('#dyec');if(dc)dc.onchange=e=>dyeCat(S.dyeT==='pcolor'?'pcolor':'coat',e.target.value);
+  const pv=tab==='dye'&&S.dyePick?Object.assign({},c,{look:Object.assign({},c.look,S.dyePick)}):c;
+  openSheet(`<h2>꾸미기</h2><div class="creator"><div class="preview" style="padding:4px">${catSVG(pv,{still:true})}${tab==='dye'&&S.dyePick?'<span class="chip pink" style="position:absolute;left:10px;top:10px">미리 보기</span>':''}</div></div><div class="tabs" style="margin-top:10px">${[['wear','착용'],['dye','염색'],['room','방 꾸미기']].map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="decotab" data-v="${k}">${l}</button>`).join('')}</div><div class="stack">${body}</div>`);
+  const dc=$('#dyec');if(dc)dc.onchange=e=>dyePick(e.target.value);
 }
 async function openSettings(){
   const u=me();let st=null;if(DK&&DK.getSettings){try{st=await DK.getSettings()}catch(e){}}
@@ -1238,12 +1245,16 @@ document.addEventListener('click',async e=>{
     case'nap':nap();break;
     case'wake':wake();break;
     case'search':searchCat();break;
-    case'deco':openDeco();break;
+    case'deco':S.dyePick=null;S.dyeConfirm=false;openDeco();break;
     case'decotab':S.tab.deco=v;openDeco();break;
     case'equip':equip(el.dataset.s,v);break;
     case'room':setRoom(el.dataset.s,el.dataset.s==='bg'?v:!!v);break;
     case'dyet':S.dyeT=v;openDeco();break;
-    case'dye':dyeCat(S.dyeT==='pcolor'?'pcolor':'coat',v);break;
+    case'dye':dyePick(v);break;
+    case'dyesave':S.dyeConfirm=true;openDeco();break;
+    case'dyeok':dyeApply();break;
+    case'dyecancel':S.dyeConfirm=false;openDeco();break;
+    case'dyereset':S.dyePick=null;S.dyeConfirm=false;openDeco();break;
     case'shoptab':S.tab.shop=v;render();break;
     case'buy':buy(v);break;
     case'card':openCatCard(v);break;
