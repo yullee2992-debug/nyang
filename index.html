@@ -231,6 +231,19 @@ html.pet .app{max-width:none;padding:0;min-height:0}
 @keyframes dangle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
 .dcat.squash .body{animation:squash .4s ease-out}
 @keyframes squash{30%{transform:scale(1.2,.75)}70%{transform:scale(.94,1.07)}}
+
+.dcat .mark{position:absolute;right:14%;top:8%;width:26px;height:26px;animation:pulse .5s infinite}
+.dcat .mark svg{width:100%;height:100%}
+.dcat.act-roll .body{animation:a-roll .62s linear 2;transform-origin:50% 64%}
+@keyframes a-roll{to{transform:rotate(360deg)}}
+.dcat.act-lie .body{animation:a-lie 2.8s ease-in-out;transform-origin:50% 92%}
+@keyframes a-lie{0%,100%{transform:none}15%{transform:rotate(-82deg) translate(10px,6px)}30%{transform:rotate(-90deg) translate(10px,6px)}45%{transform:rotate(-76deg) translate(10px,6px)}60%{transform:rotate(-90deg) translate(10px,6px)}75%{transform:rotate(-80deg) translate(10px,6px)}}
+.dcat.act-cute .body{animation:a-cute 2.1s ease-in-out;transform-origin:50% 95%}
+@keyframes a-cute{0%,100%{transform:none}15%{transform:rotate(-12deg) scale(1.04)}35%{transform:rotate(12deg) scale(1.04)}55%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+.dcat.act-angry .body{animation:a-angry .19s linear 10;transform-origin:50% 95%}
+@keyframes a-angry{0%,100%{transform:translateX(0) scale(1.06,1.08)}50%{transform:translateX(-5px) scale(1.08,1.04)}}
+.dcat.act-stretch .body{animation:a-stretch 1.7s ease-in-out;transform-origin:50% 100%}
+@keyframes a-stretch{0%,100%{transform:none}35%,65%{transform:scale(1.3,.78)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (min-width:640px){.actions{gap:10px}}
 </style>
@@ -768,18 +781,24 @@ function busy(c){if(c.status==='runaway')return'가출 중이에요';if(c.sleepU
 let lastPet=0;
 async function pet(ev){
   const c=activeCat();if(!c)return;
-  const t=now();if(t-lastPet<350)return;lastPet=t;
+  const t=now();if(t-lastPet<300)return;lastPet=t;
   const v=live(c);
+  if(v.petRestUntil&&v.petRestUntil>t){toast(`잠시 쉬어야 해요 · ${dur(v.petRestUntil-t)} 뒤에 다시 쓰다듬을 수 있어요`);return}
   spawnHeart(ev);
   if(v.sleepUntil&&v.sleepUntil>t){say('쿨... 쿨...');return}
   const res=await catTx(c.id,(c,res)=>{
     const d=kstDay();if(c.petDay!==d){c.petDay=d;c.petN=0}
     if(c.st.mood<25&&Math.random()<.4){res.msg='하악! 지금은 삐졌어요';res.refuse=true;return}
+    if(c.petRestUntil&&c.petRestUntil>now()){res.rest=true;return}
     c.petN++;c.st.mood=clamp(c.st.mood+3);c.neglect=0;
-    if(c.petN<=40){c.aff=clamp(c.aff+.4);if(c.petN%3===0)res.coins=2}
+    if(c.petN<=40)c.aff=clamp(c.aff+.4);
+    c.petBurst=(c.petBurst||0)+1;res.coins=1;
+    if(c.petBurst>=100){c.petBurst=0;c.petRestUntil=now()+2*MIN;res.restNow=true}
     if(c.petN%10===0)xp(c,res,2);
   });
   if(res&&res.refuse){say('하악!');return}
+  if(res&&res.restNow){toast('100번 쓰다듬었어요! 잠시 쉬어야 해요 · 2분 뒤에 다시 가능해요',3200);say('너무 많이 만졌다냥... 좀 쉬자');schedule();return}
+  if(res&&res.rest){toast('잠시 쉬어야 해요');return}
   S.happyUntil=now()+900;say(pick(['골골골...','냐아~','더 해줘옹','기분 좋다냥','그르릉']));schedule();
 }
 function spawnHeart(ev){
@@ -1114,7 +1133,7 @@ function viewShop(){
   const ids=Object.keys(ITEMS).filter(k=>{const t=ITEMS[k].t;return tab==='wear'?(t==='neck'||t==='face'):tab==='special'?(t==='special'||t==='dye'):t===tab});
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(u.coins||0)<it.p?'disabled':''}>${done?'보유 중':'사기'}</button></div></div>`}).join('')}</div>
-  <p class="grow" style="margin-top:12px">코인 모으는 법: 매일 첫 접속 300 · 운동 최대 80 · 교육 최대 75 · 놀아주기 15 · 레벨 업 보너스 · 친구에게 츄르 선물 15 · 쓰다듬기 3번마다 2</p>`;
+  <p class="grow" style="margin-top:12px">코인 모으는 법: 매일 첫 접속 300 · 운동 최대 80 · 교육 최대 75 · 놀아주기 15 · 레벨 업 보너스 · 친구에게 츄르 선물 15 · 쓰다듬기 1번에 1 (100번마다 2분 휴식)</p>`;
 }
 function viewPlaza(){
   const list=Object.entries(S.users).map(([k,u])=>S.cats[u.main]).filter(Boolean);
@@ -1310,15 +1329,16 @@ function renderDesk(){
   for(const it of list){
     keep.add(it.id);let el=d.querySelector(`.dcat[data-v="${it.id}"]`);
     if(!el){el=document.createElement('div');el.className='dcat'+(it.mine?'':' friend');el.dataset.a='dpet';el.dataset.v=it.id;el.setAttribute('role','button');
-      el.innerHTML=`<div class="bubble" hidden></div><span class="zz" hidden>z Z</span><div class="body"><div class="flip"></div></div>${it.mine?'':`<span class="nm"></span>`}`;
+      el.innerHTML=`<div class="bubble" hidden></div><span class="zz" hidden>z Z</span><span class="mark" hidden><svg viewBox="0 0 24 24"><path d="M3 9h6V3M15 3v6h6M21 15h-6v6M9 21v-6H3" stroke="#e2453c" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div class="body"><div class="flip"></div></div>${it.mine?'':`<span class="nm"></span>`}`;
       d.appendChild(el);
       if(it.guest)setTimeout(()=>deskSay('guest','저를 누르면 냥이마을이 열려요! 끌어서 옮길 수도 있어요',6000),800);
     }
     const s=DS[it.id]=DS[it.id]||{x:it.mine?W*.62:rnd(40,Math.max(60,W-160)),y:0,vx:0,vy:0,dir:Math.random()<.5?-1:1,mode:'walk',until:t+rnd(3e3,8e3),sig:''};
     const c=it.cat,sleeping=c.sleepUntil&&c.sleepUntil>t;
-    const expr=it.away?'':(s.ouchUntil>t)?'ouch':sleeping?'sleep':(it.mine&&S.happyUntil>t)?'happy':(c.st&&c.st.mood<25)?'sulky':'normal';
+    const expr=it.away?'':(s.ouchUntil>t)?'ouch':(s.actExpr&&s.actUntil>t)?s.actExpr:sleeping?'sleep':(it.mine&&S.happyUntil>t)?'happy':(c.st&&c.st.mood<25)?'sulky':'normal';
     const sig=it.away?'away':JSON.stringify([c.look,c.eq,c.stage,expr]);
     if(s.sig!==sig){s.sig=sig;el.querySelector('.flip').innerHTML=it.away?LETTER:catSVG(c,{expr})}
+    s.mood=c.st?c.st.mood:60;s.aff=c.aff||0;
     s.sleep=!!sleeping||!!it.away;s.mine=it.mine;s.away=!!it.away;s.guest=!!it.guest;s.owner=it.owner||c.owner;s.name=c.name;
     el.querySelector('.zz').hidden=!sleeping;
     const nm=el.querySelector('.nm');if(nm)nm.textContent=title(c);
@@ -1354,8 +1374,10 @@ function deskLoop(){
       }
     }else{
       if(s.sleep)s.mode='sit';
-      else if(t>s.until){s.mode=Math.random()<.55?'walk':'sit';s.until=t+(s.mode==='walk'?rnd(4e3,11e3):rnd(5e3,15e3));if(s.mode==='walk'&&Math.random()<.4)s.dir*=-1}
-      if(s.mode==='walk'&&!deskOver&&!deskMenu){walking=true;s.x+=s.dir*(s.mine?1.1:.85);if(s.x<4){s.x=4;s.dir=1}if(s.x>W-w-4){s.x=W-w-4;s.dir=-1}}
+      else if(t>s.until&&!s.act&&Math.random()<.22){deskDo(id,pickAct(s))}
+      else if(t>s.until&&!s.act){s.mode=Math.random()<.55?'walk':'sit';s.until=t+(s.mode==='walk'?rnd(4e3,11e3):rnd(5e3,15e3));if(s.mode==='walk'&&Math.random()<.4)s.dir*=-1}
+      if(s.act==='roll'&&!deskMenu){s.x+=s.dir*2.6;if(s.x<4||s.x>W-w-4)s.dir*=-1}
+      if(s.mode==='walk'&&!s.act&&!deskOver&&!deskMenu){walking=true;s.x+=s.dir*(s.mine?1.1:.85);if(s.x<4){s.x=4;s.dir=1}if(s.x>W-w-4){s.x=W-w-4;s.dir=-1}}
     }
     if(s.ouchUntil&&s.ouchUntil<t){s.ouchUntil=0;renderDesk()}
     s.x=clamp(s.x,0,Math.max(0,W-w));
@@ -1365,6 +1387,32 @@ function deskLoop(){
   });
   setFull(need);
   requestAnimationFrame(deskLoop);
+}
+const ACTS={
+  roll:{ms:1250,expr:'happy',lines:['데굴데굴~','구르기 신난다냥','우다다 데굴!']},
+  lie:{ms:2800,expr:'happy',lines:['뒹굴뒹굴~','배 만져도 된다냥','바닥 시원하다옹']},
+  cute:{ms:2100,expr:'happy',lines:['냥~♡','예쁘게 봐줘옹','골골골~','나 귀엽지?']},
+  angry:{ms:1900,expr:'sulky',lines:['하악!','흥! 건드리지 마','캬악!','지금 화났다냥']},
+  stretch:{ms:1700,expr:'sleep',lines:['으으~ 기지개','쭈욱~','하암...']},
+  jump:{ms:1000,expr:'happy',lines:['폴짝!','점프!','높이 뛴다냥']}
+};
+function pickAct(s,noAngry){
+  const w={roll:2,lie:2,cute:s.aff>=60?3:1,angry:noAngry?0:(s.mood<25?5:.5),stretch:1.5,jump:1.5};
+  let r=Math.random()*Object.values(w).reduce((a,b)=>a+b,0);
+  for(const k in w){r-=w[k];if(r<=0)return k}return'cute';
+}
+function deskDo(id,act){
+  const s=DS[id],el=document.querySelector(`.dcat[data-v="${id}"]`);
+  if(!s||!el||s.held||s.away||s.sleep||s.act||!ACTS[act])return;
+  const A=ACTS[act],t=now();
+  s.act=act;s.actUntil=t+A.ms;s.actExpr=A.expr;s.mode='sit';s.until=s.actUntil+rnd(2e3,5e3);
+  Object.keys(ACTS).forEach(k=>el.classList.remove('act-'+k));void el.offsetWidth;el.classList.add('act-'+act);
+  if(act==='jump'){s.vy=-13;s.y=Math.max(s.y,1);s.fallFrom=0}
+  if(act==='roll'&&Math.random()<.5)s.dir*=-1;
+  if(act==='cute')[0,350,700].forEach(d=>setTimeout(()=>{const h=document.createElement('div');h.className='heart';h.style.left=(el.offsetWidth/2-10+rnd(-24,24))+'px';h.style.top='10px';h.innerHTML=heartSVG;el.appendChild(h);setTimeout(()=>h.remove(),1000)},d));
+  const mk=el.querySelector('.mark');if(mk)mk.hidden=act!=='angry';
+  deskSay(id,pick(A.lines),1800);renderDesk();
+  setTimeout(()=>{el.classList.remove('act-'+act);s.act=null;s.actExpr=null;if(mk)mk.hidden=true;renderDesk()},A.ms);
 }
 function deskChatter(){
   setTimeout(deskChatter,rnd(50e3,110e3));
@@ -1405,7 +1453,7 @@ function openDeskMenu(id){
   let html='';
   if(s.guest)html=it('open','냥이마을 열기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.away)html=`<p>${esc(s.name)}${iGa(s.name).slice(-1)} 집을 나갔어요</p>`+it('open','찾으러 가기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
-  else if(s.mine)html=`<p>${esc(s.name)}</p>`+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료')+it('play','놀아주기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
+  else if(s.mine)html=`<p>${esc(s.name)}</p>`+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료')+it('play','놀아주기')+it('trick','재롱 보기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기')+it('talk','말 걸기')+it('gift','츄르 선물',(inv.churu||0)+'개')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
   const m=document.createElement('div');m.id='dmenu';m.innerHTML=html;document.body.appendChild(m);
   const w=el.offsetWidth,W=window.innerWidth;
@@ -1444,6 +1492,7 @@ async function deskAction(a,id,e){
     case'kibble':await feed('kibble');break;
     case'play':{const ok=await play();if(ok&&s){s.vy=-15;s.y=Math.max(s.y,1);s.fallFrom=0}break}
     case'call':openDeskPanel();break;
+    case'trick':if(s){if(s.sleep){deskSay(id,'쿨... 쿨... (자는 중)',2000);break}deskDo(id,pickAct(s,true))}break;
     case'fpet':friendPet(id);break;
     case'gift':await gift(id);break;
     case'talk':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;
