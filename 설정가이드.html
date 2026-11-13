@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>냥이마을 설정 가이드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* layout: single reading column, numbered setup steps grouped by service */
+:root{--bg:#f4f9f7;--paper:#fff;--ink:#3b3346;--muted:#7d7488;--line:#d9e8e3;--pink:#e0607f;--pink-l:#ffe3ea;--teal:#2f8f7d;--teal-l:#d7f0ea;--gold-l:#fff1cf;
+--display:"Jua","Malgun Gothic",sans-serif;--body:"Gowun Dodum","Malgun Gothic",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.7;font-size:16px}
+main{max-width:720px;margin:0 auto;padding:32px 18px 64px}
+h1,h2{font-family:var(--display);font-weight:400;text-wrap:balance}
+h1{font-size:2rem;color:var(--pink);margin:0 0 6px}
+h2{font-size:1.35rem;margin:36px 0 10px;display:flex;align-items:center;gap:10px}
+h2 span{font-size:.8rem;background:var(--teal-l);color:var(--teal);padding:2px 10px;border-radius:99px;font-family:var(--body)}
+.lead{color:var(--muted);margin:0 0 18px}
+ol{padding-left:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px;margin:0}
+ol>li{counter-increment:s;background:var(--paper);border:1.5px solid var(--line);border-radius:16px;padding:12px 16px 12px 52px;position:relative}
+ol>li::before{content:counter(s);position:absolute;left:14px;top:12px;width:26px;height:26px;border-radius:50%;background:var(--pink-l);color:var(--pink);font-family:var(--display);display:grid;place-items:center}
+b{font-weight:700}
+code,pre{font-family:ui-monospace,Consolas,monospace;font-size:.88em}
+code{background:#eef3f1;padding:1px 6px;border-radius:6px}
+pre{background:#2f2a38;color:#f3eef7;padding:14px;border-radius:12px;overflow-x:auto;line-height:1.5}
+.note{background:var(--gold-l);border-radius:14px;padding:12px 16px;margin-top:12px}
+.warn{background:var(--pink-l);border-radius:14px;padding:12px 16px;margin-top:12px}
+ul{margin:6px 0;padding-left:20px}
+a{color:var(--teal)}
+</style>
+</head>
+<body>
+<main>
+<h1>냥이마을 설정 가이드</h1>
+<p class="lead">처음 한 번만 하면 돼요. Firebase로 "함께 쓰는 저장소"를 만들고, GitHub에 게임을 올려 링크를 만드는 순서예요. 전부 무료이고, 개인 PC에서 하는 걸 추천해요.</p>
+
+<h2>1. Firebase 저장소 만들기 <span>약 10분</span></h2>
+<ol>
+<li><a href="https://console.firebase.google.com" target="_blank" rel="noopener">console.firebase.google.com</a>에 구글 계정으로 들어가서 <b>프로젝트 만들기</b>를 누르세요. 이름은 <code>uri-nyang</code>처럼 아무거나 괜찮아요. Google 애널리틱스는 꺼도 돼요.</li>
+<li>왼쪽 메뉴 <b>빌드 → Realtime Database</b> → <b>데이터베이스 만들기</b>. 위치는 <b>싱가포르(asia-southeast1)</b>를 고르고, <b>테스트 모드로 시작</b>을 선택한 뒤 사용 설정을 누르세요.</li>
+<li>만들어진 데이터베이스 화면에서 <b>규칙</b> 탭을 누르고, 안에 있는 내용을 전부 지운 다음 받은 파일 중 <code>database.rules.json</code>의 내용을 그대로 붙여넣고 <b>게시</b>를 누르세요.
+<div class="warn">테스트 모드 규칙은 30일 뒤 자동으로 막혀요. 이 단계를 꼭 해야 계속 쓸 수 있어요.</div></li>
+<li>왼쪽 위 <b>프로젝트 개요</b> 옆 톱니바퀴 → <b>프로젝트 설정</b> → 아래쪽 "내 앱"에서 <b>웹 아이콘(&lt;/&gt;)</b>을 누르세요. 앱 닉네임을 적고 등록하면(호스팅 체크는 안 해도 돼요) <code>firebaseConfig</code> 값이 나와요.</li>
+<li>받은 파일 중 <code>config.js</code>를 메모장으로 열고, <code>firebase: null</code> 부분을 아래처럼 복사한 값으로 바꿔 저장하세요.
+<pre>window.NYANG_CONFIG = {
+  firebase: {
+    apiKey: "AIza...",
+    authDomain: "uri-nyang.firebaseapp.com",
+    databaseURL: "https://uri-nyang-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "uri-nyang",
+    storageBucket: "...",
+    messagingSenderId: "...",
+    appId: "..."
+  }
+};</pre>
+<div class="note"><b>databaseURL</b> 줄이 꼭 있어야 해요. 없으면 2번(데이터베이스 만들기)을 먼저 하고 설정 화면에서 값을 다시 복사하세요.</div></li>
+</ol>
+
+<h2>2. GitHub에 올려서 링크 만들기 <span>약 5분</span></h2>
+<ol>
+<li><a href="https://github.com" target="_blank" rel="noopener">github.com</a>에 가입하거나 로그인하고, 오른쪽 위 <b>+ → New repository</b>를 누르세요. 이름은 <code>nyang</code>, <b>Public</b>으로 두고 <b>Create repository</b>.</li>
+<li>만들어진 화면의 <b>uploading an existing file</b> 링크를 누르고, 압축을 푼 파일을 <b>전부</b> 끌어다 놓으세요. <code>icons</code> 폴더도 폴더째로 넣어야 해요. 아래 <b>Commit changes</b>.</li>
+<li>저장소의 <b>Settings → Pages</b>에서 Branch를 <code>main</code>, 폴더를 <code>/(root)</code>로 고르고 <b>Save</b>.</li>
+<li>1~2분 뒤 <code>https://내아이디.github.io/nyang/</code> 주소로 열려요. 설정 화면에 "온라인 모드"라고 나오면 성공이에요. 이 링크를 단톡방에 공유하세요.</li>
+</ol>
+
+<h2>3. 바탕화면에 설치하기 <span>친구들도 똑같이</span></h2>
+<ol>
+<li><b>PC (크롬·엣지)</b>: 링크를 열고 주소창 오른쪽의 설치 아이콘(모니터 모양)을 누르거나, 메뉴(⋮) → <b>앱 설치</b>를 누르세요. 바탕화면과 시작 메뉴에 냥이마을 아이콘이 생기고 별도 창으로 열려요.</li>
+<li><b>안드로이드</b>: 크롬 메뉴(⋮) → <b>홈 화면에 추가</b> 또는 <b>앱 설치</b>.</li>
+<li><b>아이폰</b>: 사파리로 열고 공유 버튼 → <b>홈 화면에 추가</b>.</li>
+</ol>
+
+<h2>알아두면 좋은 점</h2>
+<ul>
+<li>링크를 아는 사람은 누구나 들어올 수 있어요. 친구들 단톡방에만 공유하세요.</li>
+<li>주인이름 + 비밀번호 4자리는 친구끼리 쓰기 위한 간단한 잠금이에요. 다른 곳에서 쓰는 비밀번호는 쓰지 마세요.</li>
+<li>Firebase 무료 요금제로 친구 여러 명이 노는 데는 충분해요. 결제 정보를 넣지 않으면 요금이 나가지 않아요.</li>
+<li>게임을 고치고 싶으면 GitHub 저장소에서 파일을 다시 올리면 돼요. 저장소를 Claude에 연결해 주면 수정과 업로드를 대신 해드릴 수 있어요.</li>
+<li>설치한 앱은 열 때마다 최신 버전을 받아요. 바로 반영이 안 되면 앱을 한 번 껐다 켜세요.</li>
+</ul>
+</main>
+</body>
+</html>
