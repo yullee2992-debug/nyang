@@ -364,6 +364,10 @@ const ITEMS={
   plant:{n:'캣그라스 화분',t:'room',slot:'plant',p:150,d:'방 오른쪽에 놓여요'},
   fishbowl:{n:'어항',t:'room',slot:'fishbowl',p:350,d:'구경만 해야 해요'},
   ring:{n:'결혼반지',t:'special',p:1500,d:'광장에서 청혼할 때 필요해요'},
+  wildflower:{n:'들꽃',t:'flower',p:50,pop:1,need:30,d:'인기도 +1 · 아는 사이부터 선물 가능'},
+  rose:{n:'장미',t:'flower',p:150,pop:3,need:30,d:'인기도 +3 · 아는 사이부터 선물 가능'},
+  sunflower:{n:'해바라기',t:'flower',p:300,pop:6,need:60,d:'인기도 +6 · 친구 사이부터 선물 가능'},
+  bouquet:{n:'꽃다발',t:'flower',p:800,pop:20,need:120,d:'인기도 +20 · 단짝 사이부터 선물 가능'},
   adopt:{n:'분양권',t:'special',p:1000,d:'새 고양이를 한 마리 더 데려와요'},
   party:{n:'고깔모자',t:'hat',p:160,d:'매일이 생일 파티'},
   cap:{n:'야구모자',t:'hat',p:200,d:'운동할 때 딱'},
@@ -400,7 +404,8 @@ const ITEMS={
   lamp:{n:'스탠드 조명',t:'room',slot:'lamp',p:260,d:'포근한 불빛'},
   scratcher:{n:'스크래쳐',t:'room',slot:'scratcher',p:240,d:'발톱 관리 필수템'}
 };
-const STACK=new Set(['churu','fish','smelt','cake','dye','ring','adopt']);
+const STACK=new Set(['churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
+const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
 const STAGE={kitten:'아기냥',junior:'청소년냥',adult:'어른냥'};
 const need=lv=>40+lv*25;
 const MAX_CATS=8;
@@ -455,7 +460,7 @@ const PT={
 };
 function ptypeOf(c){
   const t=c&&c.tr||{};const g=k=>t[k]||0;
-  const sc={cuddly:g('pet')*.06+g('trick')*1.2,lazy:g('pester')*5+g('nap')*.4,grumpy:g('drop')*1.6,scaredy:g('scare')*3,glutton:g('feed'),playful:g('play')+g('carry')*.3,smart:g('train')*1.2,chatty:g('talk')*1.2,sleepy:g('nap')};
+  const sc={cuddly:g('pet')*.06+g('trick')*1.2,lazy:g('pester')*5+g('nap')*.4,grumpy:g('drop')*1.6+g('anger'),scaredy:g('scare')*3,glutton:g('feed'),playful:g('play')+g('carry')*.3,smart:g('train')*1.2,chatty:g('talk')*1.2,sleepy:g('nap')};
   let best='aloof',bv=3;for(const k in sc)if(sc[k]>bv){bv=sc[k];best=k}
   return best;
 }
@@ -651,6 +656,10 @@ function itemPic(id,cat){
     smelt:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="74" rx="40" ry="9" fill="#e8eef2"/>${[0,1,2].map(i=>`<g transform="translate(${8+i*4},${30+i*14}) rotate(${-6+i*6} 40 10)"><path d="M6 10 Q30 -2 64 8 Q72 10 72 10 Q66 14 64 14 Q30 22 6 10z" fill="#c9d6de" stroke="#7d93a3" stroke-width="2"/><path d="M64 10 L80 2 L78 18 Z" fill="#c9d6de" stroke="#7d93a3" stroke-width="2" stroke-linejoin="round"/><path d="M24 10 h30" stroke="#e8b04a" stroke-width="3" stroke-linecap="round"/><circle cx="14" cy="9" r="2" fill="#2c2433"/></g>`).join('')}</svg>`,
     cake:`<svg viewBox="0 0 100 100"><rect x="22" y="46" width="56" height="34" rx="8" fill="#fff4f8" stroke="#e0607f" stroke-width="3"/><path d="M22 56 q7 8 14 0 q7 8 14 0 q7 8 14 0 q7 8 14 0" fill="none" stroke="#ff8fab" stroke-width="4"/><path d="M36 46 l-4 -12 l8 6z M64 46 l4 -12 l-8 6z" fill="#f2a950"/><circle cx="50" cy="40" r="7" fill="#ff6f91"/><rect x="48" y="22" width="4" height="12" fill="#6cbfe8"/></svg>`,
     dye:`<svg viewBox="0 0 100 100"><rect x="34" y="34" width="32" height="50" rx="8" fill="#c7b4f0" stroke="#7d64b8" stroke-width="3"/><rect x="40" y="18" width="20" height="18" rx="4" fill="#fff" stroke="#7d64b8" stroke-width="3"/><circle cx="50" cy="58" r="9" fill="#f7a8c4"/><circle cx="26" cy="30" r="6" fill="#8fd8c4"/><circle cx="76" cy="26" r="5" fill="#f5df6b"/></svg>`,
+    wildflower:`<svg viewBox="0 0 100 100"><path d="M50 52 V90" stroke="#5fae5a" stroke-width="4"/><path d="M50 74 q-14 -4 -18 -14 q12 0 18 10" fill="#79c267"/>${[0,60,120,180,240,300].map(a=>`<ellipse cx="${50+Math.cos(a*Math.PI/180)*13}" cy="${40+Math.sin(a*Math.PI/180)*13}" rx="9" ry="6" transform="rotate(${a} ${50+Math.cos(a*Math.PI/180)*13} ${40+Math.sin(a*Math.PI/180)*13})" fill="#fff" stroke="#e6dff0" stroke-width="1.5"/>`).join('')}<circle cx="50" cy="40" r="8" fill="#ffd166"/></svg>`,
+    rose:`<svg viewBox="0 0 100 100"><path d="M50 50 V92" stroke="#4f9a55" stroke-width="4"/><path d="M50 70 q16 -6 20 -16 q-14 0 -20 10 M50 80 q-14 -4 -18 -14 q12 0 18 10" fill="#5fae5a"/><path d="M32 34 Q32 54 50 56 Q68 54 68 34 Q60 40 50 30 Q40 40 32 34Z" fill="#e2456f" stroke="#b82d52" stroke-width="2"/><path d="M40 34 Q50 22 60 34 Q54 40 50 36 Q46 40 40 34Z" fill="#ff7a9a" stroke="#b82d52" stroke-width="1.5"/></svg>`,
+    sunflower:`<svg viewBox="0 0 100 100"><path d="M50 56 V94" stroke="#4f9a55" stroke-width="5"/><path d="M50 78 q18 -4 22 -16 q-16 0 -22 12" fill="#5fae5a"/>${Array.from({length:12},(_,i)=>i*30).map(a=>`<ellipse cx="${50+Math.cos(a*Math.PI/180)*18}" cy="${38+Math.sin(a*Math.PI/180)*18}" rx="9" ry="5" transform="rotate(${a} ${50+Math.cos(a*Math.PI/180)*18} ${38+Math.sin(a*Math.PI/180)*18})" fill="#ffd23f" stroke="#e0a72a" stroke-width="1.2"/>`).join('')}<circle cx="50" cy="38" r="12" fill="#8a5a2b"/><circle cx="46" cy="35" r="2" fill="#5f3d1d"/><circle cx="54" cy="40" r="2" fill="#5f3d1d"/></svg>`,
+    bouquet:`<svg viewBox="0 0 100 100"><path d="M34 52 L50 92 L66 52 Z" fill="#c7b4f0" stroke="#7d64b8" stroke-width="2.5" stroke-linejoin="round"/><path d="M40 70 q10 6 20 0" stroke="#ff8fab" stroke-width="5" fill="none"/>${[[38,40,'#ff7a9a'],[52,34,'#ffd166'],[64,42,'#ff9fb3'],[46,50,'#fff'],[60,52,'#e2456f'],[30,50,'#b9e0ff']].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="8" fill="${c}" stroke="#fff" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="2.5" fill="#f2b33d"/>`).join('')}</svg>`,
     ring:`<svg viewBox="0 0 100 100"><circle cx="50" cy="60" r="22" fill="none" stroke="#f2b33d" stroke-width="8"/><path d="M38 34 L50 20 L62 34 L50 44 Z" fill="#bfe8ff" stroke="#6fa8dc" stroke-width="3" stroke-linejoin="round"/></svg>`,
     adopt:`<svg viewBox="0 0 100 100"><rect x="14" y="28" width="72" height="46" rx="8" fill="#fff1cf" stroke="#d99a1e" stroke-width="3"/><path d="M50 64s-12-7-12-15a6 6 0 0 1 12-3 6 6 0 0 1 12 3c0 8-12 15-12 15z" fill="#ff8fab"/></svg>`
   };
@@ -936,17 +945,42 @@ async function dyeApply(){
 
 /* ================= social ================= */
 const friendLogT={};
+const BOND_LV=[[0,'낯선 사이'],[30,'아는 사이'],[60,'친구'],[120,'단짝'],[200,'베프']];
+function bondInfo(pts){pts=Math.floor(pts||0);let i=0;for(let k=0;k<BOND_LV.length;k++)if(pts>=BOND_LV[k][0])i=k;const next=BOND_LV[i+1];return{pts,lv:i,name:BOND_LV[i][1],next:next?next[0]:null,nextName:next?next[1]:null,hearts:'♥'.repeat(i)+'♡'.repeat(4-i)}}
+const myBond=c=>((c&&c.bond)||{})[S.me]||0;
+function bondKey(id){return'nyang-bond-'+kstDay()+'-'+id}
+async function addBond(id,n,daily){
+  if(daily){let used=0;try{used=+localStorage.getItem(bondKey(id))||0}catch(e){}if(used>=40)return;try{localStorage.setItem(bondKey(id),used+n)}catch(e){}}
+  const before=bondInfo(myBond(S.cats[id]));
+  const r=await Store.tx('cats/'+id,c=>{if(!c)return c;c.bond=c.bond||{};c.bond[S.me]=Math.round(((c.bond[S.me]||0)+n)*10)/10;return c});
+  if(!r.committed)return;const after=bondInfo(((r.value.bond||{})[S.me]));
+  if(after.lv>before.lv){const nm=r.value.name;const fl=FLOWER_IDS.filter(f=>ITEMS[f].need<=after.pts&&ITEMS[f].need>before.pts).map(f=>ITEMS[f].n);
+    setTimeout(()=>toast(`${nm}${waGwa(nm).slice(-1)} '${after.name}'${after.name.endsWith('사이')?'':' 사이'}가 됐어요!${fl.length?` 이제 ${fl.join('·')}${eulReul(fl[fl.length-1]).slice(-1)} 선물할 수 있어요`:''}`,3600),600);
+    log(`${ownerName(S.me)}님과 ${title(r.value)}${iGa(r.value.name).slice(-1)} '${after.name}'${after.name.endsWith('사이')?'':' 사이'}가 됐어요.`)}
+}
+async function giveFlower(id,fid){
+  const t=S.cats[id],it=ITEMS[fid];if(!t||!it)return;const v=live(t);
+  if(v.status==='runaway')return toast('지금은 가출 중이에요');
+  const b=bondInfo(myBond(t));if(b.pts<it.need)return toast(`${it.n}${eunNeun(it.n).slice(-1)} 친밀도 ${it.need} 이상부터 선물할 수 있어요 (지금 ${b.pts})`);
+  if(!(await useItem(fid)))return toast(`${it.n}${iGa(it.n).slice(-1)} 없어요. 상점 '꽃' 탭에서 살 수 있어요`);
+  await Store.tx('cats/'+id,c=>{if(!c)return c;c.pop=(c.pop||0)+it.pop;c.flowers=c.flowers||{};c.flowers[fid]=(c.flowers[fid]||0)+1;c.bond=c.bond||{};c.bond[S.me]=(c.bond[S.me]||0)+3;return c});
+  log(`${ownerName(S.me)}님이 ${title(v)}에게 ${it.n}${eulReul(it.n).slice(-1)} 선물했어요 (인기도 +${it.pop})`);
+  toast(`${it.n}${eulReul(it.n).slice(-1)} 선물했어요! ${v.name}의 인기도 +${it.pop}`);
+}
+function flowerButtons(id,attr){const inv=(me()&&me().inv)||{};const b=bondInfo(myBond(S.cats[id]));
+  return FLOWER_IDS.map(f=>{const it=ITEMS[f],ok=b.pts>=it.need,n=inv[f]||0;return`<button class="btn small ${ok&&n?'':'ghost'}" data-a="${attr}" data-id="${id}" data-v="${f}" ${ok&&n?'':'disabled'} title="${esc(it.d)}">${it.n} ${n}개${ok?'':' · 친밀도 '+it.need}</button>`}).join('')}
 async function friendPet(id){
   const t=S.cats[id];if(!t)return;const v=live(t);if(v.status==='runaway')return toast('지금은 가출 중이에요');
   await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.mood=clamp(c.st.mood+2);bumpTr(c,{pet:.5});return roundCat(c)});
-  toast(`${v.name}${iGa(v.name).slice(-1)} 골골거려요`);
+  toast(`${v.name}${iGa(v.name).slice(-1)} 골골거려요 · 친밀도 +1`);
+  addBond(id,1,true);
   if(!friendLogT[id]||now()-friendLogT[id]>10*MIN){friendLogT[id]=now();log(`${ownerName(S.me)}님이 ${title(v)}${eulReul(v.name).slice(-1)} 쓰다듬었어요.`)}
 }
 async function gift(id){
   const t=S.cats[id];if(!t)return;const v=live(t);if(v.status==='runaway')return toast('지금은 가출 중이에요');
   if(!(await useItem('churu')))return toast('츄르가 없어요. 상점에서 살 수 있어요');
   await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.hunger=clamp(c.st.hunger+10);c.st.mood=clamp(c.st.mood+20);c.neglect=0;return roundCat(c)});
-  await addCoins(15);log(`${ownerName(S.me)}님이 ${title(v)}에게 츄르를 선물했어요.`);toast('츄르를 선물했어요 · 우정 보너스 15코인');closeSheet();
+  await addCoins(15);addBond(id,5);log(`${ownerName(S.me)}님이 ${title(v)}에게 츄르를 선물했어요.`);toast('츄르를 선물했어요 · 우정 보너스 15코인');closeSheet();
 }
 function proposeCheck(myC,t){
   const u=me();
@@ -1029,7 +1063,7 @@ async function talk(id,text){
   if(now()-talkT<3000){toast('조금 천천히 말해주세요');return null}
   const v=live(S.cats[id]);if(!v)return null;
   if(v.status==='runaway'){toast('지금은 가출 중이에요');return null}
-  talkT=now();
+  talkT=now();addBond(id,2);
   Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());bumpTr(c,{talk:1});const nt=ptypeOf(c);if(nt!==c.ptype&&c.ptype){const pn=PT[nt].n;setTimeout(()=>log(`${title(c)}의 성격이 '${pn}'${josa(pn,'으로','로').slice(pn.length)} 바뀌었어요.`),0)}c.ptype=nt;return roundCat(c)});
   log(`${ownerName(S.me)}님이 ${title(v)}에게 말을 걸었어요: "${text}"`);
   return talkReply(v,text);
@@ -1101,6 +1135,8 @@ function openCatCard(id){
   const sp=t.spouse&&S.cats[t.spouse];
   openSheet(`<div class="row" style="align-items:flex-start;gap:14px"><div class="thumb" style="width:110px;height:110px;flex-basis:110px;background:var(--teal-l)">${catSVG(t,{still:true,expr:t.status==='runaway'?'sulky':'normal'})}</div>
   <div class="tx" style="flex:1;min-width:0"><h2>${esc(title(t))}</h2><p class="online">${on?'지금 접속 중':'마지막 접속 '+(ou.seen?ago(ou.seen):'-')}</p><div class="chips" style="margin-top:6px"><span class="chip">${STAGE[t.stage]} · Lv.${t.lv}</span>${personality(t).map(p=>`<span class="chip pink">${p}</span>`).join('')}${sp?`<span class="chip gold">${esc(sp.name)}${waGwa(sp.name).slice(-1)} 결혼</span>`:''}${t.status==='runaway'?'<span class="chip gray">가출 중</span>':''}</div></div></div>
+  ${(()=>{const fl=t.flowers||{};const got=FLOWER_IDS.filter(f=>fl[f]).map(f=>`${ITEMS[f].n} ${fl[f]}`).join(' · ');return`<div class="row" style="margin-top:10px"><span class="chip gold num">인기도 ${t.pop||0}</span>${got?`<span class="grow">받은 꽃: ${got}</span>`:''}</div>`})()}
+  ${mine?'':(()=>{const b=bondInfo(myBond(t));return`<div class="panel" style="margin-top:10px;padding:10px 12px"><div class="row" style="justify-content:space-between"><b style="font-family:var(--display);font-weight:400">나와의 친밀도 · ${b.name}</b><span style="color:var(--pink-d);letter-spacing:2px">${b.hearts}</span></div><div class="bar" style="margin:6px 0"><i style="width:${b.next?Math.min(100,b.pts/b.next*100):100}%;background:var(--pink)"></i></div><p class="grow" style="margin:0">${b.pts}점${b.next?` · ${b.next}점이 되면 '${b.nextName}'`:''} · 쓰다듬기 +1(하루 40까지), 말 걸기 +2, 츄르 +5, 꽃 +3</p><div class="row" style="margin-top:8px">${flowerButtons(id,'flower')}</div></div>`})()}
   ${mine?`<p class="lead" style="margin-top:12px">내 대표 고양이예요. 친구들이 광장에서 이 아이를 만나요.</p>`:`<div class="row" style="margin-top:14px"><button class="btn teal" data-a="fpet" data-v="${id}">쓰다듬기</button><button class="btn teal" data-a="talk" data-v="${id}">말 걸기</button><button class="btn" data-a="gift" data-v="${id}">츄르 선물 · ${(u.inv||{}).churu||0}개</button><button class="btn ghost" data-a="propose" data-v="${id}" ${why?'aria-disabled="true"':''}>청혼하기</button></div>${why?`<p class="grow" style="margin-top:8px">청혼 조건: ${esc(why)}</p>`:''}`}`);
 }
 
@@ -1136,7 +1172,7 @@ function viewHome(){
   return`${sw}<div class="scene">${roomScene(u)}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
   <div class="catwrap" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div><div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div></div></div>
   <div class="panel stack"><div class="stats">${statBar('배부름',c.st.hunger,'var(--hunger)')}${statBar('기분',c.st.mood,'var(--mood)')}${statBar('청결',c.st.clean,'var(--clean)')}${statBar('기력',c.st.energy,'var(--energy)')}</div>
-  <div class="meta"><div class="chips">${pers.map((p,i)=>`<span class="chip ${i?'':'pink'}">${p}</span>`).join('')}<span class="chip gold num">애정 ${Math.floor(c.aff)}</span><span class="chip num">똑똑 ${Math.floor(c.smart)}</span><span class="chip num">튼튼 ${Math.floor(c.strong)}</span>${c.spouse&&S.cats[c.spouse]?`<span class="chip gold">${esc(title(S.cats[c.spouse]))}${waGwa(S.cats[c.spouse].name).slice(-1)} 결혼</span>`:''}</div>
+  <div class="meta"><div class="chips">${pers.map((p,i)=>`<span class="chip ${i?'':'pink'}">${p}</span>`).join('')}<span class="chip gold num">애정 ${Math.floor(c.aff)}</span><span class="chip gold num">인기도 ${c.pop||0}</span><span class="chip num">똑똑 ${Math.floor(c.smart)}</span><span class="chip num">튼튼 ${Math.floor(c.strong)}</span>${c.spouse&&S.cats[c.spouse]?`<span class="chip gold">${esc(title(S.cats[c.spouse]))}${waGwa(S.cats[c.spouse].name).slice(-1)} 결혼</span>`:''}</div>
   <div class="xp num">Lv.${c.lv}<div class="bar"><i style="width:${c.xp/need(c.lv)*100}%;background:var(--gold)"></i></div>${Math.floor(c.xp)}/${need(c.lv)}</div>
   <div class="grow"><b style="font-family:var(--display);font-weight:400;color:var(--pink-d)">성격: ${PT[ptypeOf(c)].n}</b> · ${PT[ptypeOf(c)].d}. 대하는 방식에 따라 성격이 바뀌어요.</div>
   ${g?`<div class="grow">다음 성장(${STAGE[g.to]}): Lv.${g.lv} 이상 · 태어난 지 ${g.day}일째부터 — 지금 Lv.${c.lv}, ${ageDays(c)}일째</div>`:'<div class="grow">다 자란 어른냥이에요. 광장에서 짝을 찾아볼 수 있어요.</div>'}</div></div>
@@ -1153,7 +1189,7 @@ function viewHome(){
 }
 function viewShop(){
   const u=me(),inv=u.inv||{},c=activeCat();const tab=S.tab.shop;
-  const tabs=[['food','간식'],['hat','모자'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['room','방 꾸미기'],['special','특별']];
+  const tabs=[['food','간식'],['hat','모자'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
   const ids=Object.keys(ITEMS).filter(k=>{const t=ITEMS[k].t;return tab==='wear'?(t==='neck'||t==='face'):tab==='special'?(t==='special'||t==='dye'):t===tab});
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(u.coins||0)<it.p?'disabled':''}>${done?'보유 중':'사기'}</button></div></div>`}).join('')}</div>
@@ -1163,8 +1199,9 @@ function viewPlaza(){
   const list=Object.entries(S.users).map(([k,u])=>S.cats[u.main]).filter(Boolean);
   const online=Object.values(S.users).filter(u=>u.seen&&now()-u.seen<3*MIN).length;
   return`<div class="plaza" id="plaza">${plazaBG}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
-    return`<div class="pcat" data-a="card" data-v="${c.id}" data-id="${c.id}" style="left:${p.x}%;top:${p.y}%;z-index:${Math.round(p.y)}" role="button" tabindex="0" aria-label="${esc(title(v))}"><div class="flip" style="transform:scaleX(${p.f})">${v.status==='runaway'?`<svg viewBox="0 0 200 210"><text x="100" y="150" font-size="34" text-anchor="middle" fill="#857c8f" font-family="Jua">가출 중</text></svg>`:catSVG(v,{expr:v.st.mood<25?'sulky':'normal'})}</div><span class="tag"><i class="${on?'on':''}"></i>${esc(title(v))}</span></div>`}).join('')}</div>
-  <p class="online" style="margin:10px 2px">지금 ${online}명 접속 중 · 고양이를 누르면 쓰다듬기, 츄르 선물, 청혼을 할 수 있어요.${DEMO?' 예시 친구 3명이 함께 있어요.':''}</p>`;
+    return`<div class="pcat" data-a="card" data-v="${c.id}" data-id="${c.id}" style="left:${p.x}%;top:${p.y}%;z-index:${Math.round(p.y)}" role="button" tabindex="0" aria-label="${esc(title(v))}"><div class="flip" style="transform:scaleX(${p.f})">${v.status==='runaway'?`<svg viewBox="0 0 200 210"><text x="100" y="150" font-size="34" text-anchor="middle" fill="#857c8f" font-family="Jua">가출 중</text></svg>`:catSVG(v,{expr:v.st.mood<25?'sulky':'normal'})}</div><span class="tag"><i class="${on?'on':''}"></i>${esc(title(v))}${v.pop?` · 인기 ${v.pop}`:''}</span></div>`}).join('')}</div>
+  ${(()=>{const top=Object.values(S.cats).filter(c=>c&&c.pop>0).sort((a,b)=>b.pop-a.pop).slice(0,5);return top.length?`<div class="sect">인기 랭킹</div><div class="list">${top.map((c,i)=>`<div class="item" data-a="card" data-v="${c.id}" role="button" tabindex="0" style="cursor:pointer"><b style="font-family:var(--display);font-weight:400;width:22px;color:${i===0?'#d99a1e':'var(--muted)'}" class="num">${i+1}</b><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(title(c))}</b><span>${FLOWER_IDS.filter(f=>(c.flowers||{})[f]).map(f=>ITEMS[f].n+' '+c.flowers[f]).join(' · ')}</span></div><span class="chip gold num">인기 ${c.pop}</span></div>`).join('')}</div>`:''})()}
+  <p class="online" style="margin:10px 2px">지금 ${online}명 접속 중 · 고양이를 누르면 쓰다듬기, 말 걸기, 꽃 선물, 청혼을 할 수 있어요. 쓰다듬을수록 친밀도가 올라요.${DEMO?' 예시 친구 3명이 함께 있어요.':''}</p>`;
 }
 const PZ={};
 function plazaPos(id,i=0,n=1){if(!PZ[id])PZ[id]={x:clamp(14+(i+.5)*(72/Math.max(1,n))+rnd(-4,4),12,88),y:i%2?rnd(84,93):rnd(64,74),f:Math.random()<.5?-1:1};return PZ[id]}
@@ -1301,6 +1338,9 @@ document.addEventListener('click',async e=>{
     case'shoptab':S.tab.shop=v;render();break;
     case'buy':buy(v);break;
     case'card':openCatCard(v);break;
+    case'flower':{const id2=el.dataset.id;await giveFlower(id2,v);setTimeout(()=>openCatCard(id2),250);break}
+    case'dflower':{closeDeskMenu();const id2=el.dataset.id;await giveFlower(id2,v);deskSay(id2,pick(['꽃이다냥! 고마워♡','향기 좋다옹','나 인기 많아지겠다냥']),3000);break}
+    case'dact':{closeDeskMenu();const s2=DS[el.dataset.id];if(!s2)break;if(s2.sleep){deskSay(el.dataset.id,'쿨... 쿨... (자는 중)',2000);break}deskDo(el.dataset.id,v);if(s2.mine&&S.cats[el.dataset.id])catTx(el.dataset.id,c=>{bumpTr(c,v==='angry'?{anger:1}:{trick:1})});break}
     case'talk':openTalk(v);break;
     case'tquick':talkUI(el.dataset.id,v);break;
     case'tsend':talkUI(el.dataset.id,($('#tin')||{}).value);break;
@@ -1398,7 +1438,6 @@ function deskLoop(){
       }
     }else{
       if(s.sleep)s.mode='sit';
-      else if(t>s.until&&!s.act&&Math.random()<.22){deskDo(id,pickAct(s))}
       else if(t>s.until&&!s.act){s.mode=Math.random()<({lazy:.25,sleepy:.35,playful:.75}[s.ptype]||.55)?'walk':'sit';s.until=t+(s.mode==='walk'?rnd(4e3,11e3):rnd(5e3,15e3));if(s.mode==='walk'&&Math.random()<.4)s.dir*=-1}
       if(s.act==='roll'&&!deskMenu){s.x+=s.dir*2.6;if(s.x<4||s.x>W-w-4)s.dir*=-1}
       if(s.mode==='walk'&&!s.act&&!deskOver&&!deskMenu){walking=true;s.x+=s.dir*(s.mine?1.1:.85)*({playful:1.6,lazy:.55,sleepy:.7,scaredy:.9}[s.ptype]||1);if(s.x<4){s.x=4;s.dir=1}if(s.x>W-w-4){s.x=W-w-4;s.dir=-1}}
@@ -1480,8 +1519,8 @@ function openDeskMenu(id){
   let html='';
   if(s.guest)html=it('open','냥이마을 열기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.away)html=`<p>${esc(s.name)}${iGa(s.name).slice(-1)} 집을 나갔어요</p>`+it('open','찾으러 가기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
-  else if(s.mine)html=`<p>${esc(s.name)}</p>`+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료')+it('play','놀아주기')+it('trick','재롱 보기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
-  else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기')+it('talk','말 걸기')+it('gift','츄르 선물',(inv.churu||0)+'개')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
+  else if(s.mine)html=`<p>${esc(s.name)}</p>`+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료')+it('play','놀아주기')+it('acts','동작 시키기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
+  else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기',(()=>{const b=bondInfo(myBond(S.cats[id]));return b.name})())+it('talk','말 걸기')+it('flowers','꽃 선물')+it('gift','츄르 선물',(inv.churu||0)+'개')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
   const m=document.createElement('div');m.id='dmenu';m.innerHTML=html;document.body.appendChild(m);
   const w=el.offsetWidth,W=window.innerWidth;
   m.style.left=clamp(s.x+w/2-95,8,W-200)+'px';m.style.bottom=(s.y+el.offsetHeight*.75)+'px';
@@ -1524,6 +1563,13 @@ async function deskAction(a,id,e){
     case'gift':await gift(id);break;
     case'talk':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;
       const m=document.createElement('div');m.id='dmenu';m.innerHTML=`<p>${esc(s.name)}에게 뭐라고 할까요?</p>`+TALK_QUICK.map(q=>`<button data-a="dtalk" data-id="${id}" data-v="${esc(q)}">${esc(q)}</button>`).join('');
+      document.body.appendChild(m);m.style.left=clamp(s.x+el.offsetWidth/2-95,8,window.innerWidth-200)+'px';m.style.bottom=(s.y+el.offsetHeight*.75)+'px';deskMenu={id};setThrough();setFull(true);break}
+    case'acts':case'flowers':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;
+      const NAMES={roll:'구르기',lie:'뒹굴기',cute:'애교 부리기',angry:'화내기',stretch:'기지개 켜기',jump:'점프'};
+      const inv=(me()&&me().inv)||{},b=bondInfo(myBond(S.cats[id]));
+      const m=document.createElement('div');m.id='dmenu';
+      m.innerHTML=a==='acts'?`<p>${esc(s.name)}에게 시킬 동작</p>`+Object.keys(NAMES).map(k=>`<button data-a="dact" data-id="${id}" data-v="${k}">${NAMES[k]}</button>`).join('')
+        :`<p>꽃 선물 · 친밀도 ${b.pts} (${b.name})</p>`+FLOWER_IDS.map(f=>{const it=ITEMS[f],ok=b.pts>=it.need&&(inv[f]||0)>0;return`<button data-a="dflower" data-id="${id}" data-v="${f}" ${ok?'':'disabled'}>${it.n}<small>${(inv[f]||0)}개${b.pts>=it.need?'':' · '+it.need+'점부터'}</small></button>`}).join('');
       document.body.appendChild(m);m.style.left=clamp(s.x+el.offsetWidth/2-95,8,window.innerWidth-200)+'px';m.style.bottom=(s.y+el.offsetHeight*.75)+'px';deskMenu={id};setThrough();setFull(true);break}
     case'sendhome':if(s){deskSay(id,pick(['안녕~ 또 올게!','집에 갈게옹','재밌었다냥!']),1500);const k=s.owner;setTimeout(()=>deskCall(k,false),1300)}break;
   }
