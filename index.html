@@ -283,7 +283,7 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 @keyframes a-jump{0%,100%{transform:none}15%{transform:scale(1.1,.85)}45%{transform:translateY(-38%)}80%{transform:translateY(0) scale(1.1,.88)}}
 @media (max-width:380px){.top h1{font-size:1.15rem}.act{font-size:.8rem;padding:8px 2px 6px}.act span.ic{width:34px;height:34px}.nav button{font-size:.66rem}.coin{font-size:.9rem;padding:4px 10px 4px 5px}}
 .star{font-style:normal;font-family:var(--display);color:#c98c1c;margin-left:4px}
-.attb{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.attb{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .ac{position:relative;aspect-ratio:1;border-radius:12px;background:var(--paper);border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;overflow:hidden}
 .ac span{font-family:var(--display);font-size:.9rem}
 .ac small{font-size:.58rem;color:var(--muted);text-align:center;line-height:1.1;padding:0 2px;word-break:keep-all}
@@ -1517,8 +1517,14 @@ function nav(){
 const DQ=[['pet','내 고양이 쓰다듬기 30번',30],['feed','밥이나 간식 2번 주기',2],['train','교육 1번 하기',1],['play','놀아주기 3번',3],['ex','운동 1번 하기',1],['talk','친구 고양이에게 말 걸기',1],['gift','친구에게 간식이나 꽃 선물하기',1],['lotto','로또 참여하기',1],['visit','친구 집에 놀러가기',1],['book','방명록 1개 쓰기',1],['fpet','친구 고양이 쓰다듬기 10번',10],['bath','목욕시키기',1]];
 const WQ=[['train','교육 7번 하기',7],['gift','친구에게 선물 3번 하기',3],['book','방명록 3개 쓰기',3],['att','5일 출석하기',5]];
 const QREW={d:{c:30,s:1},all:{c:50,s:2},w:{c:150,s:4}};
-const ATT_EX={7:'tiara',14:'bg_moon',21:'medal',28:'clover'};
-function attReward(day){if(ATT_EX[day])return{item:ATT_EX[day],s:2};if(day%7===3||day%7===5)return{c:60,s:1};return{c:100}}
+const ATT_EX={5:'tiara',10:'bg_moon',15:'medal',20:'clover'},ATT_CELLS=20;
+const ATT_REF=Date.parse('2026-11-16T00:00:00+09:00');
+function attReward(day){if(ATT_EX[day])return{item:ATT_EX[day],s:2};if(day%5===2||day%5===4)return{c:60,s:1};return{c:100}}
+const kstDow=()=>new Date(now()+9*HOUR).getUTCDay();
+const isWeekday=()=>{const d=kstDow();return d>=1&&d<=5};
+function attBoardId(){return Math.floor((Date.parse(kstDay()+'T00:00:00+09:00')-ATT_REF)/(28*DAY))}
+function attRange(b){const st=ATT_REF+b*28*DAY;const f=t=>{const d=new Date(t+9*HOUR);return`${d.getUTCMonth()+1}/${d.getUTCDate()}`};return{start:f(st),end:f(st+27*DAY),left:Math.ceil((st+28*DAY-now())/DAY)}}
+function attCur(u){const a=(u&&u.att)||{};return a.b===attBoardId()?(a.n||0):0}
 function weekKey(t){const d=new Date((t||now())+9*HOUR);d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10)}
 function dailyIds(D){const r=seeded(strHash('nyang-q-'+D+'-'+S.me));const out=[];while(out.length<3){const k=DQ[Math.floor(r()*DQ.length)][0];if(!out.includes(k))out.push(k)}return out}
 function qNorm(q){const D=kstDay(),W=weekKey();q=q||{};if(q.d!==D){q.d=D;q.dp={};q.dc={};q.da=false}if(q.w!==W){q.w=W;q.wp={};q.wc={}}q.dp=q.dp||{};q.dc=q.dc||{};q.wp=q.wp||{};q.wc=q.wc||{};return q}
@@ -1544,20 +1550,25 @@ async function qClaim(kind,id){
 function qClaimable(u){if(!u)return 0;const q=qNorm(clone(u.q));const ids=dailyIds(q.d);let n=0;ids.forEach(k=>{const def=DQ.find(x=>x[0]===k);if((q.dp[k]||0)>=def[2]&&!q.dc[k])n++});if(!q.da&&ids.every(k=>q.dc[k]))n++;WQ.forEach(w=>{if((q.wp[w[0]]||0)>=w[2]&&!q.wc[w[0]])n++});return n}
 async function attendance(){
   if(!S.me)return;const D=kstDay();let got=null;
-  const r=await Store.tx('users/'+S.me,u=>{if(!u)return u;u.att=u.att||{n:0};if(u.att.last===D)return;u.att.n=(u.att.n||0)+1;u.att.last=D;
-    const day=((u.att.n-1)%28)+1;let rw=attReward(day);u.inv=u.inv||{};
+  if(!isWeekday())return;
+  const B=attBoardId();
+  const r=await Store.tx('users/'+S.me,u=>{if(!u)return u;u.att=u.att||{};
+    if(u.att.b===undefined){u.att.b=B;u.att.n=Math.min(u.att.n||0,ATT_CELLS)}
+    if(u.att.b!==B){u.att.b=B;u.att.n=0}
+    if(u.att.last===D||u.att.n>=ATT_CELLS)return;u.att.n=(u.att.n||0)+1;u.att.last=D;u.att.total=(u.att.total||0)+1;
+    const day=u.att.n;let rw=attReward(day);u.inv=u.inv||{};
     if(rw.item&&u.inv[rw.item])rw={c:500,s:5,dup:rw.item};
     if(rw.item)u.inv[rw.item]=1;u.coins=(u.coins||0)+(rw.c||0);u.stars=(u.stars||0)+(rw.s||0);got={day,n:u.att.n,rw};return u});
   if(!r.committed||!got)return;
   qEvent('att');
   const rw=got.rw,txt=[rw.item?`한정 아이템 '${ITEMS[rw.item].n}'`:'',rw.c?`${rw.c}코인`:'',rw.s?`⭐${rw.s}`:''].filter(Boolean).join(' · ');
-  if(PET){toast(`출석 ${got.n}일째! ${txt}`,5000);return}
-  setTimeout(()=>openSheet(`<h2>출석 ${got.n}일째! 도장 꾹</h2><p class="lead">오늘 보상: <b>${txt}</b>${rw.dup?' (이미 가진 한정 아이템이라 코인과 스타로 바꿔 드렸어요)':''}</p>${attBoard(got.n,true)}<button class="btn block" style="margin-top:12px" data-a="close">확인</button>`),600);
+  if(PET){toast(`출석 도장 ${got.n}번째! ${txt}`,5000);return}
+  setTimeout(()=>openSheet(`<h2>이번 출석부 ${got.n}번째 도장 꾹!</h2><p class="lead">오늘 보상: <b>${txt}</b>${rw.dup?' (이미 가진 한정 아이템이라 코인과 스타로 바꿔 드렸어요)':''}</p>${attBoard(got.n,true)}<button class="btn block" style="margin-top:12px" data-a="close">확인</button>`),600);
 }
 function attBoard(n,justNow){
-  const pos=n?((n-1)%28)+1:0;
-  return`<div class="attb">${Array.from({length:28},(_,i)=>{const d=i+1,rw=attReward(d),done=d<=pos;return`<div class="ac ${done?'done':''} ${rw.item?'ex':''} ${justNow&&d===pos?'now':''}"><span class="num">${d}</span><small>${rw.item?ITEMS[rw.item].n:rw.s?`⭐${rw.s}`:`${rw.c}`}</small>${done?'<i class="stamp">출석</i>':''}</div>`}).join('')}</div>
-  <p class="grow" style="margin:8px 0 0">빠져도 이어서 쌓여요(누적). 7·14·21·28일째엔 상점에 없는 한정 아이템을 줘요. 28칸을 다 채우면 새 판이 시작돼요.</p>`;
+  const pos=n||0;
+  return`<div class="attb">${Array.from({length:ATT_CELLS},(_,i)=>{const d=i+1,rw=attReward(d),done=d<=pos;return`<div class="ac ${done?'done':''} ${rw.item?'ex':''} ${justNow&&d===pos?'now':''}"><span class="num">${d}</span><small>${rw.item?ITEMS[rw.item].n:rw.s?`⭐${rw.s}`:`${rw.c}`}</small>${done?'<i class="stamp">출석</i>':''}</div>`}).join('')}</div>
+  <p class="grow" style="margin:8px 0 0">평일(월~금)에 들어오면 도장이 하나씩 쌓여요. 빠진 날이 있어도 이어서 쌓이고, 5·10·15·20번째 도장에는 상점에 없는 한정 아이템을 줘요. 출석부는 4주마다 새로 바뀌고, 그때까지 못 찍은 칸은 사라져요.</p>`;
 }
 function viewEvents(){
   const tab=S.tab.ev||'quest',u=me();
@@ -1573,8 +1584,8 @@ function viewEvents(){
     <div class="sect">이번 주 퀘스트 <small class="grow">· 월요일 0시에 바뀌어요</small></div><div class="list">${WQ.map(w=>row('w',w[0],w[1],q.wp[w[0]]||0,w[2],q.wc[w[0]],QREW.w)).join('')}</div>
     <p class="grow" style="margin-top:10px">⭐ 스타는 퀘스트와 출석으로만 얻어요. 상점의 프리미엄 상품에 써요.</p>`;
   }else if(tab==='att'){
-    const att=u.att||{n:0};
-    body=`<div class="panel stack"><h2>출석부 · 누적 ${att.n||0}일</h2>${attBoard(att.n||0)}</div>`;
+    const n=attCur(u),rg=attRange(attBoardId());
+    body=`<div class="panel stack"><h2>이번 출석부 · ${n} / ${ATT_CELLS}</h2><p class="grow num" style="margin:0">기간 ${rg.start} ~ ${rg.end} · ${rg.left}일 남음${isWeekday()?'':' · 오늘은 주말이라 쉬어요'}</p>${attBoard(n)}</div>`;
   }else body=viewLotto();
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="evtab" data-v="${k}">${l}${k==='quest'&&qClaimable(u)?' •':''}</button>`).join('')}</div>${body}`;
 }
