@@ -1228,7 +1228,7 @@ function openSheet(html){
   clearLayer();
   $('#layer').innerHTML=`<div class="backdrop" data-a="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="grab" title="아래로 내리면 닫혀요"></div>${html}</div>`;
   document.body.style.overflow='hidden';
-  if(!PET&&!S.sheetHist){try{history.pushState({nyang:'sheet'},'');S.sheetHist=true}catch(e){}}
+  markHist();
   const sh=$('.sheet'),g=sh.querySelector('.grab');let y0=null,dy=0;
   const start=e=>{if(e.target!==g&&sh.scrollTop>0)return;if(e.target!==g&&!e.target.closest('h2'))return;y0=e.clientY;dy=0;sh.style.transition='none'};
   sh.addEventListener('pointerdown',start);
@@ -1236,8 +1236,9 @@ function openSheet(html){
   const end=()=>{if(y0==null)return;y0=null;sh.style.transition='';if(dy>90)closeSheet();else sh.style.transform=''};
   sh.addEventListener('pointerup',end);sh.addEventListener('pointercancel',end);
 }
-function closeSheet(){clearLayer();if(S.sheetHist){S.sheetHist=false;try{history.back()}catch(e){}}}
-window.addEventListener('popstate',()=>{if(PET)return;if(S.sheetHist){S.sheetHist=false;clearLayer();return}if($('#layer .sheet')){clearLayer();return}if(S.screen==='app'&&S.view!=='home'){S.view='home';render()}});
+function closeSheet(){clearLayer()}
+function markHist(){if(PET)return;try{if(!(history.state&&history.state.nyang))history.pushState({nyang:1},'')}catch(e){}}
+window.addEventListener('popstate',()=>{if(PET)return;if($('#layer .sheet')){clearLayer();return}if(S.screen==='app'&&S.view!=='home'){S.view='home';render()}});
 function openFood(){
   const inv=(me().inv)||{};
   const row=(id,name,desc,n)=>`<div class="item"><div class="thumb">${id==='kibble'?`<svg viewBox="0 0 100 100"><path d="M14 52h72a36 26 0 0 1-72 0z" fill="#8fc7e8" stroke="#5d9fc4" stroke-width="3"/>${[30,42,54,66,36,60,48].map((x,i)=>`<circle cx="${x}" cy="${i>3?44:48}" r="6" fill="#c9884a"/>`).join('')}</svg>`:itemPic(id)}</div><div class="tx"><b>${name}</b><span>${desc}</span></div><button class="btn small" data-a="feed" data-v="${id}" ${id!=='kibble'&&!n?'disabled':''}>${id==='kibble'?'주기':'주기 · '+(n||0)+'개'}</button></div>`;
@@ -1518,7 +1519,7 @@ document.addEventListener('click',async e=>{
       if(!/^\d{4}$/.test(d.pin||'')){err.textContent='비밀번호는 숫자 4자리예요.';break}
       try{el.disabled=true;await register(d.owner,d.pin,d.name,d.look);S.view='home'}catch(x){err.textContent=String(x);el.disabled=false}break}
     case'cancelAdopt':S.screen='app';render();break;
-    case'go':closeSheet();if(!PET&&S.view==='home'&&v!=='home'){try{history.pushState({nyang:'tab'},'')}catch(e){}}S.view=v;window.scrollTo(0,0);render();break;
+    case'go':closeSheet();if(v!=='home')markHist();S.view=v;window.scrollTo(0,0);render();break;
     case'pet':pet(e);break;
     case'food':openFood();break;
     case'feed':feed(v);break;
