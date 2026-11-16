@@ -244,6 +244,19 @@ html.pet .app{max-width:none;padding:0;min-height:0}
 @keyframes a-angry{0%,100%{transform:translateX(0) scale(1.06,1.08)}50%{transform:translateX(-5px) scale(1.08,1.04)}}
 .dcat.act-stretch .body{animation:a-stretch 1.7s ease-in-out;transform-origin:50% 100%}
 @keyframes a-stretch{0%,100%{transform:none}35%,65%{transform:scale(1.3,.78)}}
+.mcards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mc{position:relative;aspect-ratio:1;border-radius:14px;padding:0;overflow:hidden;cursor:pointer}
+.mc .back,.mc .front{position:absolute;inset:0;display:grid;place-items:center;border-radius:14px;transition:transform .3s,opacity .3s;backface-visibility:hidden}
+.mc .back{background:repeating-linear-gradient(45deg,var(--pink) 0 8px,#ffa6bd 8px 16px);border:2px solid #fff}
+.mc .front{background:#fff;border:2px solid var(--line);opacity:0;transform:scale(.6)}
+.mc .front svg{width:80%;height:80%}
+.mc.up .back{opacity:0;transform:scale(.6)}.mc.up .front{opacity:1;transform:none}
+.mc.ok .front{border-color:#7fd1c0;background:#effaf6}
+.spads{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:320px;margin:0 auto}
+.sp{aspect-ratio:1;border-radius:22px;background:color-mix(in srgb,var(--c) 30%,#fff);border:3px solid color-mix(in srgb,var(--c) 70%,#fff);display:grid;place-items:center;transition:transform .1s,background .1s}
+.sp svg{width:46%;height:46%;fill:color-mix(in srgb,var(--c) 85%,#3b3346)}
+.sp.lit{background:var(--c);transform:scale(1.06);box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 35%,transparent)}
+.sp.lit svg{fill:#fff}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (min-width:640px){.actions{gap:10px}}
 </style>
@@ -865,9 +878,9 @@ async function bath(){
 async function nap(){
   const c=activeCat();if(!c)return;const v=live(c);const b=busy(v);if(b)return toast(b);
   if(v.st.energy>=90)return toast('아직 안 졸려요');
-  await catTx(c.id,c=>{c.sleepUntil=now()+2*MIN;bumpTr(c,{nap:1})});toast('2분 동안 낮잠을 자요. 일어나면 기력이 가득 차요');schedule();
+  await catTx(c.id,c=>{c.sleepUntil=now()+3650*DAY;bumpTr(c,{nap:1})});toast('낮잠을 자요. 2분이면 기력이 가득 차고, 깨워줄 때까지 계속 자요');schedule();
 }
-async function wake(){const c=activeCat();if(!c)return;await catTx(c.id,c=>{c.sleepUntil=null;c.st.mood=clamp(c.st.mood-3)});say('하암...');schedule()}
+async function wake(){const c=activeCat();if(!c)return;let full=false;await catTx(c.id,c=>{full=c.st.energy>=99;c.sleepUntil=null;c.st.mood=clamp(c.st.mood+(full?2:-3))});say(full?'잘 잤다냥! 기운 펄펄':'하암... 덜 잤는데');schedule()}
 async function searchCat(){
   const c=activeCat();if(!c)return;
   if(!(await useItem('churu')))return toast('츄르가 1개 있어야 찾으러 갈 수 있어요. 상점에서 사 오세요');
@@ -901,6 +914,59 @@ function exerciseGame(){
       }},100)};
 }
 function trainGame(){
+  const v=checkTrain('train');if(!v)return;
+  const G=[['timing','명령 연습','막대가 초록 칸에 들어올 때 누르기','쉬움'],['match','카드 짝 맞추기','같은 그림 카드 6쌍을 적은 횟수로 찾기','기억력'],['simon','발자국 순서 기억','고양이가 밟은 발자국 순서를 그대로 따라 하기','집중력']];
+  openSheet(`<h2>교육: 어떤 공부를 할까요?</h2><p class="lead">잘할수록 똑똑함과 코인을 더 많이 받아요. 교육은 5분마다 할 수 있어요.</p><div class="list">${G.map(([k,n,d,tag])=>`<button class="item" data-a="tgame" data-v="${k}" style="text-align:left;width:100%"><div class="tx"><b>${n}</b><span>${d}</span></div><span class="chip">${tag}</span></button>`).join('')}</div>`);
+}
+async function trainReward(v,smart,coins,xpN,mood){
+  await catTx(v.id,(c,res)=>{c.smart=clamp(c.smart+smart);c.st.energy=clamp(c.st.energy-8);c.st.hunger=clamp(c.st.hunger-8);c.st.mood=clamp(c.st.mood+(mood||0));c.neglect=0;c.cd.train=now()+5*MIN;bumpTr(c,{train:1});res.coins=coins;xp(c,res,xpN)});
+}
+function matchGame(){
+  const v=checkTrain('train');if(!v)return;
+  const kinds=['churu','fish','smelt','cake','rose','sunflower'];
+  const deck=[...kinds,...kinds].map(k=>({k,r:Math.random()})).sort((a,b)=>a.r-b.r).map(x=>x.k);
+  openSheet(`<h2>카드 짝 맞추기</h2><p class="lead">카드 두 장을 뒤집어 같은 그림을 찾으세요. 적은 횟수로 끝낼수록 보상이 커요.</p>
+  <div class="gstat num"><span id="mv">뒤집은 횟수 0</span><span id="pr">찾은 짝 0 / 6</span></div>
+  <div class="mcards" data-live="1">${deck.map((k,i)=>`<button class="mc" data-i="${i}" aria-label="카드 ${i+1}"><span class="back"></span><span class="front">${itemPic(k)}</span></button>`).join('')}</div>
+  <div class="row" style="margin-top:12px"><button class="btn ghost block" id="mq">그만하기</button></div>`);
+  let open=[],lock=false,moves=0,pairs=0,done=false;
+  const finish=async(quit)=>{if(done)return;done=true;
+    const coins=quit?0:Math.max(20,Math.min(100,100-(moves-6)*6)),smart=quit?0:Math.max(1,Math.min(6,6-(moves-6)*.4));
+    if(!quit)await trainReward(v,smart,coins,8+Math.round(smart*2),moves<=10?5:0);
+    const g=$('.mcards');if(g)g.outerHTML=`<div class="empty"><h2>${quit?'다음에 다시 해요':moves<=8?'천재냥!':moves<=12?'잘했어요!':'다 찾았어요!'}</h2><p>${quit?'보상 없이 끝냈어요.':`${moves}번 만에 6쌍 · 똑똑함 +${smart.toFixed(1)} · ${coins}코인`}</p></div>`;
+    const q=$('#mq');if(q){q.textContent='닫기';q.onclick=closeSheet}};
+  $('#mq').onclick=()=>finish(true);
+  document.querySelectorAll('.mc').forEach(b=>b.addEventListener('click',()=>{
+    if(lock||done||b.classList.contains('up'))return;b.classList.add('up');open.push(b);
+    if(open.length<2)return;moves++;$('#mv').textContent='뒤집은 횟수 '+moves;
+    const[a,c]=open;open=[];
+    if(deck[a.dataset.i]===deck[c.dataset.i]){a.classList.add('ok');c.classList.add('ok');pairs++;$('#pr').textContent=`찾은 짝 ${pairs} / 6`;if(pairs===6)setTimeout(()=>finish(false),500)}
+    else{lock=true;setTimeout(()=>{a.classList.remove('up');c.classList.remove('up');lock=false},750)}
+  }));
+}
+function simonGame(){
+  const v=checkTrain('train');if(!v)return;
+  const cols=[['#ff8fab','분홍'],['#7fd1c0','민트'],['#ffd166','노랑'],['#8cc4f0','하늘']];
+  openSheet(`<h2>발자국 순서 기억</h2><p class="lead">고양이가 밟는 발자국 순서를 잘 보고, 똑같은 순서로 눌러주세요. 맞힐 때마다 하나씩 길어져요.</p>
+  <div class="gstat num"><span id="sl">단계 1</span><span id="ss">잘 보세요</span></div>
+  <div class="spads" data-live="1">${cols.map(([c,n],i)=>`<button class="sp" data-i="${i}" style="--c:${c}" aria-label="${n} 발자국"><svg viewBox="0 0 24 24"><circle cx="7" cy="9" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="17" cy="9" r="2.2"/><path d="M8 17c0-3 2-5 4-5s4 2 4 5c0 2-2 3-4 3s-4-1-4-3z"/></svg></button>`).join('')}</div>
+  <div class="row" style="margin-top:12px"><button class="btn teal block" id="sg">시작</button></div>`);
+  const pads=[...document.querySelectorAll('.sp')];let seq=[],pos=0,input=false,cleared=0,done=false;
+  const flash=(i,ms=420)=>new Promise(r=>{pads[i].classList.add('lit');setTimeout(()=>{pads[i].classList.remove('lit');setTimeout(r,180)},ms)});
+  const show=async()=>{input=false;$('#ss').textContent='잘 보세요';$('#sl').textContent='단계 '+(seq.length-2);await new Promise(r=>setTimeout(r,500));for(const i of seq){if(done)return;await flash(i,Math.max(260,460-seq.length*15))}pos=0;input=true;$('#ss').textContent='이제 따라 하세요'};
+  const finish=async()=>{if(done)return;done=true;input=false;
+    const coins=Math.min(100,cleared*15),smart=Math.min(8,cleared*1.2);
+    if(cleared)await trainReward(v,smart,coins,6+cleared*3,cleared>=4?5:0);else await trainReward(v,0,0,4,-3);
+    const g=$('.spads');if(g)g.outerHTML=`<div class="empty"><h2>${cleared>=6?'기억력 천재냥!':cleared>=3?'잘했어요!':cleared?'조금 더 연습해요':'다음엔 잘할 거야'}</h2><p>${cleared}단계 성공 · 똑똑함 +${smart.toFixed(1)} · ${coins}코인</p></div>`;
+    const b=$('#sg');if(b){b.disabled=false;b.textContent='닫기';b.onclick=closeSheet}};
+  pads.forEach(p=>p.addEventListener('click',async()=>{
+    if(!input||done)return;const i=+p.dataset.i;flash(i,180);
+    if(i!==seq[pos]){$('#ss').textContent='앗, 틀렸어요';setTimeout(finish,500);return}
+    pos++;if(pos===seq.length){cleared++;input=false;$('#ss').textContent='맞았어요!';if(seq.length>=12){setTimeout(finish,500);return}seq.push(Math.floor(Math.random()*4));setTimeout(show,700)}
+  }));
+  $('#sg').onclick=()=>{if(seq.length)return;$('#sg').disabled=true;$('#sg').textContent='진행 중...';seq=[0,0,0].map(()=>Math.floor(Math.random()*4));show()};
+}
+function timingGame(){
   const v=checkTrain('train');if(!v)return;
   const cmds=['앉아!','손!','기다려!','하이파이브!','빵야!','돌아!'];
   const zoneW=Math.round(14+v.smart/10+v.st.mood/20);
@@ -1182,7 +1248,7 @@ function viewHome(){
    <button class="act" data-a="train" ${dis}>${cdTxt('train')}<span class="ic" style="background:#ece6fb;color:#7b62c4">${I.cap}</span>교육</button>
    <button class="act" data-a="exercise" ${dis}>${cdTxt('ex')}<span class="ic" style="background:#e3f5dc;color:#4c9a3c">${I.dumbbell}</span>운동</button>
    <button class="act" data-a="bath" ${dis}><span class="ic" style="background:#e0f2fb;color:#3b95c4">${I.bath}</span>목욕</button>
-   ${sleeping?`<button class="act" data-a="wake"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>깨우기<small class="num">${dur(c.sleepUntil-t)}</small></button>`:`<button class="act" data-a="nap"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>낮잠</button>`}
+   ${sleeping?`<button class="act" data-a="wake"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>깨우기<small class="num">${Math.round(c.st.energy)}%</small></button>`:`<button class="act" data-a="nap"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>낮잠</button>`}
    <button class="act" data-a="deco"><span class="ic" style="background:#fff3cf;color:#c58a10">${I.sparkle}</span>꾸미기</button>
    <button class="act" data-a="go" data-v="cats"><span class="ic" style="background:var(--teal-l);color:var(--teal)">${I.paw}</span>내 고양이</button>
   </div>`;
@@ -1320,6 +1386,7 @@ document.addEventListener('click',async e=>{
     case'feed':feed(v);break;
     case'play':play();break;
     case'train':trainGame();break;
+    case'tgame':closeSheet();({timing:timingGame,match:matchGame,simon:simonGame})[v]();break;
     case'exercise':exerciseGame();break;
     case'bath':bath();break;
     case'nap':nap();break;
@@ -1376,6 +1443,7 @@ if('serviceWorker'in navigator&&!window.nyangDesk&&location.protocol==='https:'&
 /* ================= desktop pet ================= */
 const DS={};let deskOver=false,deskBlock=null,deskFeedSeen=now(),deskClicked=null,deskFull=false,deskShrinkT=0,deskMenu=null,deskPanel=false,deskDrag=null,deskSuppress=0;
 const CALLKEY='nyang-desk-called';
+let deskWalk=false;try{deskWalk=localStorage.getItem('nyang-desk-walk')==='1'}catch(e){}
 let deskCalled=[];try{deskCalled=JSON.parse(localStorage.getItem(CALLKEY)||'[]')||[]}catch(e){}
 const saveCalled=()=>{try{localStorage.setItem(CALLKEY,JSON.stringify(deskCalled))}catch(e){}};
 const GUEST={id:'guest',name:'냥이',look:{coat:'#f2a950',pattern:'tabby',pcolor:'#c9692e',eyeL:'#79c267',eyeR:'#79c267',ear:'pointed',tail:'fluffy',build:'normal',nose:'#f39bb1',blush:true},stage:'kitten',eq:{hat:'ribbon'},st:{mood:80}};
@@ -1397,7 +1465,7 @@ function renderDesk(){
       d.appendChild(el);
       if(it.guest)setTimeout(()=>deskSay('guest','저를 누르면 냥이마을이 열려요! 끌어서 옮길 수도 있어요',6000),800);
     }
-    const s=DS[it.id]=DS[it.id]||{x:it.mine?W*.62:rnd(40,Math.max(60,W-160)),y:0,vx:0,vy:0,dir:Math.random()<.5?-1:1,mode:'walk',until:t+rnd(3e3,8e3),sig:''};
+    const s=DS[it.id]=DS[it.id]||{x:it.mine?W*.62:rnd(40,Math.max(60,W-160)),y:0,vx:0,vy:0,dir:Math.random()<.5?-1:1,mode:deskWalk?'walk':'sit',until:t+rnd(3e3,8e3),sig:''};
     const c=it.cat,sleeping=c.sleepUntil&&c.sleepUntil>t;
     const expr=it.away?'':(s.ouchUntil>t)?'ouch':(s.actExpr&&s.actUntil>t)?s.actExpr:sleeping?'sleep':(it.mine&&S.happyUntil>t)?'happy':(c.st&&c.st.mood<25)?'sulky':'normal';
     const sig=it.away?'away':JSON.stringify([c.look,c.eq,c.stage,expr]);
@@ -1438,7 +1506,7 @@ function deskLoop(){
       }
     }else{
       if(s.sleep)s.mode='sit';
-      else if(t>s.until&&!s.act){s.mode=Math.random()<({lazy:.25,sleepy:.35,playful:.75}[s.ptype]||.55)?'walk':'sit';s.until=t+(s.mode==='walk'?rnd(4e3,11e3):rnd(5e3,15e3));if(s.mode==='walk'&&Math.random()<.4)s.dir*=-1}
+      else if(t>s.until&&!s.act){s.mode=deskWalk&&Math.random()<({lazy:.25,sleepy:.35,playful:.75}[s.ptype]||.55)?'walk':'sit';s.until=t+(s.mode==='walk'?rnd(4e3,11e3):rnd(5e3,15e3));if(s.mode==='walk'&&Math.random()<.4)s.dir*=-1}
       if(s.act==='roll'&&!deskMenu){s.x+=s.dir*2.6;if(s.x<4||s.x>W-w-4)s.dir*=-1}
       if(s.mode==='walk'&&!s.act&&!deskOver&&!deskMenu){walking=true;s.x+=s.dir*(s.mine?1.1:.85)*({playful:1.6,lazy:.55,sleepy:.7,scaredy:.9}[s.ptype]||1);if(s.x<4){s.x=4;s.dir=1}if(s.x>W-w-4){s.x=W-w-4;s.dir=-1}}
     }
@@ -1519,7 +1587,7 @@ function openDeskMenu(id){
   let html='';
   if(s.guest)html=it('open','냥이마을 열기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.away)html=`<p>${esc(s.name)}${iGa(s.name).slice(-1)} 집을 나갔어요</p>`+it('open','찾으러 가기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
-  else if(s.mine)html=`<p>${esc(s.name)}</p>`+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료')+it('play','놀아주기')+it('acts','동작 시키기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
+  else if(s.mine)html=`<p>${esc(s.name)}${s.sleep?' (자는 중)':''}</p>`+(s.sleep?it('wake','깨우기'):'')+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료')+it('play','놀아주기')+it('acts','동작 시키기')+it('walk',deskWalk?'돌아다니기 끄기':'돌아다니기 켜기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기',(()=>{const b=bondInfo(myBond(S.cats[id]));return b.name})())+it('talk','말 걸기')+it('flowers','꽃 선물')+it('gift','츄르 선물',(inv.churu||0)+'개')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
   const m=document.createElement('div');m.id='dmenu';m.innerHTML=html;document.body.appendChild(m);
   const w=el.offsetWidth,W=window.innerWidth;
@@ -1558,6 +1626,8 @@ async function deskAction(a,id,e){
     case'kibble':await feed('kibble');break;
     case'play':{const ok=await play();if(ok&&s){s.vy=-15;s.y=Math.max(s.y,1);s.fallFrom=0}break}
     case'call':openDeskPanel();break;
+    case'wake':await wake();break;
+    case'walk':deskWalk=!deskWalk;try{localStorage.setItem('nyang-desk-walk',deskWalk?'1':'0')}catch(e){}deskSay(id,deskWalk?'산책 간다냥~':'여기 가만히 있을게옹',2200);break;
     case'trick':if(s){if(s.sleep){deskSay(id,'쿨... 쿨... (자는 중)',2000);break}deskDo(id,pickAct(s,true));if(s.mine&&S.cats[id])catTx(id,c=>{bumpTr(c,{trick:1})})}break;
     case'fpet':friendPet(id);break;
     case'gift':await gift(id);break;
