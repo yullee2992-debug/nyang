@@ -12,6 +12,8 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="냥이마을">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
@@ -268,6 +270,18 @@ html.pet .app{max-width:none;padding:0;min-height:0}
 .ball{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eef0f4;font-family:var(--display);font-size:.9rem;margin-right:2px;vertical-align:middle}
 .ball.hit{background:var(--gold);color:#fff}
 .nav button{font-size:.72rem}
+button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
+.catwrap,.pcat,.game,.mcards,.spads,.lgrid,.dcat,.nav{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.sheet{overscroll-behavior:contain;touch-action:pan-y}
+.sheet .grab{width:56px;height:6px;cursor:grab;padding:0}
+.catwrap.act-roll svg{animation:a-roll .62s linear 2;transform-origin:50% 64%}
+.catwrap.act-lie svg{animation:a-lie 2.8s ease-in-out;transform-origin:50% 92%}
+.catwrap.act-cute svg{animation:a-cute 2.1s ease-in-out;transform-origin:50% 95%}
+.catwrap.act-angry svg{animation:a-angry .19s linear 10;transform-origin:50% 95%}
+.catwrap.act-stretch svg{animation:a-stretch 1.7s ease-in-out;transform-origin:50% 100%}
+.catwrap.act-jump svg{animation:a-jump .9s ease-out;transform-origin:50% 100%}
+@keyframes a-jump{0%,100%{transform:none}15%{transform:scale(1.1,.85)}45%{transform:translateY(-38%)}80%{transform:translateY(0) scale(1.1,.88)}}
+@media (max-width:380px){.top h1{font-size:1.15rem}.act{font-size:.8rem;padding:8px 2px 6px}.act span.ic{width:34px;height:34px}.nav button{font-size:.66rem}.coin{font-size:.9rem;padding:4px 10px 4px 5px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (min-width:640px){.actions{gap:10px}}
 </style>
@@ -350,6 +364,7 @@ if(fb&&fb.apiKey&&fb.databaseURL&&!String(fb.apiKey).includes('여기에')){
 if(!Store&&fb&&fb.apiKey){document.getElementById('root').innerHTML='<div class="gate"><h1>연결하지 못했어요</h1><p>인터넷 연결을 확인한 뒤 다시 열어 주세요.</p></div>';return}
 if(!Store)Store=LocalStore();
 const DEMO=Store.mode==='local';
+const DEV=Math.random().toString(36).slice(2,10);
 const PET=new URLSearchParams(location.search).get('pet')==='1';
 const DK=window.nyangDesk||null;
 if(PET)document.documentElement.classList.add('pet');
@@ -774,7 +789,7 @@ function subscribe(){
   S.subs.push(Store.on('users',v=>{S.users=v||{};first.users=1;onData()}));
   S.subs.push(Store.on('cats',v=>{S.cats={};for(const k in(v||{}))S.cats[k]=norm(v[k]);first.cats=1;onData()}));
   S.subs.push(Store.on('proposals',v=>{S.props=v||{};onData()}));
-  S.subs.push(Store.on('feed',v=>{S.feed=Object.entries(v||{}).map(([k,x])=>Object.assign({k},x)).sort((a,b)=>a.at-b.at).slice(-60);onData()},60));
+  S.subs.push(Store.on('feed',v=>{S.feedLoaded=true;S.feed=Object.entries(v||{}).map(([k,x])=>Object.assign({k},x)).sort((a,b)=>a.at-b.at).slice(-60);onData()},60));
   let booted=false;
   function onData(){
     if(!booted&&first.users&&first.cats){booted=true;afterLogin()}
@@ -791,6 +806,14 @@ async function afterLogin(){
   // persist decay
   for(const c of myCats())await Store.tx('cats/'+c.id,x=>{if(!x)return x;return roundCat(tick(norm(x),now()))});
   heartbeat();
+  if(!PET){let tries=0;while(!S.feedLoaded&&tries++<30)await new Promise(r=>setTimeout(r,100));
+    const K='nyang-lastvisit-'+S.me;let last=0;try{last=+localStorage.getItem(K)||0}catch(e){}
+    const mine=myCats().map(c=>c.name),nm=ownerName(S.me);
+    const items=last?S.feed.filter(f=>f.at>last&&f.by!==S.me&&(f.text.includes(nm+'의')||mine.some(n=>f.text.includes(n)))):[];
+    try{localStorage.setItem(K,now())}catch(e){}
+    setInterval(()=>{try{if(document.visibilityState==='visible')localStorage.setItem(K,now())}catch(e){}},60e3);
+    if(items.length)setTimeout(()=>openSheet(`<h2>자리 비운 동안 있었던 일</h2><p class="lead">${dur(now()-last)} 동안 ${items.length}개의 소식이 있었어요.</p><div class="feed">${items.slice(-15).reverse().map(f=>`<div><time>${ago(f.at)}</time><span>${esc(f.text)}</span></div>`).join('')}</div><button class="btn block" style="margin-top:12px" data-a="awayok">확인</button>`),900);
+  }
 }
 let hbT=0;function heartbeat(){clearInterval(hbT);const f=()=>{if(S.me&&document.visibilityState==='visible')Store.set('users/'+S.me+'/seen',now())};f();hbT=setInterval(f,60e3)}
 setInterval(()=>{if(S.screen==='app'&&!document.querySelector('.sheet [data-live]'))schedule()},20e3);
@@ -858,7 +881,8 @@ async function pet(ev){
   petBonus();
   S.happyUntil=now()+900;say(Math.random()<.6?ptLine(S.cats[c.id]||c,'pet'):pick(['골골골...','냐아~','그르릉']));schedule();
 }
-function spawnHeart(ev){
+function buzz(ms=12){try{if(navigator.vibrate&&matchMedia('(pointer:coarse)').matches)navigator.vibrate(ms)}catch(e){}}
+function spawnHeart(ev){buzz();
   const sc=PET?(ev&&ev.target&&ev.target.closest('.dcat')):$('.scene');if(!sc)return;const r=sc.getBoundingClientRect();
   const x=(ev&&ev.clientX?ev.clientX:r.left+r.width/2)-r.left,y=(ev&&ev.clientY?ev.clientY:r.top+r.height*.6)-r.top;
   const h=document.createElement('div');h.className='heart';h.style.left=(x-11+rnd(-10,10))+'px';h.style.top=(y-20)+'px';h.innerHTML=heartSVG;sc.appendChild(h);setTimeout(()=>h.remove(),1000);
@@ -1141,8 +1165,23 @@ function petBonus(){
   if(!PET)return;
   const K='nyang-petbonus-'+S.me;let left=0;try{left=+localStorage.getItem(K)||0}catch(e){}
   if(left<1||left>20)left=10+Math.floor(Math.random()*11);left--;
-  if(left<=0){left=10+Math.floor(Math.random()*11);addCoins(500);coinFx('쓰다듬기 포인트 획득! +500')}
+  if(left<=0){left=10+Math.floor(Math.random()*11);addCoins(500);buzz([20,40,20]);coinFx('쓰다듬기 포인트 획득! +500')}
   try{localStorage.setItem(K,left)}catch(e){}
+}
+
+/* ================= motions from game (phone/PC) ================= */
+const MOTION_NAMES={roll:'구르기',lie:'뒹굴기',cute:'애교 부리기',angry:'화내기',stretch:'기지개 켜기',jump:'점프'};
+function openMotions(){
+  const c=activeCat();if(!c)return;
+  openSheet(`<h2>${esc(c.name)}에게 동작 시키기</h2><p class="lead">여기서 시키면 PC 바탕화면의 ${esc(c.name)}, 그리고 ${esc(c.name)}${eulReul(c.name).slice(-1)} 불러둔 친구들 바탕화면에서도 같이 해요.</p><div class="grid" style="grid-template-columns:repeat(3,1fr)">${Object.keys(MOTION_NAMES).map(k=>`<button class="btn ${k==='angry'?'ghost':'teal'}" data-a="hmotion" data-v="${k}">${MOTION_NAMES[k]}</button>`).join('')}</div>`);
+}
+async function homeMotion(k){
+  const c=activeCat();if(!c||!ACTS[k])return;const v=live(c);if(busy(v))return toast(busy(v));
+  closeSheet();S.view='home';render();
+  S.homeAct={k,until:now()+ACTS[k].ms};render();setTimeout(()=>{S.homeAct=null;render()},ACTS[k].ms+50);
+  say(pick(ACTS[k].lines));buzz(20);
+  Store.set('cats/'+c.id+'/act',{k,at:now(),dev:DEV});
+  catTx(c.id,c=>{bumpTr(c,k==='angry'?{anger:1}:{trick:1})});
 }
 
 /* ================= talk ================= */
@@ -1184,12 +1223,21 @@ async function talkUI(id,text){
 }
 
 /* ================= sheets ================= */
+function clearLayer(){$('#layer').innerHTML='';document.body.style.overflow=''}
 function openSheet(html){
-  closeSheet();
-  $('#layer').innerHTML=`<div class="backdrop" data-a="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
+  clearLayer();
+  $('#layer').innerHTML=`<div class="backdrop" data-a="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="grab" title="아래로 내리면 닫혀요"></div>${html}</div>`;
   document.body.style.overflow='hidden';
+  if(!PET&&!S.sheetHist){try{history.pushState({nyang:'sheet'},'');S.sheetHist=true}catch(e){}}
+  const sh=$('.sheet'),g=sh.querySelector('.grab');let y0=null,dy=0;
+  const start=e=>{if(e.target!==g&&sh.scrollTop>0)return;if(e.target!==g&&!e.target.closest('h2'))return;y0=e.clientY;dy=0;sh.style.transition='none'};
+  sh.addEventListener('pointerdown',start);
+  sh.addEventListener('pointermove',e=>{if(y0==null)return;dy=Math.max(0,e.clientY-y0);sh.style.transform=`translate(-50%,${dy}px)`});
+  const end=()=>{if(y0==null)return;y0=null;sh.style.transition='';if(dy>90)closeSheet();else sh.style.transform=''};
+  sh.addEventListener('pointerup',end);sh.addEventListener('pointercancel',end);
 }
-function closeSheet(){$('#layer').innerHTML='';document.body.style.overflow=''}
+function closeSheet(){clearLayer();if(S.sheetHist){S.sheetHist=false;try{history.back()}catch(e){}}}
+window.addEventListener('popstate',()=>{if(PET)return;if(S.sheetHist){S.sheetHist=false;clearLayer();return}if($('#layer .sheet')){clearLayer();return}if(S.screen==='app'&&S.view!=='home'){S.view='home';render()}});
 function openFood(){
   const inv=(me().inv)||{};
   const row=(id,name,desc,n)=>`<div class="item"><div class="thumb">${id==='kibble'?`<svg viewBox="0 0 100 100"><path d="M14 52h72a36 26 0 0 1-72 0z" fill="#8fc7e8" stroke="#5d9fc4" stroke-width="3"/>${[30,42,54,66,36,60,48].map((x,i)=>`<circle cx="${x}" cy="${i>3?44:48}" r="6" fill="#c9884a"/>`).join('')}</svg>`:itemPic(id)}</div><div class="tx"><b>${name}</b><span>${desc}</span></div><button class="btn small" data-a="feed" data-v="${id}" ${id!=='kibble'&&!n?'disabled':''}>${id==='kibble'?'주기':'주기 · '+(n||0)+'개'}</button></div>`;
@@ -1269,8 +1317,12 @@ function viewHome(){
   const bub=S.bubble&&S.bubble.until>t?S.bubble.t:line;
   const cdTxt=k=>c.cd[k]>t?`<small class="num">${Math.ceil((c.cd[k]-t)/MIN)}분</small>`:'';
   const dis=sleeping?'disabled':'';
-  return`${sw}<div class="scene">${roomScene(u)}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
-  <div class="catwrap" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div><div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div></div></div>
+  const coarse=matchMedia('(pointer:coarse)').matches,standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  let instHide=false;try{instHide=localStorage.getItem('nyang-inst-hide')==='1'}catch(e){}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const inst=!DK&&coarse&&!standalone&&!instHide?`<div class="panel row" style="padding:10px 12px;gap:10px;background:var(--gold-l);border-color:#f4dfa4"><span style="flex:1;min-width:0;font-size:.86rem">${ios?'공유 버튼 → <b>홈 화면에 추가</b>를 누르면 앱처럼 쓸 수 있어요.':'홈 화면에 추가하면 앱처럼 바로 열 수 있어요.'}</span>${S.installEvt?'<button class="btn small" data-a="install">추가</button>':''}<button class="btn small ghost" data-a="instdismiss">닫기</button></div>`:'';
+  return`${inst}${sw}<div class="scene">${roomScene(u)}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
+  <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div><div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div></div></div>
   <div class="panel stack"><div class="stats">${statBar('배부름',c.st.hunger,'var(--hunger)')}${statBar('기분',c.st.mood,'var(--mood)')}${statBar('청결',c.st.clean,'var(--clean)')}${statBar('기력',c.st.energy,'var(--energy)')}</div>
   <div class="meta"><div class="chips">${pers.map((p,i)=>`<span class="chip ${i?'':'pink'}">${p}</span>`).join('')}<span class="chip gold num">애정 ${Math.floor(c.aff)}</span><span class="chip gold num">인기도 ${c.pop||0}</span><span class="chip num">똑똑 ${Math.floor(c.smart)}</span><span class="chip num">튼튼 ${Math.floor(c.strong)}</span>${c.spouse&&S.cats[c.spouse]?`<span class="chip gold">${esc(title(S.cats[c.spouse]))}${waGwa(S.cats[c.spouse].name).slice(-1)} 결혼</span>`:''}</div>
   <div class="xp num">Lv.${c.lv}<div class="bar"><i style="width:${c.xp/need(c.lv)*100}%;background:var(--gold)"></i></div>${Math.floor(c.xp)}/${need(c.lv)}</div>
@@ -1284,7 +1336,7 @@ function viewHome(){
    <button class="act" data-a="bath" ${dis}><span class="ic" style="background:#e0f2fb;color:#3b95c4">${I.bath}</span>목욕</button>
    ${sleeping?`<button class="act" data-a="wake"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>깨우기<small class="num">${Math.round(c.st.energy)}%</small></button>`:`<button class="act" data-a="nap"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>낮잠</button>`}
    <button class="act" data-a="deco"><span class="ic" style="background:#fff3cf;color:#c58a10">${I.sparkle}</span>꾸미기</button>
-   <button class="act" data-a="go" data-v="cats"><span class="ic" style="background:var(--teal-l);color:var(--teal)">${I.paw}</span>내 고양이</button>
+   <button class="act" data-a="motions" ${dis}><span class="ic" style="background:var(--teal-l);color:var(--teal)">${I.paw}</span>동작 시키기</button>
   </div>`;
 }
 function viewShop(){
@@ -1466,7 +1518,7 @@ document.addEventListener('click',async e=>{
       if(!/^\d{4}$/.test(d.pin||'')){err.textContent='비밀번호는 숫자 4자리예요.';break}
       try{el.disabled=true;await register(d.owner,d.pin,d.name,d.look);S.view='home'}catch(x){err.textContent=String(x);el.disabled=false}break}
     case'cancelAdopt':S.screen='app';render();break;
-    case'go':closeSheet();S.view=v;window.scrollTo(0,0);render();break;
+    case'go':closeSheet();if(!PET&&S.view==='home'&&v!=='home'){try{history.pushState({nyang:'tab'},'')}catch(e){}}S.view=v;window.scrollTo(0,0);render();break;
     case'pet':pet(e);break;
     case'food':openFood();break;
     case'feed':feed(v);break;
@@ -1491,6 +1543,10 @@ document.addEventListener('click',async e=>{
     case'shoptab':S.tab.shop=v;render();break;
     case'buy':buy(v);break;
     case'card':openCatCard(v);break;
+    case'motions':openMotions();break;
+    case'hmotion':homeMotion(v);break;
+    case'awayok':closeSheet();break;
+    case'instdismiss':try{localStorage.setItem('nyang-inst-hide','1')}catch(e){}render();break;
     case'lnum':{S.lpick=S.lpick||[];const n=+v;if(S.lpick.includes(n))S.lpick=S.lpick.filter(x=>x!==n);else if(S.lpick.length<4)S.lpick.push(n);else toast('숫자는 4개까지 고를 수 있어요');render();break}
     case'lauto':{const a=[];while(a.length<4){const n=1+Math.floor(Math.random()*LOTTO_N);if(!a.includes(n))a.push(n)}S.lpick=a;render();break}
     case'lenter':await lottoEnter();break;
@@ -1498,7 +1554,7 @@ document.addEventListener('click',async e=>{
     case'flower':{const id2=el.dataset.id;await giveFlower(id2,v);setTimeout(()=>openCatCard(id2),250);break}
     case'dgift':{closeDeskMenu();const id2=el.dataset.id;await gift(id2,v);deskSay(id2,pick(v==='smelt'?['오독오독 열빙어!','열빙어 최고냥']:v==='cake'?['케이크?! 생일 아닌데!','달콤하다옹']:v==='fish'?['생선구이 냄새 최고냥','냠냠냠']:['츄르 최고냥!!','고마워옹']),3000);break}
     case'dflower':{closeDeskMenu();const id2=el.dataset.id;await giveFlower(id2,v);deskSay(id2,pick(['꽃이다냥! 고마워♡','향기 좋다옹','나 인기 많아지겠다냥']),3000);break}
-    case'dact':{closeDeskMenu();const s2=DS[el.dataset.id];if(!s2)break;if(s2.sleep){deskSay(el.dataset.id,'쿨... 쿨... (자는 중)',2000);break}deskDo(el.dataset.id,v);if(s2.mine)Store.set('cats/'+el.dataset.id+'/act',{k:v,at:now()});if(s2.mine&&S.cats[el.dataset.id])catTx(el.dataset.id,c=>{bumpTr(c,v==='angry'?{anger:1}:{trick:1})});break}
+    case'dact':{closeDeskMenu();const s2=DS[el.dataset.id];if(!s2)break;if(s2.sleep){deskSay(el.dataset.id,'쿨... 쿨... (자는 중)',2000);break}deskDo(el.dataset.id,v);if(s2.mine)Store.set('cats/'+el.dataset.id+'/act',{k:v,at:now(),dev:DEV});if(s2.mine&&S.cats[el.dataset.id])catTx(el.dataset.id,c=>{bumpTr(c,v==='angry'?{anger:1}:{trick:1})});break}
     case'talk':openTalk(v);break;
     case'tquick':talkUI(el.dataset.id,v);break;
     case'tsend':talkUI(el.dataset.id,($('#tin')||{}).value);break;
@@ -1647,9 +1703,9 @@ const deskLoadAt=now();let deskPlayStart=0,deskLastTouch=0,deskNag=0;
 function deskTouched(){const t=now();if(t-deskLastTouch>3*MIN)deskPlayStart=t;deskLastTouch=t;
   if(t-deskPlayStart>=20*MIN&&t-deskNag>=15*MIN){deskNag=t;const m=activeCat();if(m)setTimeout(()=>deskSay(m.id,pick(WORK_LINES),5000),800)}}
 function deskActSync(){
-  document.querySelectorAll('.dcat.friend').forEach(el=>{const id=el.dataset.v,c=S.cats[id];if(!c)return;
+  document.querySelectorAll('.dcat').forEach(el=>{const id=el.dataset.v,c=S.cats[id];if(!c)return;
     if(actSeen[id]===undefined){actSeen[id]=c.act?c.act.at:0;return}
-    if(!c.act)return;
+    if(!c.act||c.act.dev===DEV)return;
     if(c.act.at>actSeen[id]){actSeen[id]=c.act.at;if(now()-c.act.at<20000)setTimeout(()=>deskDo(id,c.act.k),50)}});
 }
 function deskChatter(){
