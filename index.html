@@ -1079,7 +1079,7 @@ async function friendPet(id){
   const t=S.cats[id];if(!t)return;const v=live(t);if(v.status==='runaway')return toast('지금은 가출 중이에요');
   await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.mood=clamp(c.st.mood+2);bumpTr(c,{pet:.5});return roundCat(c)});
   toast(`${v.name}${iGa(v.name).slice(-1)} 골골거려요 · 친밀도 +1`);
-  petBonus();
+  petBonus(10);
   addBond(id,1,true);
   if(!friendLogT[id]||now()-friendLogT[id]>10*MIN){friendLogT[id]=now();log(`${ownerName(S.me)}님이 ${title(v)}${eulReul(v.name).slice(-1)} 쓰다듬었어요.`)}
 }
@@ -1161,11 +1161,11 @@ function babySheet(id){
 let lastPtr={x:innerWidth/2,y:innerHeight/2};
 document.addEventListener('pointerdown',e=>{lastPtr={x:e.clientX,y:e.clientY}},true);
 function coinFx(text){const d=document.createElement('div');d.className='coinfx';d.style.left=lastPtr.x+'px';d.style.top=lastPtr.y+'px';d.innerHTML=`<i></i><b>${esc(text)}</b>`;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
-function petBonus(){
+function petBonus(amt=500){
   if(!PET)return;
   const K='nyang-petbonus-'+S.me;let left=0;try{left=+localStorage.getItem(K)||0}catch(e){}
   if(left<1||left>20)left=10+Math.floor(Math.random()*11);left--;
-  if(left<=0){left=10+Math.floor(Math.random()*11);addCoins(500);buzz([20,40,20]);coinFx('쓰다듬기 포인트 획득! +500')}
+  if(left<=0){left=10+Math.floor(Math.random()*11);addCoins(amt);buzz([20,40,20]);coinFx(`쓰다듬기 포인트 획득! +${amt}`)}
   try{localStorage.setItem(K,left)}catch(e){}
 }
 
