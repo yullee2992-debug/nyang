@@ -155,7 +155,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .price span i{width:14px;height:14px;border-radius:50%;background:var(--gold);display:inline-block;box-shadow:inset 0 0 0 2px #e3a227}
 
 /* plaza */
-.plaza{position:relative;border-radius:22px;overflow:hidden;width:100%;aspect-ratio:1/1;max-height:62vh;border:2px solid #fff}
+.plaza{position:relative;isolation:isolate;border-radius:22px;overflow:hidden;width:100%;aspect-ratio:1/1;max-height:62vh;border:2px solid #fff}
 .plaza>svg.bg{position:absolute;inset:0;width:100%;height:100%}
 .pcat{position:absolute;width:22%;max-width:120px;transform:translate(-50%,-100%);transition:left 3.5s linear,top 3.5s linear;cursor:pointer;text-align:center}
 .pcat .flip{transition:transform .3s}
@@ -1059,12 +1059,17 @@ async function friendPet(id){
   addBond(id,1,true);
   if(!friendLogT[id]||now()-friendLogT[id]>10*MIN){friendLogT[id]=now();log(`${ownerName(S.me)}님이 ${title(v)}${eulReul(v.name).slice(-1)} 쓰다듬었어요.`)}
 }
-async function gift(id){
-  const t=S.cats[id];if(!t)return;const v=live(t);if(v.status==='runaway')return toast('지금은 가출 중이에요');
-  if(!(await useItem('churu')))return toast('츄르가 없어요. 상점에서 살 수 있어요');
-  await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.hunger=clamp(c.st.hunger+10);c.st.mood=clamp(c.st.mood+20);c.neglect=0;return roundCat(c)});
-  await addCoins(15);addBond(id,5);log(`${ownerName(S.me)}님이 ${title(v)}에게 츄르를 선물했어요.`);toast('츄르를 선물했어요 · 우정 보너스 15코인');closeSheet();
+const GIFT_FOODS=['churu','smelt','fish','cake'];
+const GIFT_BOND={churu:5,smelt:5,fish:6,cake:8};
+async function gift(id,kind='churu'){
+  const t=S.cats[id];if(!t||!FOOD[kind])return;const v=live(t);if(v.status==='runaway')return toast('지금은 가출 중이에요');
+  const nm=ITEMS[kind].n;
+  if(!(await useItem(kind)))return toast(`${nm}${iGa(nm).slice(-1)} 없어요. 상점 '간식' 탭에서 살 수 있어요`);
+  const f=FOOD[kind];
+  await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.hunger=clamp(c.st.hunger+f.h);c.st.mood=clamp(c.st.mood+f.m);c.neglect=0;return roundCat(c)});
+  await addCoins(15);addBond(id,GIFT_BOND[kind]||5);log(`${ownerName(S.me)}님이 ${title(v)}에게 ${nm}${eulReul(nm).slice(-1)} 선물했어요.`);toast(`${nm}${eulReul(nm).slice(-1)} 선물했어요 · 친밀도 +${GIFT_BOND[kind]||5} · 우정 보너스 15코인`);closeSheet();
 }
+function giftButtons(id){const inv=(me()&&me().inv)||{};return GIFT_FOODS.map(k=>`<button class="btn small ${inv[k]?'':'ghost'}" data-a="gift" data-v="${id}" data-k="${k}" ${inv[k]?'':'disabled'}>${ITEMS[k].n} ${inv[k]||0}개</button>`).join('')}
 function proposeCheck(myC,t){
   const u=me();
   if(!myC)return'대표 고양이가 없어요';
@@ -1232,7 +1237,7 @@ function openCatCard(id){
   <div class="tx" style="flex:1;min-width:0"><h2>${esc(title(t))}</h2><p class="online">${on?'지금 접속 중':'마지막 접속 '+(ou.seen?ago(ou.seen):'-')}</p><div class="chips" style="margin-top:6px"><span class="chip">${STAGE[t.stage]} · Lv.${t.lv}</span>${personality(t).map(p=>`<span class="chip pink">${p}</span>`).join('')}${sp?`<span class="chip gold">${esc(sp.name)}${waGwa(sp.name).slice(-1)} 결혼</span>`:''}${t.status==='runaway'?'<span class="chip gray">가출 중</span>':''}</div></div></div>
   ${(()=>{const fl=t.flowers||{};const got=FLOWER_IDS.filter(f=>fl[f]).map(f=>`${ITEMS[f].n} ${fl[f]}`).join(' · ');return`<div class="row" style="margin-top:10px"><span class="chip gold num">인기도 ${t.pop||0}</span>${got?`<span class="grow">받은 꽃: ${got}</span>`:''}</div>`})()}
   ${mine?'':(()=>{const b=bondInfo(myBond(t));return`<div class="panel" style="margin-top:10px;padding:10px 12px"><div class="row" style="justify-content:space-between"><b style="font-family:var(--display);font-weight:400">나와의 친밀도 · ${b.name}</b><span style="color:var(--pink-d);letter-spacing:2px">${b.hearts}</span></div><div class="bar" style="margin:6px 0"><i style="width:${b.next?Math.min(100,b.pts/b.next*100):100}%;background:var(--pink)"></i></div><p class="grow" style="margin:0">${b.pts}점${b.next?` · ${b.next}점이 되면 '${b.nextName}'`:''} · 쓰다듬기 +1(하루 40까지), 말 걸기 +2, 츄르 +5, 꽃 +3</p><div class="row" style="margin-top:8px">${flowerButtons(id,'flower')}</div></div>`})()}
-  ${mine?`<p class="lead" style="margin-top:12px">내 대표 고양이예요. 친구들이 광장에서 이 아이를 만나요.</p>`:`<div class="row" style="margin-top:14px"><button class="btn teal" data-a="fpet" data-v="${id}">쓰다듬기</button><button class="btn teal" data-a="talk" data-v="${id}">말 걸기</button><button class="btn" data-a="gift" data-v="${id}">츄르 선물 · ${(u.inv||{}).churu||0}개</button><button class="btn ghost" data-a="propose" data-v="${id}" ${why?'aria-disabled="true"':''}>청혼하기</button></div>${why?`<p class="grow" style="margin-top:8px">청혼 조건: ${esc(why)}</p>`:''}`}`);
+  ${mine?`<p class="lead" style="margin-top:12px">내 대표 고양이예요. 친구들이 광장에서 이 아이를 만나요.</p>`:`<div class="row" style="margin-top:14px"><button class="btn teal" data-a="fpet" data-v="${id}">쓰다듬기</button><button class="btn teal" data-a="talk" data-v="${id}">말 걸기</button><button class="btn ghost" data-a="propose" data-v="${id}" ${why?'aria-disabled="true"':''}>청혼하기</button></div><div class="panel" style="margin-top:10px;padding:10px 12px"><b style="font-family:var(--display);font-weight:400">간식 선물</b> <span class="grow">츄르·열빙어 +5, 생선구이 +6, 케이크 +8 친밀도 · 우정 보너스 15코인</span><div class="row" style="margin-top:8px">${giftButtons(id)}</div></div>${why?`<p class="grow" style="margin-top:8px">청혼 조건: ${esc(why)}</p>`:''}`}`);
 }
 
 /* ================= views ================= */
@@ -1491,6 +1496,7 @@ document.addEventListener('click',async e=>{
     case'lenter':await lottoEnter();break;
     case'lclaim':await lottoClaim(v);break;
     case'flower':{const id2=el.dataset.id;await giveFlower(id2,v);setTimeout(()=>openCatCard(id2),250);break}
+    case'dgift':{closeDeskMenu();const id2=el.dataset.id;await gift(id2,v);deskSay(id2,pick(v==='smelt'?['오독오독 열빙어!','열빙어 최고냥']:v==='cake'?['케이크?! 생일 아닌데!','달콤하다옹']:v==='fish'?['생선구이 냄새 최고냥','냠냠냠']:['츄르 최고냥!!','고마워옹']),3000);break}
     case'dflower':{closeDeskMenu();const id2=el.dataset.id;await giveFlower(id2,v);deskSay(id2,pick(['꽃이다냥! 고마워♡','향기 좋다옹','나 인기 많아지겠다냥']),3000);break}
     case'dact':{closeDeskMenu();const s2=DS[el.dataset.id];if(!s2)break;if(s2.sleep){deskSay(el.dataset.id,'쿨... 쿨... (자는 중)',2000);break}deskDo(el.dataset.id,v);if(s2.mine)Store.set('cats/'+el.dataset.id+'/act',{k:v,at:now()});if(s2.mine&&S.cats[el.dataset.id])catTx(el.dataset.id,c=>{bumpTr(c,v==='angry'?{anger:1}:{trick:1})});break}
     case'talk':openTalk(v);break;
@@ -1498,7 +1504,7 @@ document.addEventListener('click',async e=>{
     case'tsend':talkUI(el.dataset.id,($('#tin')||{}).value);break;
     case'dtalk':{closeDeskMenu();const r=await talk(el.dataset.id,v);if(r==null)break;const m=activeCat();if(m)deskSay(m.id,v,2600);setTimeout(()=>deskSay(el.dataset.id,r,4500),1200);break}
     case'fpet':friendPet(v);break;
-    case'gift':gift(v);break;
+    case'gift':gift(v,el.dataset.k||'churu');break;
     case'propose':propose(v);break;
     case'accept':accept(v,S.me);break;
     case'decline':decline(v);break;
@@ -1691,7 +1697,7 @@ function openDeskMenu(id){
   if(s.guest)html=it('open','냥이마을 열기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.away)html=`<p>${esc(s.name)}${iGa(s.name).slice(-1)} 집을 나갔어요</p>`+it('open','찾으러 가기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.mine)html=`<p>${esc(s.name)}${s.sleep?' (자는 중)':''}</p>`+(s.sleep?it('wake','깨우기'):'')+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료')+it('play','놀아주기')+it('acts','동작 시키기')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
-  else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기',(()=>{const b=bondInfo(myBond(S.cats[id]));return b.name})())+it('talk','말 걸기')+it('flowers','꽃 선물')+it('gift','츄르 선물',(inv.churu||0)+'개')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
+  else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기',(()=>{const b=bondInfo(myBond(S.cats[id]));return b.name})())+it('talk','말 걸기')+it('flowers','꽃 선물')+it('foods','간식 선물')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
   const m=document.createElement('div');m.id='dmenu';m.innerHTML=html;document.body.appendChild(m);
   const w=el.offsetWidth,W=window.innerWidth;
   m.style.left=clamp(s.x+w/2-95,8,W-200)+'px';m.style.bottom=(s.y+el.offsetHeight*.75)+'px';
@@ -1736,6 +1742,9 @@ async function deskAction(a,id,e){
     case'gift':await gift(id);break;
     case'talk':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;
       const m=document.createElement('div');m.id='dmenu';m.innerHTML=`<p>${esc(s.name)}에게 뭐라고 할까요?</p>`+TALK_QUICK.map(q=>`<button data-a="dtalk" data-id="${id}" data-v="${esc(q)}">${esc(q)}</button>`).join('');
+      document.body.appendChild(m);m.style.left=clamp(s.x+el.offsetWidth/2-95,8,window.innerWidth-200)+'px';m.style.bottom=(s.y+el.offsetHeight*.75)+'px';deskMenu={id};setThrough();setFull(true);break}
+    case'foods':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;const inv=(me()&&me().inv)||{};
+      const m=document.createElement('div');m.id='dmenu';m.innerHTML=`<p>${esc(s.name)}에게 간식 선물</p>`+GIFT_FOODS.map(k=>`<button data-a="dgift" data-id="${id}" data-v="${k}" ${inv[k]?'':'disabled'}>${ITEMS[k].n}<small>${inv[k]||0}개</small></button>`).join('');
       document.body.appendChild(m);m.style.left=clamp(s.x+el.offsetWidth/2-95,8,window.innerWidth-200)+'px';m.style.bottom=(s.y+el.offsetHeight*.75)+'px';deskMenu={id};setThrough();setFull(true);break}
     case'acts':case'flowers':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;
       const NAMES={roll:'구르기',lie:'뒹굴기',cute:'애교 부리기',angry:'화내기',stretch:'기지개 켜기',jump:'점프'};
