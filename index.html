@@ -1133,9 +1133,10 @@ let lastPtr={x:innerWidth/2,y:innerHeight/2};
 document.addEventListener('pointerdown',e=>{lastPtr={x:e.clientX,y:e.clientY}},true);
 function coinFx(text){const d=document.createElement('div');d.className='coinfx';d.style.left=lastPtr.x+'px';d.style.top=lastPtr.y+'px';d.innerHTML=`<i></i><b>${esc(text)}</b>`;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
 function petBonus(){
+  if(!PET)return;
   const K='nyang-petbonus-'+S.me;let left=0;try{left=+localStorage.getItem(K)||0}catch(e){}
-  if(left<1)left=5+Math.floor(Math.random()*6);left--;
-  if(left<=0){left=5+Math.floor(Math.random()*6);addCoins(500);coinFx('쓰다듬기 포인트 획득! +500')}
+  if(left<1||left>20)left=10+Math.floor(Math.random()*11);left--;
+  if(left<=0){left=10+Math.floor(Math.random()*11);addCoins(500);coinFx('쓰다듬기 포인트 획득! +500')}
   try{localStorage.setItem(K,left)}catch(e){}
 }
 
