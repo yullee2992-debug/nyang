@@ -331,6 +331,38 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 .dcat .prop.bowl svg{display:block;width:100%;height:auto}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (min-width:640px){.actions{gap:10px}}
+/* christmas */
+.snowfx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:300}
+.snowfx i{position:absolute;top:-12px;border-radius:50%;background:#fff;box-shadow:0 0 4px rgba(140,165,200,.7);animation:snowf linear infinite}
+@keyframes snowf{0%{transform:translate(0,0)}50%{transform:translate(14px,260px)}100%{transform:translate(-6px,520px)}}
+.xbanner{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#e8f6ee,#fdeaea);border:1.5px solid #cfe6d8;border-radius:16px;padding:10px 14px;margin:0 0 10px;font-size:.9rem}
+.xbanner b{font-family:var(--display);font-weight:400;color:#c0392b;font-size:1.05rem}
+.xbox{position:absolute;width:13%;max-width:58px;transform:translate(-50%,-80%);background:none;border:0;padding:0;cursor:pointer;animation:xwig 2.2s ease-in-out infinite}
+.xbox svg{width:100%;display:block;filter:drop-shadow(0 3px 3px rgba(59,51,70,.25))}
+@keyframes xwig{0%,80%,100%{transform:translate(-50%,-80%) rotate(0)}85%{transform:translate(-50%,-84%) rotate(-8deg)}90%{transform:translate(-50%,-84%) rotate(8deg)}95%{transform:translate(-50%,-80%) rotate(-4deg)}}
+.mphop{animation:mphop 1.5s ease-in-out infinite}@keyframes mphop{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.mpglow{animation:mpg 1.6s ease-in-out infinite}@keyframes mpg{50%{opacity:.65}}
+/* celebration */
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+.confetti i{position:absolute;top:-14px;width:8px;height:12px;border-radius:2px;animation:conf linear infinite}
+@keyframes conf{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(560px) rotate(540deg)}}
+.celebc{position:relative;text-align:center;padding:4px 0 2px}
+.celebc h2{font-size:1.7rem;color:var(--pink-d);margin:4px 0}
+.celebc .cats{display:flex;justify-content:center;align-items:flex-end;gap:4px;margin:6px auto 8px;max-width:300px}
+.celebc .cats>div{width:46%}
+/* fishing */
+.pond{position:relative;border-radius:18px;overflow:hidden;background:#cfe9f7;aspect-ratio:16/10}
+.pond>svg{position:absolute;inset:0;width:100%;height:100%}
+.pond .fcat{position:absolute;left:2%;bottom:30%;width:27%}
+.fmsg{position:absolute;left:50%;top:10%;transform:translateX(-50%);background:#fff;border-radius:14px;padding:6px 12px;font-family:var(--display);font-size:1.05rem;box-shadow:0 2px 8px rgba(59,51,70,.15);white-space:nowrap}
+.fmsg:empty{display:none}
+#bob{transition:transform .25s}
+#bob.float{animation:bobf 1.8s ease-in-out infinite}
+#bob.nib{animation:bobn .35s ease-in-out 2}
+#bob.bite{transform:translateY(9px)}
+@keyframes bobf{50%{transform:translateY(2px)}}
+@keyframes bobn{25%{transform:translate(-2px,3px)}75%{transform:translate(2px,1px)}}
+.fbite{position:absolute;font-family:var(--display);font-size:2.2rem;color:#e2453c;transform:translate(-50%,-100%);animation:pop .25s}
 </style>
 </head>
 <body>
@@ -496,6 +528,7 @@ const ITEMS={
   gold:{n:'황금 오라',t:'aura',p:3000,s:10,d:'마을 최고 부자 냥'},
   fireworks:{n:'불꽃놀이',t:'aura',p:3500,s:15,d:'펑펑! 마을 최고의 축제'},
   clover:{n:'네잎클로버 오라',t:'aura',p:0,ex:true,d:'출석 28일 기념 한정'},
+  rudolph:{n:'루돌프 미니펫',t:'mpet',p:0,ex:true,d:'12월 크리스마스 이벤트 한정 · 고양이 옆에서 깡총깡총'},
   tee:{n:'하트 티셔츠',t:'body',p:200,d:'편한 하루'},
   apron:{n:'앞치마',t:'body',p:240,d:'오늘의 요리사'},
   stripe:{n:'줄무늬 니트',t:'body',p:260,d:'포근한 가을'},
@@ -781,8 +814,19 @@ ${L.blush!==false?both(`<ellipse cx="66" cy="110" rx="9" ry="5" fill="#ff9fb3" o
 <path d="M100,112 Q96,118 91,115 M100,112 Q104,118 109,115" stroke="${ink}" stroke-width="2.2" fill="none" stroke-linecap="round"/>
 ${both(`<path d="M58,106 L36,102 M58,112 L37,115" stroke="${ink}" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>`)}
 ${eq.neck&&necks[eq.neck]||''}${eq.face&&faces[eq.face]||''}${eq.hat&&hats[eq.hat]||''}${expr==='sick'?`<path d="M82,58 v10 M91,56 v12 M100,55 v12 M109,56 v12 M118,58 v10" stroke="#7fb3e8" stroke-width="2.5" opacity=".75" stroke-linecap="round"/><g transform="rotate(22 106 114)"><rect x="104" y="111" width="30" height="6" rx="3" fill="#fff" stroke="#9aa7bd" stroke-width="1.5"/><circle cx="134" cy="114" r="4.5" fill="#e2453c"/></g>`:''}
-</g>${eq.aura&&AF[eq.aura]||''}</svg>`;
+</g>${eq.aura&&AF[eq.aura]||''}${eq.mpet==='rudolph'&&!o.nompet?rudolphSVG(o.still):''}</svg>`;
 }
+function rudolphSVG(still){return`<g transform="translate(170,186)"><g${still?'':' class="mphop"'}>
+<path d="M-10,6 v11 M-3,7 v11 M6,7 v11 M12,6 v11" stroke="#6e4224" stroke-width="3.4" stroke-linecap="round"/>
+<circle cx="-17" cy="-3" r="3.6" fill="#fff4e0" stroke="#6e4224" stroke-width="1.2"/>
+<ellipse cx="0" cy="2" rx="17" ry="11" fill="#a86b3c" stroke="#6e4224" stroke-width="2"/><ellipse cx="3" cy="6" rx="9" ry="4.5" fill="#e8c9a0"/>
+<path d="M7,-19 Q2,-31 -4,-33 M4,-26 L-2,-25 M16,-19 Q20,-31 26,-33 M19,-26 L25,-24" stroke="#c9884a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<ellipse cx="3" cy="-16" rx="4.5" ry="2.4" fill="#a86b3c" stroke="#6e4224" stroke-width="1.4" transform="rotate(-25 3 -16)"/>
+<circle cx="12" cy="-11" r="10" fill="#a86b3c" stroke="#6e4224" stroke-width="2"/>
+<path d="M3,-3 Q12,1 20,-2" stroke="#2f9e6e" stroke-width="3.2" fill="none" stroke-linecap="round"/><circle cx="12" cy="0" r="2" fill="#ffd43b"/>
+<circle cx="14" cy="-13" r="1.9" fill="#3b3346"/>
+<circle cx="21" cy="-8" r="7.5" fill="#ff5050" opacity=".25" class="mpglow"/><circle cx="21" cy="-8" r="4.2" fill="#ff3b3b" stroke="#c42020" stroke-width="1"/><circle cx="19.8" cy="-9.5" r="1.3" fill="#fff" opacity=".85"/>
+</g></g>`}
 
 /* ================= icons ================= */
 const ic=(d,extra='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d.startsWith('<')?d:`<path d="${d}"/>`}${extra}</svg>`;
@@ -987,7 +1031,7 @@ function logout(){S.subs.forEach(f=>f());S.subs=[];S.me=null;S.session=null;try{
 /* ================= actions ================= */
 async function catTx(id,fn){
   let res=null;
-  const r=await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());res={};const out=fn(c,res);if(out===false){return}const nt=ptypeOf(c);if(nt!==c.ptype){if(c.ptype)res.pchange=nt;c.ptype=nt}const g=tryGrow(c);if(g)res.grew=g;return roundCat(c)});
+  const r=await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());res={};const out=fn(c,res);if(out===false){return}const nt=ptypeOf(c);if(nt!==c.ptype){if(c.ptype)res.pchange=nt;c.ptype=nt}const g=tryGrow(c);if(g){res.grew=g;c.celebs=c.celebs||{};c.celebs[c.stage]={k:c.stage,at:now()}}return roundCat(c)});
   if(!r.committed||!res)return res&&res.msg?(toast(res.msg),null):null;
   if(res.coins)await addCoins(res.coins);
   if(res.grew){const c=S.cats[id]||r.value;toast(`${c.name}${iGa(c.name).slice(-1)} ${josa(res.grew,'으로','로')} 자랐어요!`,3200);log(`${title(r.value)}${iGa(r.value.name).slice(-1)} ${josa(res.grew,'으로','로')} 자랐어요!`)}
@@ -1274,7 +1318,7 @@ async function accept(pid,asOwner){
   const r=await Store.tx('users/'+p.fromOwner+'/inv/ring',v=>{if((v||0)<1)return;return v-1});
   if(!r.committed){await Store.set('proposals/'+pid+'/status','expired');return toast('청혼한 쪽 결혼반지가 없어서 결혼할 수 없어요')}
   const t=now();
-  await Store.update({[`cats/${a.id}/spouse`]:b.id,[`cats/${b.id}/spouse`]:a.id,[`cats/${a.id}/marriedAt`]:t,[`cats/${b.id}/marriedAt`]:t,[`proposals/${pid}/status`]:'accepted'});
+  await Store.update({[`cats/${a.id}/spouse`]:b.id,[`cats/${b.id}/spouse`]:a.id,[`cats/${a.id}/marriedAt`]:t,[`cats/${b.id}/marriedAt`]:t,[`cats/${a.id}/celebs/wed`]:{k:'wed',at:t,with:b.id},[`proposals/${pid}/status`]:'accepted'});
   await Store.push('feed',{at:t,text:`${title(a)}${waGwa(a.name).slice(-1)} ${title(b)}${iGa(b.name).slice(-1)} 결혼했어요! 축하해 주세요`,by:asOwner||S.me});
   if(p.fromOwner===S.me||p.toOwner===S.me)toast(`${a.name}${waGwa(a.name).slice(-1)} ${b.name}${iGa(b.name).slice(-1)} 결혼했어요!`,3200);
 }
@@ -1445,19 +1489,163 @@ const RANKG={match:{n:'카드 짝 맞추기',better:(a,b)=>!b||a.moves<b.moves||
 async function saveBest(g,rec){
   rec.at=now();let improved=false;
   await Store.tx('users/'+S.me+'/best/'+g,cur=>{if(RANKG[g].better(rec,cur)){improved=true;return rec}improved=false;return});
+  const wk=weekKey(),prev=weekKey(now()-7*DAY);
+  await Store.tx('users/'+S.me+'/wb',W=>{W=W||{};for(const k of Object.keys(W))if(k!==wk&&k!==prev)delete W[k];W[wk]=W[wk]||{};if(RANKG[g].better(rec,W[wk][g]))W[wk][g]=Object.assign({},rec);return W});
   return improved;
 }
-function rankList(g){return Object.entries(S.users).filter(([k,u])=>u&&u.best&&u.best[g]).map(([k,u])=>({k,name:u.name,r:u.best[g]})).sort((a,b)=>RANKG[g].cmp(a.r,b.r))}
+function rankList(g,wk){return Object.entries(S.users).map(([k,u])=>({k,name:u&&u.name,r:u&&(wk?(u.wb&&u.wb[wk]&&u.wb[wk][g]):(u.best&&u.best[g]))})).filter(x=>x.r).sort((a,b)=>RANKG[g].cmp(a.r,b.r))}
+const WRREW=[{c:300,s:2},{c:200,s:1},{c:100,s:0}];
+const rewTxt=R=>`${R.c}코인${R.s?' ⭐'+R.s:''}`;
+async function wrClaim(){
+  const u=me();if(!u||PET||S.screen!=='app'||$('#layer').innerHTML)return;const prev=weekKey(now()-7*DAY);
+  for(const g of Object.keys(RANKG)){
+    const key=prev+'_'+g;if((u.wrc||{})[key])continue;
+    const L=rankList(g,prev),i=L.findIndex(x=>x.k===S.me);if(i<0||i>2)continue;
+    const R=WRREW[i];let ok=false;
+    await Store.tx('users/'+S.me,x=>{if(!x)return x;x.wrc=x.wrc||{};if(x.wrc[key]){ok=false;return}x.wrc[key]=1;x.coins=(x.coins||0)+R.c;x.stars=(x.stars||0)+R.s;ok=true;return x});
+    if(ok){log(`지난주 ${RANKG[g].n} 랭킹 ${i+1}위는 ${ownerName(S.me)}님이에요! 축하해요`);
+      openSheet(`<div class="celebc"><div class="confetti">${confettiHTML()}</div><h2>주간 랭킹 ${i+1}위!</h2><p class="lead">지난주 <b>${RANKG[g].n}</b>에서 ${L.length}명 중 <b>${i+1}위</b>를 했어요.<br>기록 ${RANKG[g].fmt(L[i].r)}</p><div class="panel" style="background:var(--gold-l);border-color:#f3dfa0;margin:10px 0"><b>보상 ${rewTxt(R)}</b></div><button class="btn block" data-a="close">고마워요!</button></div>`);
+      return;}
+  }
+}
 function rankLine(g,improved){
-  setTimeout(()=>{const el=$('#rkline');if(!el)return;const L=rankList(g),i=L.findIndex(x=>x.k===S.me);if(i<0)return;el.innerHTML=`${improved?'<b style="color:var(--pink-d)">새 최고 기록!</b> ':''}내 최고 ${RANKG[g].fmt(L[i].r)} · 마을 <b>${i+1}위</b> / ${L.length}명 <button class="btn small ghost" data-a="rank" data-v="${g}">랭킹 보기</button>`},400);
+  setTimeout(()=>{const el=$('#rkline');if(!el)return;const L=rankList(g),i=L.findIndex(x=>x.k===S.me);if(i<0)return;const W=rankList(g,weekKey()),j=W.findIndex(x=>x.k===S.me);el.innerHTML=`${improved?'<b style="color:var(--pink-d)">새 최고 기록!</b> ':''}${j>=0?`이번 주 <b>${j+1}위</b> (${RANKG[g].fmt(W[j].r)}) · `:''}역대 ${i+1}위 / ${L.length}명 <button class="btn small ghost" data-a="rank" data-v="${g}">랭킹 보기</button>`},400);
   return`<p class="grow" id="rkline" style="margin-top:6px">기록 저장 중...</p>`;
 }
-function openRank(g){
-  const L=rankList(g);const col=['#e0a72a','#9aa7bd','#c97f2a'];
-  openSheet(`<h2>${RANKG[g].n} 랭킹</h2><p class="lead">${g==='match'?'적은 횟수로 6쌍을 찾을수록, 같으면 더 빠를수록 위예요.':'더 높은 단계까지 기억할수록 위예요.'} 마을 모든 친구의 최고 기록이에요.</p>
+function openRank(g,mode){
+  mode=mode||S.rkMode||'week';S.rkMode=mode;
+  const wk=weekKey(),L=rankList(g,mode==='week'?wk:null);const col=['#e0a72a','#9aa7bd','#c97f2a'];
+  const P=rankList(g,weekKey(now()-7*DAY)).slice(0,3);
+  const left=Date.parse(wk+'T00:00:00+09:00')+7*DAY-now();
+  openSheet(`<h2>${RANKG[g].n} 랭킹</h2><p class="lead">${g==='match'?'적은 횟수로 6쌍을 찾을수록, 같으면 더 빠를수록 위예요.':'더 높은 단계까지 기억할수록 위예요.'}</p>
+  <div class="tabs" style="margin-bottom:10px"><button class="${mode==='week'?'on':''}" data-a="rank" data-v="${g}" data-k="week">이번 주</button><button class="${mode==='all'?'on':''}" data-a="rank" data-v="${g}" data-k="all">역대 최고</button></div>
+  ${mode==='week'?`<div class="panel" style="background:var(--gold-l);border-color:#f3dfa0;margin-bottom:10px;font-size:.88rem"><b>주간 보상</b> · 월요일 0시 마감 (${dur(left)} 남음)<br>1위 ${rewTxt(WRREW[0])} · 2위 ${rewTxt(WRREW[1])} · 3위 ${rewTxt(WRREW[2])}<br><span class="grow">다음 주에 접속하면 자동으로 받아요.</span>${P.length?`<br><span class="grow">지난주: ${P.map((x,i)=>`${i+1}위 ${esc(x.name)}`).join(' · ')}</span>`:''}</div>`:''}
   ${L.length?`<div class="list">${L.slice(0,20).map((x,i)=>`<div class="item" style="${x.k===S.me?'background:var(--pink-l);border-color:#ffc4d4':''}"><b class="num" style="font-family:var(--display);font-weight:400;font-size:1.2rem;width:30px;text-align:center;color:${col[i]||'var(--muted)'}">${i+1}</b><div class="tx"><b>${esc(x.name)}${x.k===S.me?' (나)':''}</b><span>${ago(x.r.at)}</span></div><span class="chip ${i<3?'gold':''} num">${RANKG[g].fmt(x.r)}</span></div>`).join('')}</div>`:'<div class="empty">아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!</div>'}
   <button class="btn ghost block" style="margin-top:12px" data-a="train">교육으로 돌아가기</button>`);
 }
+
+/* ================= celebrations ================= */
+function confettiHTML(n=34){const C=['#ff8fab','#ffd166','#7fd1c0','#8cc4f0','#c3a6ff','#ff6b6b'];return Array.from({length:n},(_,i)=>`<i style="left:${(i*29+7)%100}%;background:${C[i%C.length]};animation-duration:${2.6+(i%5)*.5}s;animation-delay:${-((i*.37)%3)}s"></i>`).join('')}
+const CELEB={junior:{t:'청소년냥이 되었어요!',d:'아기 티를 벗고 조금 의젓해졌어요.',rew:{c:150,it:'churu',n:2}},adult:{t:'어른냥이 되었어요!',d:'다 자란 어른냥이에요. 그동안 잘 키워줘서 고마워요.',rew:{c:300,it:'cake',n:1}},wed:{t:'결혼했어요!',d:'두 고양이가 부부가 되었어요. 오래오래 행복하자!',rew:{c:200,it:'cake',n:1}}};
+function celebList(){const out=[];for(const c of Object.values(S.cats)){if(!c||!c.celebs)continue;for(const [k,e] of Object.entries(c.celebs))if(e&&e.at>now()-3*DAY)out.push({cat:c,k,e})}return out.sort((a,b)=>b.e.at-a.e.at)}
+function celebText(x){const c=x.cat;if(x.k==='wed'){const b=S.cats[x.e.with];return`${title(c)}${waGwa(c.name).slice(-1)} ${b?title(b):''}${b?iGa(b.name).slice(-1):''} 결혼했어요!`}return`${title(c)}${iGa(c.name).slice(-1)} ${CELEB[x.k].t}`}
+const celebMine=x=>x.cat.owner===S.me||(x.k==='wed'&&S.cats[x.e.with]&&S.cats[x.e.with].owner===S.me);
+function celebCats(x){const b=x.k==='wed'&&S.cats[x.e.with];return b?`<div>${catSVG(live(x.cat),{still:true,expr:'happy'})}</div><div>${catSVG(live(b),{still:true,expr:'happy'})}</div>`:`<div style="width:62%">${catSVG(live(x.cat),{expr:'happy'})}</div>`}
+async function celebPop(){
+  if(PET||S.screen!=='app'||$('#layer').innerHTML||S.celebBusy)return;const u=me();if(!u)return;
+  const x=celebList().find(x=>celebMine(x)&&!(u.celebGot||{})[x.cat.id+'_'+x.k]);if(!x)return;
+  const R=CELEB[x.k].rew;
+  openSheet(`<div class="celebc"><div class="confetti">${confettiHTML()}</div><h2>축하해요!</h2><div class="cats">${celebCats(x)}</div><p style="font-family:var(--display);font-size:1.15rem;margin:0">${esc(celebText(x))}</p><p class="lead">${CELEB[x.k].d}<br>마을 친구들도 '소식'에서 축하해 줄 수 있어요.</p><div class="panel" style="background:var(--gold-l);border-color:#f3dfa0;margin:10px 0"><b>축하 선물 ${R.c}코인 + ${ITEMS[R.it].n} ${R.n}개</b></div><button class="btn block" data-a="celebgot" data-v="${x.cat.id}" data-k="${x.k}">선물 받기</button></div>`);
+}
+async function celebGot(id,k){
+  const key=id+'_'+k,R=CELEB[k].rew;let ok=false;S.celebBusy=1;
+  await Store.tx('users/'+S.me,u=>{if(!u)return u;u.celebGot=u.celebGot||{};if(u.celebGot[key]){ok=false;return}u.celebGot[key]=now();u.coins=(u.coins||0)+R.c;u.inv=u.inv||{};u.inv[R.it]=(u.inv[R.it]||0)+R.n;ok=true;return u});
+  closeSheet();if(ok)toast(`${R.c}코인과 ${ITEMS[R.it].n} ${R.n}개를 받았어요!`);setTimeout(()=>S.celebBusy=0,1500);
+}
+async function cheer(id,k){
+  let ok=false;const c=S.cats[id];if(!c)return;
+  await Store.tx(`cats/${id}/celebs/${k}/cheers/${S.me}`,v=>{if(v){ok=false;return}ok=true;return now()});
+  if(ok){await addCoins(10);addBond(id,1);toast('축하를 보냈어요! +10코인')}
+}
+function celebNews(){
+  const L=celebList();if(!L.length)return'';
+  return`<div class="sect">축하해 주세요</div><div class="list">${L.map(x=>{const ch=Object.keys(x.e.cheers||{});const mine=celebMine(x);const did=ch.includes(S.me);
+    return`<div class="item" style="background:#fff7e8;border-color:#f6e0b0"><div class="thumb" style="width:52px;height:52px;flex-basis:52px">${catSVG(live(x.cat),{still:true,expr:'happy'})}</div><div class="tx"><b>${esc(celebText(x))}</b><span>${ago(x.e.at)} · 축하 ${ch.length}개${mine&&ch.length?' · '+ch.slice(0,4).map(k=>esc(ownerName(k))).join(', '):''}</span></div>${mine?'<span class="chip gold">우리 냥이</span>':did?'<span class="chip gray">축하했어요</span>':`<button class="btn small" data-a="cheer" data-v="${x.cat.id}" data-k="${x.k}">축하하기</button>`}</div>`}).join('')}</div>`;
+}
+setInterval(()=>{celebPop();wrClaim()},5000);
+
+/* ================= christmas ================= */
+const isXmas=()=>{try{if(localStorage.getItem('nyang-xmas')==='1')return true}catch(e){}return new Date(now()+9*HOUR).getUTCMonth()===11};
+const XBOX_HRS=[0,12,18],XMAS_GOAL=12;
+const GIFT_SVG=(c1='#e2453c',c2='#2f9e6e')=>`<svg viewBox="0 0 60 60"><rect x="8" y="24" width="44" height="30" rx="4" fill="${c1}" stroke="#8c2a22" stroke-width="2"/><rect x="5" y="16" width="50" height="11" rx="3" fill="${c1}" stroke="#8c2a22" stroke-width="2"/><rect x="26" y="16" width="8" height="38" fill="#ffd43b"/><path d="M30 16 C20 2 10 10 18 16 M30 16 C40 2 50 10 42 16" stroke="${c2}" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`;
+function xmasState(u){u=u||me()||{};const D=kstDay(),x=u.xmas||{};return{D,n:x.n||0,got:x.d===D?(x.got||{}):{}}}
+function xboxes(){
+  if(!isXmas()||!me())return[];const st=xmasState(),h=new Date(now()+9*HOUR).getUTCHours();
+  return XBOX_HRS.map((hr,i)=>{const r=seeded(strHash(S.me+st.D+'box'+i));return{i,hr,open:h>=hr,got:!!st.got[i],x:12+r()*76,y:62+r()*30}});
+}
+function snowHTML(n=30){return`<div class="snowfx" aria-hidden="true">${Array.from({length:n},(_,i)=>{const z=3+i%4;return`<i style="left:${(i*37+11)%100}%;width:${z}px;height:${z}px;opacity:${.6+(i%3)*.15};animation-duration:${7+(i%6)}s;animation-delay:${-((i*.83)%9)}s"></i>`}).join('')}</div>`}
+async function openXbox(i){
+  const b=xboxes()[i];if(!b||!b.open||b.got)return;const D=kstDay();
+  const r=seeded(strHash('xr'+S.me+D+i))();
+  const rew=r<.4?{c:30+Math.floor(r*75)}:r<.65?{it:'churu',n:1}:r<.85?{it:'kibble',n:3}:{it:'smelt',n:2};
+  let total=0,rud=false;
+  const res=await Store.tx('users/'+S.me,u=>{if(!u)return u;const o=u.xmas||{};const x={d:D,got:o.d===D?Object.assign({},o.got||{}):{},n:o.n||0};if(x.got[i])return;x.got[i]=1;x.n++;total=x.n;u.xmas=x;
+    if(rew.c)u.coins=(u.coins||0)+rew.c;else{u.inv=u.inv||{};u.inv[rew.it]=(u.inv[rew.it]||0)+rew.n}
+    rud=false;if(x.n>=XMAS_GOAL&&!(u.inv&&u.inv.rudolph)){u.inv=u.inv||{};u.inv.rudolph=1;rud=true}return u});
+  if(!res.committed)return;
+  if(rud)log(`${ownerName(S.me)}님이 선물상자 ${XMAS_GOAL}개를 모아 루돌프 미니펫을 받았어요!`);
+  const c=activeCat();
+  openSheet(`<div class="celebc">${rud?`<div class="confetti">${confettiHTML()}</div>`:''}<div style="width:90px;margin:0 auto">${GIFT_SVG()}</div><h2>${rud?'루돌프가 왔어요!':'선물상자를 찾았어요!'}</h2><p class="lead">${rew.c?`<b>${rew.c}코인</b>이 들어 있었어요.`:`<b>${ITEMS[rew.it].n} ${rew.n}개</b>가 들어 있었어요.`}<br>모은 선물상자 ${Math.min(total,XMAS_GOAL)} / ${XMAS_GOAL}${total>XMAS_GOAL?` (총 ${total}개)`:''}</p>
+  ${rud&&c?`<div style="width:62%;margin:0 auto">${catSVG(Object.assign({},live(c),{eq:Object.assign({},c.eq,{mpet:'rudolph'})}))}</div><p class="lead">루돌프 미니펫을 받았어요! '꾸미기 → 미니펫'에서 데리고 다닐 수 있어요.</p>`:total<XMAS_GOAL?`<div class="bar" style="height:9px;margin:4px 0 12px"><i style="width:${total/XMAS_GOAL*100}%;background:#e2453c"></i></div><p class="grow">${XMAS_GOAL}개를 모으면 루돌프 미니펫을 받아요.</p>`:''}
+  <button class="btn block" data-a="close">${rud?'고마워 루돌프!':'좋아요'}</button></div>`);
+}
+function viewXmas(){
+  const st=xmasState(),B=xboxes(),own=((me().inv||{}).rudolph);const c=activeCat();
+  return`<div class="panel stack" style="position:relative;overflow:hidden;background:linear-gradient(180deg,#eaf4fb,#fff)">${snowHTML(18)}<h2 style="color:#c0392b">메리 크리스마스!</h2><p class="lead" style="margin:0">12월 한 달 동안 광장에 <b>선물상자</b>가 숨어 있어요. 하루 3개 (0시 · 12시 · 18시에 하나씩) 나타나고, 친구마다 위치가 달라요.</p>
+  <div class="row" style="align-items:flex-end;gap:12px"><div style="width:40%">${c?catSVG(Object.assign({},live(c),{eq:Object.assign({},c.eq,{mpet:'rudolph'})})):''}</div><div style="flex:1"><b style="font-family:var(--display);font-weight:400;font-size:1.1rem">루돌프 미니펫</b><p class="grow" style="margin:2px 0 6px">선물상자 ${XMAS_GOAL}개를 모으면 받는 12월 한정 미니펫</p><div class="bar" style="height:9px"><i style="width:${Math.min(100,st.n/XMAS_GOAL*100)}%;background:#e2453c"></i></div><p class="num" style="margin:4px 0 0">${own?'<b style="color:#2f9e6e">받았어요!</b> 꾸미기 → 미니펫':`${st.n} / ${XMAS_GOAL}`}</p></div></div></div>
+  <div class="sect">오늘의 선물상자</div><div class="list">${B.map(b=>`<div class="item"><div class="thumb" style="width:44px;height:44px;flex-basis:44px;${b.got?'opacity:.4':''}">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</div><div class="tx"><b>${b.hr}시 선물상자</b><span>${b.got?'찾았어요':b.open?'광장 어딘가에 있어요':b.hr+'시에 나타나요'}</span></div>${b.got?'<span class="chip gray">완료</span>':b.open?'<button class="btn small" data-a="go" data-v="plaza">찾으러 가기</button>':'<span class="chip">대기</span>'}</div>`).join('')}</div>
+  <p class="grow" style="margin-top:10px">광장에는 12월 내내 눈이 내려요.</p>`;
+}
+
+/* ================= fishing ================= */
+const FISH=[{k:'smelt',n:'열빙어',p:.42,win:1000,sz:[12,22],it:'smelt'},{k:'fish',n:'고등어',p:.27,win:850,sz:[25,45],it:'fish'},{k:'shell',n:'반짝 조개',p:.1,win:900,sz:[5,9],c:30},{k:'boot',n:'낡은 장화',p:.14,win:1100,sz:[24,28],c:5},{k:'gold',n:'황금 잉어',p:.07,win:600,sz:[40,70],c:150}];
+const FISH_N=5,FISH_REST=10*MIN;
+function fishPic(k){return{smelt:itemPic('smelt'),fish:itemPic('fish'),
+  shell:`<svg viewBox="0 0 100 100"><path d="M50 22 L20 70 Q50 86 80 70 Z" fill="#ffd9e3" stroke="#e48aa6" stroke-width="3" stroke-linejoin="round"/><path d="M50 22 L34 74 M50 22 L50 78 M50 22 L66 74" stroke="#e48aa6" stroke-width="2.5"/><circle cx="64" cy="40" r="4" fill="#fff"/></svg>`,
+  boot:`<svg viewBox="0 0 100 100"><path d="M34 18 h26 v44 l22 8 v14 H30 Z" fill="#8a7a6a" stroke="#5a4c3e" stroke-width="3" stroke-linejoin="round"/><path d="M34 30 h26" stroke="#5a4c3e" stroke-width="3"/><path d="M70 84 q4 -8 8 -6" stroke="#6fa8c9" stroke-width="3" fill="none"/></svg>`,
+  gold:`<svg viewBox="0 0 100 100"><path d="M14 50 Q40 22 72 44 L88 30 L86 70 L72 56 Q40 78 14 50Z" fill="#ffc83d" stroke="#d99a1e" stroke-width="3" stroke-linejoin="round"/><circle cx="28" cy="46" r="3.5" fill="#3b3346"/><path d="M44 40 q6 10 0 20 M54 40 q6 10 0 20" stroke="#e6a92a" stroke-width="2.5" fill="none"/></svg>`}[k]}
+function fishLeft(u){const f=(u||me()||{}).fish||{};if(f.until>now())return 0;if(f.until&&f.until<=now())return FISH_N;return f.left==null?FISH_N:f.left}
+function viewFishTab(){
+  const u=me(),f=u.fish||{},left=fishLeft(u),rest=f.until>now()?f.until-now():0;const B=f.best||{};
+  return`<div class="panel stack"><h2>냥이 낚시터</h2><p class="lead" style="margin:0">찌가 쑥 들어가며 <b>!</b>가 뜨면 재빨리 당겨요. 열빙어와 고등어는 간식 가방으로, 조개와 황금 잉어는 코인으로 바뀌어요. ${FISH_N}번 던지면 10분 쉬어요.</p>
+  <button class="btn teal block" data-a="fishgo" ${rest?'disabled':''}>${rest?`쉬는 중 · ${dur(rest)} 뒤에 다시`:`낚시하러 가기 · ${left}번 남음`}</button></div>
+  <div class="sect">내 도감 <small class="grow">· 잡은 횟수 ${f.cnt||0}번</small></div><div class="list">${FISH.map(x=>`<div class="item"><div class="thumb" style="width:44px;height:44px;flex-basis:44px;${B[x.k]?'':'filter:grayscale(1) brightness(1.4);opacity:.5'}">${fishPic(x.k)}</div><div class="tx"><b>${B[x.k]?x.n:'???'}</b><span>${B[x.k]?`최대 ${B[x.k]}cm`:'아직 못 잡았어요'}</span></div><span class="chip">${x.it?ITEMS[x.it].n+' +1':x.c+'코인'}</span></div>`).join('')}</div>`;
+}
+function fishGame(){
+  if(fishLeft()<=0)return toast('조금 쉬었다가 다시 낚시해요');
+  const c=activeCat();
+  openSheet(`<h2>냥이 낚시터</h2><p class="lead">던진 다음, 찌가 쑥 들어가며 <b>!</b>가 뜨면 바로 당기세요. 너무 빨리 당기면 물고기가 도망가요.</p>
+  <div class="pond" data-live="1"><svg viewBox="0 0 320 200" preserveAspectRatio="none"><rect width="320" height="200" fill="#bfe3f5"/><path d="M0 70 Q80 60 160 68 T320 64 V200 H0Z" fill="#6fb7de"/><path d="M0 70 Q80 60 160 68 T320 64" stroke="#e7f6ff" stroke-width="3" fill="none"/>${[[60,110],[150,140],[240,100],[280,160],[110,175]].map(([x,y])=>`<path d="M${x-14} ${y} q14 -6 28 0" stroke="#a8d8f0" stroke-width="2.5" fill="none" opacity=".8"/>`).join('')}<path d="M0 150 Q30 120 70 140 L90 200 H0Z" fill="#8bc47a"/><path d="M286 200 l6 -46 M296 200 l2 -54 M306 200 l-4 -40" stroke="#5f9e55" stroke-width="4" stroke-linecap="round"/>
+  <path id="rod" d="M70 128 L130 60" stroke="#8a5a32" stroke-width="4" stroke-linecap="round"/><path id="fline" d="M130 60 L130 60" stroke="#3b3346" stroke-width="1.2" fill="none"/>
+  <g id="bobw" style="display:none"><g id="bob"><circle cx="0" cy="0" r="7" fill="#fff" stroke="#3b3346" stroke-width="1.5"/><path d="M-7 0 A7 7 0 0 1 7 0Z" fill="#e2453c"/></g></g></svg>
+  <div class="fcat">${c?catSVG(live(c),{still:true}):''}</div><div class="fmsg" id="fmsg">던지기를 눌러보세요</div></div>
+  <div class="gstat num"><span id="fleft">남은 횟수 ${fishLeft()}</span><span id="fcnt">이번에 잡은 것 0</span></div>
+  <button class="btn teal block" id="fbtn">던지기</button><div class="list" id="fcatch" style="margin-top:10px"></div>`);
+  let st='idle',fish=null,tm=[],bx=0,by=0,biteAt=0,caught=0;
+  const clear=()=>{tm.forEach(clearTimeout);tm=[]};
+  const T=(f,ms)=>tm.push(setTimeout(()=>{if(!$('#fbtn')){clear();return}f()},ms));
+  const msg=t=>{const m=$('#fmsg');if(m)m.textContent=t};
+  const bob=cls=>{const b=$('#bob');if(b)b.setAttribute('class',cls||'')};
+  const pick=()=>{let r=Math.random(),a=0;for(const f of FISH){a+=f.p;if(r<a)return f}return FISH[0]};
+  const btn=$('#fbtn');
+  const end=async(ok,why)=>{clear();st='busy';$('#bobw').style.display='none';$('#fline').setAttribute('d','M130 60 L130 60');document.querySelectorAll('.fbite').forEach(e=>e.remove());
+    if(ok){const sz=Math.round(fish.sz[0]+Math.random()*(fish.sz[1]-fish.sz[0]));let rec=false;
+      await Store.tx('users/'+S.me,u=>{if(!u)return u;u.fish=u.fish||{};u.fish.cnt=(u.fish.cnt||0)+1;u.fish.best=u.fish.best||{};rec=false;if(!u.fish.best[fish.k]||sz>u.fish.best[fish.k]){u.fish.best[fish.k]=sz;rec=true}if(fish.it){u.inv=u.inv||{};u.inv[fish.it]=(u.inv[fish.it]||0)+1}else u.coins=(u.coins||0)+fish.c;return u});
+      caught++;$('#fcnt').textContent='이번에 잡은 것 '+caught;msg(`${fish.n} ${sz}cm!${rec?' 새 기록!':''}`);
+      if(fish.k==='gold')log(`${ownerName(S.me)}님이 황금 잉어 ${sz}cm를 낚았어요!`);
+      $('#fcatch').insertAdjacentHTML('afterbegin',`<div class="item"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${fishPic(fish.k)}</div><div class="tx"><b>${fish.n} ${sz}cm${rec?' <span class="chip pink">새 기록</span>':''}</b><span>${fish.it?ITEMS[fish.it].n+' +1 (간식 가방)':fish.c+'코인'}</span></div></div>`)}
+    else msg(why);
+    const left=fishLeft();$('#fleft').textContent='남은 횟수 '+left;
+    if(left<=0){btn.textContent='오늘은 여기까지! 10분 뒤에 다시';btn.disabled=true;btn.onclick=null;const b2=document.createElement('button');b2.className='btn ghost block';b2.style.marginTop='8px';b2.textContent='닫기';b2.onclick=closeSheet;btn.after(b2)}
+    else{btn.textContent='다시 던지기';st='idle'}};
+  btn.onclick=async()=>{
+    if(st==='idle'){
+      st='busy';let ok=false;
+      await Store.tx('users/'+S.me+'/fish',f=>{f=f||{};if(f.until>now()){ok=false;return}if(f.until){delete f.until;f.left=FISH_N}const l=f.left==null?FISH_N:f.left;if(l<=0){ok=false;return}f.left=l-1;if(f.left<=0){f.until=now()+FISH_REST}ok=true;return f});
+      if(!ok){toast('조금 쉬었다가 다시 낚시해요');st='idle';return}
+      $('#fleft').textContent='남은 횟수 '+fishLeft();
+      fish=pick();bx=170+Math.random()*100;by=95+Math.random()*60;
+      const w=$('#bobw');w.style.display='';w.setAttribute('transform',`translate(${bx},${by})`);$('#fline').setAttribute('d',`M130 60 Q${(130+bx)/2} ${by-10} ${bx} ${by}`);bob('float');msg('기다리는 중...');
+      btn.textContent='당기기';st='wait';
+      const wait=1500+Math.random()*3500;
+      for(let t=600;t<wait-300;t+=900+Math.random()*900)T(()=>{if(st==='wait'){bob('nib');setTimeout(()=>{if(st==='wait')bob('float')},720)}},t);
+      T(()=>{st='bite';biteAt=now();bob('bite');msg('!!');$('.pond').insertAdjacentHTML('beforeend',`<div class="fbite" style="left:${bx/320*100}%;top:${by/200*100}%">!</div>`);
+        T(()=>{if(st==='bite')end(false,'놓쳤어요... 더 빨리 당겨봐요')},fish.win)},wait);
+    }else if(st==='wait')end(false,'너무 빨랐어요! 물고기가 도망갔어요');
+    else if(st==='bite')end(true);
+  };
+}
+
 
 /* ================= sheets ================= */
 function clearLayer(){$('#layer').innerHTML='';document.body.style.overflow=''}
@@ -1485,7 +1673,7 @@ function openDeco(){
   const c=activeCat();if(!c)return;const u=me(),inv=u.inv||{},room=u.room||{};const tab=S.tab.deco;
   let body='';
   if(tab==='wear'){
-    const slots=[['hat','머리'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과']];
+    const slots=[['hat','머리'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
     body=slots.map(([s,lab])=>{const own=Object.keys(ITEMS).filter(k=>ITEMS[k].t===s&&inv[k]);
       return`<div class="opt"><h3>${lab}</h3>${own.length?`<div class="ch">${own.map(k=>`<button class="${c.eq[s]===k?'on':''}" data-a="equip" data-s="${s}" data-v="${c.eq[s]===k?'':k}">${ITEMS[k].n}</button>`).join('')}</div>`:`<p class="grow">아직 없어요. 상점에서 사 오세요.</p>`}</div>`}).join('');
   }else if(tab==='dye'){
@@ -1591,7 +1779,8 @@ function viewShop(){
 function viewPlaza(){
   const list=Object.entries(S.users).map(([k,u])=>S.cats[u.main]).filter(Boolean);
   const online=Object.values(S.users).filter(u=>u.seen&&now()-u.seen<3*MIN).length;
-  return`<div class="plaza" id="plaza">${plazaBG}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
+  const XB=isXmas()?xboxes().filter(b=>b.open&&!b.got):[];
+  return`${isXmas()?`<div class="xbanner"><div style="width:34px;flex:none">${GIFT_SVG()}</div><div><b>메리 크리스마스!</b><br>${XB.length?`광장에 선물상자 ${XB.length}개가 숨어 있어요. 찾아보세요!`:'오늘 나온 선물상자는 다 찾았어요.'} (${Math.min(xmasState().n,XMAS_GOAL)}/${XMAS_GOAL})</div></div>`:''}<div class="plaza" id="plaza">${plazaBG}${isXmas()?snowHTML()+XB.map(b=>`<button class="xbox" data-a="xbox" data-v="${b.i}" style="left:${b.x}%;top:${b.y}%;z-index:${Math.round(b.y)+1}" aria-label="선물상자 열기">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</button>`).join(''):''}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
     return`<div class="pcat" data-a="card" data-v="${c.id}" data-id="${c.id}" style="left:${p.x}%;top:${p.y}%;z-index:${Math.round(p.y)}" role="button" tabindex="0" aria-label="${esc(title(v))}"><div class="flip" style="transform:scaleX(${p.f})">${v.status==='runaway'?`<svg viewBox="0 0 200 210"><text x="100" y="150" font-size="34" text-anchor="middle" fill="#857c8f" font-family="Jua">가출 중</text></svg>`:catSVG(v,{expr:v.st.mood<25?'sulky':'normal'})}</div><span class="tag"><i class="${on?'on':''}"></i>${esc(title(v))}${v.pop?` · 인기 ${v.pop}`:''}</span></div>`}).join('')}</div>
   ${(()=>{const top=Object.values(S.cats).filter(c=>c&&c.pop>0).sort((a,b)=>b.pop-a.pop).slice(0,5);return top.length?`<div class="sect">인기 랭킹</div><div class="list">${top.map((c,i)=>`<div class="item" data-a="card" data-v="${c.id}" role="button" tabindex="0" style="cursor:pointer"><b style="font-family:var(--display);font-weight:400;width:22px;color:${i===0?'#d99a1e':'var(--muted)'}" class="num">${i+1}</b><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(title(c))}</b><span>${FLOWER_IDS.filter(f=>(c.flowers||{})[f]).map(f=>ITEMS[f].n+' '+c.flowers[f]).join(' · ')}</span></div><span class="chip gold num">인기 ${c.pop}</span></div>`).join('')}</div>`:''})()}
   <p class="online" style="margin:10px 2px">지금 ${online}명 접속 중 · 고양이를 누르면 쓰다듬기, 말 걸기, 꽃 선물, 청혼을 할 수 있어요. 쓰다듬을수록 친밀도가 올라요.${DEMO?' 예시 친구 3명이 함께 있어요.':''}</p>`;
@@ -1624,7 +1813,7 @@ function viewNews(){
   const inbox=P.filter(p=>p.toOwner===S.me),sent=P.filter(p=>p.fromOwner===S.me);
   const feed=[...S.feed].reverse();
   S.seenFeed=feed[0]?feed[0].at:S.seenFeed;try{localStorage.setItem('nyang-seen-feed',S.seenFeed)}catch(e){}
-  return secHtml+`${inbox.length?`<div class="sect">받은 청혼</div><div class="list">${inbox.map(p=>{const a=S.cats[p.from],b=S.cats[p.to];if(!a||!b)return'';return`<div class="item"><div class="thumb">${catSVG(a,{still:true})}</div><div class="tx"><b>${esc(title(a))}</b><span>${esc(b.name)}에게 청혼했어요 · ${ago(p.at)}</span></div><div class="row"><button class="btn small" data-a="accept" data-v="${p.k}">수락</button><button class="btn small ghost" data-a="decline" data-v="${p.k}">거절</button></div></div>`}).join('')}</div>`:''}
+  return secHtml+celebNews()+`${inbox.length?`<div class="sect">받은 청혼</div><div class="list">${inbox.map(p=>{const a=S.cats[p.from],b=S.cats[p.to];if(!a||!b)return'';return`<div class="item"><div class="thumb">${catSVG(a,{still:true})}</div><div class="tx"><b>${esc(title(a))}</b><span>${esc(b.name)}에게 청혼했어요 · ${ago(p.at)}</span></div><div class="row"><button class="btn small" data-a="accept" data-v="${p.k}">수락</button><button class="btn small ghost" data-a="decline" data-v="${p.k}">거절</button></div></div>`}).join('')}</div>`:''}
   ${sent.length?`<div class="sect">보낸 청혼</div><div class="list">${sent.map(p=>{const b=S.cats[p.to];return b?`<div class="item"><div class="thumb">${catSVG(b,{still:true})}</div><div class="tx"><b>${esc(title(b))}</b><span>대답을 기다리는 중 · ${ago(p.at)}</span></div></div>`:''}).join('')}</div>`:''}
   <div class="sect">마을 소식</div>${feed.length?`<div class="feed">${feed.map(f=>`<div><time>${ago(f.at)}</time><span>${esc(f.text)}</span></div>`).join('')}</div>`:'<div class="empty">아직 소식이 없어요.</div>'}`;
 }
@@ -1694,7 +1883,7 @@ function attBoard(n,justNow){
 }
 function viewEvents(){
   const tab=S.tab.ev||'quest',u=me();
-  const tabs=[['quest','퀘스트'],['att','출석부'],['lotto','로또']];
+  const tabs=[...(isXmas()?[['xmas','성탄']]:[]),['quest','퀘스트'],['att','출석부'],['lotto','로또'],['fish','낚시']];
   let body='';
   if(tab==='quest'){
     const q=qNorm(clone(u.q)),ids=dailyIds(q.d);
@@ -1708,7 +1897,9 @@ function viewEvents(){
   }else if(tab==='att'){
     const n=attCur(u),rg=attRange(attBoardId());
     body=`<div class="panel stack"><h2>이번 출석부 · ${n} / ${ATT_CELLS}</h2><p class="grow num" style="margin:0">기간 ${rg.start} ~ ${rg.end} · ${rg.left}일 남음${isWeekday()?'':' · 오늘은 주말이라 쉬어요'}</p>${attBoard(n)}</div>`;
-  }else body=viewLotto();
+  }else if(tab==='xmas'&&isXmas())body=viewXmas();
+  else if(tab==='fish')body=viewFishTab();
+  else body=viewLotto();
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="evtab" data-v="${k}">${l}${k==='quest'&&qClaimable(u)?' •':''}</button>`).join('')}</div>${body}`;
 }
 
@@ -1873,7 +2064,11 @@ document.addEventListener('click',async e=>{
     case'shoptab':S.tab.shop=v;render();break;
     case'buy':buy(v);break;
     case'card':openCatCard(v);break;
-    case'rank':openRank(v);break;
+    case'rank':openRank(v,el.dataset.k);break;
+    case'xbox':await openXbox(+v);break;
+    case'fishgo':fishGame();break;
+    case'cheer':await cheer(v,el.dataset.k);break;
+    case'celebgot':await celebGot(v,el.dataset.k);break;
     case'srep':openSecretReply(v);break;
     case'srsend':await sendSecret(v);break;
     case'sdel':await Store.set(`users/${S.me}/secret/${v}`,null);toast('지웠어요');break;
