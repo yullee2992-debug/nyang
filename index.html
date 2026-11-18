@@ -571,6 +571,15 @@ const ITEMS={
   knight:{n:'기사 갑옷',t:'body',p:700,s:3,d:'마을을 지키는 기사'},
   galaxy:{n:'은하수 망토',t:'body',p:1200,s:8,d:'별빛이 흐르는 망토'},
   hanbok:{n:'한복',t:'body',p:600,s:2,d:'명절엔 고운 한복'},
+  wdress:{n:'웨딩드레스',t:'body',p:1200,s:3,d:'결혼식 주인공 · 레이스 드레스'},
+  tux:{n:'턱시도',t:'body',p:1200,s:3,d:'결혼식 주인공 · 검은 턱시도'},
+  veil:{n:'면사포',t:'hat',p:450,s:1,d:'진주 장식 면사포'},
+  astronaut:{n:'우주복',t:'body',p:1500,s:6,d:'달나라 여행 가는 냥'},
+  moonhat:{n:'달빛 베레모',t:'hat',p:600,s:3,d:'초승달이 달린 보라 베레모'},
+  starglass:{n:'별 안경',t:'face',p:500,s:2,d:'반짝 별 모양 안경'},
+  jewel:{n:'보석 목걸이',t:'neck',p:800,s:4,d:'푸른 보석이 반짝'},
+  stardust:{n:'별똥별',t:'aura',p:2200,s:6,d:'소원을 빌어 봐요'},
+  aurora:{n:'오로라',t:'aura',p:3000,s:12,d:'등 뒤로 오로라가 일렁여요'},
   bg_cafe:{n:'고양이 카페',t:'room',slot:'bg',p:550,d:'방 배경'},
   bg_forest:{n:'숲속 캠핑',t:'room',slot:'bg',p:550,d:'방 배경'},
   bg_space:{n:'우주 정거장',t:'room',slot:'bg',p:800,s:3,d:'방 배경'},
@@ -616,10 +625,10 @@ function tick(c,t){
     const sl=c.sleepUntil&&x<c.sleepUntil;const dt=Math.max(1,Math.min(10*MIN,t-x,sl?c.sleepUntil-x:Infinity)),h=dt/HOUR;
     const s=c.st;
     s.hunger=clamp(s.hunger-(sl?2.5:5)*h);
-    s.clean=clamp(s.clean-2*h);
+    s.clean=clamp(s.clean-4*h);
     let md=sl?.5:3;if(s.hunger<20)md+=3;if(s.clean<20)md+=2;
     s.mood=clamp(s.mood-md*h);
-    s.energy=clamp(s.energy+(sl?3000:-100)*h);
+    s.energy=clamp(s.energy+(sl?3000:-65)*h);
     {const Dx=kstDay(x);if(c.sickDay!==Dx){c.sickDay=Dx;const rr=seeded(strHash('sick-'+c.id+Dx));if(rr()<.08&&!c.sick)c.sickPlan=Date.parse(Dx+'T00:00:00+09:00')+(8+rr()*12)*HOUR}}
     if(c.sickPlan&&x>=c.sickPlan){if(!c.sick)c.sick={k:'cold',at:x};c.sickPlan=null}
     if(s.clean<15)c.dirtH=(c.dirtH||0)+h;else if(c.dirtH)c.dirtH=Math.max(0,c.dirtH-h);
@@ -734,6 +743,8 @@ function catSVG(c,o={}){
     return s;
   };
   const hats={
+    veil:`<path d="M62,58 Q40,90 34,170 Q46,160 56,166 Q52,120 66,80 Z M138,58 Q160,90 166,170 Q154,160 144,166 Q148,120 134,80 Z" fill="rgba(255,255,255,.72)" stroke="#e6e0ee" stroke-width="1.5"/><path d="M64,60 Q100,40 136,60" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/>${[70,82,94,106,118,130].map((x,i)=>`<circle cx="${x}" cy="${57-Math.sin((x-64)/72*Math.PI)*9}" r="3.4" fill="#fbf8f2" stroke="#d9cfc0" stroke-width="1"/>`).join('')}<circle cx="100" cy="46" r="5" fill="#ffd6e3" stroke="#ff9fb3" stroke-width="1.5"/>`,
+    moonhat:`<ellipse cx="96" cy="54" rx="42" ry="13" fill="#5b4b8a" stroke="#3f3266" stroke-width="2.5"/><path d="M58,54 Q70,26 104,28 Q134,32 138,52 Z" fill="#6a59a0" stroke="#3f3266" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="27" r="4" fill="#3f3266"/><path d="M120,34 a9,9 0 1 0 7,14 a7,7 0 1 1 -7,-14z" fill="#ffd43b" stroke="#d99a1e" stroke-width="1"/>`,
     maplepin:MAPLE(130,52,1.5,'#e8562a',20)+MAPLE(119,60,.9,'#f39c34',-25),
     ribbon:`<g transform="translate(128,50) rotate(18)"><path d="M0,0 L-15,-10 Q-18,0 -15,10 Z M0,0 L15,-10 Q18,0 15,10 Z" fill="#ff6f91" stroke="#d94a6e" stroke-width="2" stroke-linejoin="round"/><circle r="4.5" fill="#ff9bb3" stroke="#d94a6e" stroke-width="2"/></g>`,
     flower:`<g transform="translate(70,54)">${[0,72,144,216,288].map(a=>`<circle cx="${Math.cos(a*Math.PI/180)*7}" cy="${Math.sin(a*Math.PI/180)*7}" r="6" fill="#fff4f8" stroke="#ff9fb3" stroke-width="1.5"/>`).join('')}<circle r="4.5" fill="#ffd166"/></g>`,
@@ -756,6 +767,7 @@ function catSVG(c,o={}){
     crown:`<path d="M78,54 L80,28 L90,40 L100,22 L110,40 L120,28 L122,54 Z" fill="#f6c94c" stroke="#c9962a" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="44" r="4" fill="#ff6f91"/><circle cx="87" cy="47" r="3" fill="#6fc0e8"/><circle cx="113" cy="47" r="3" fill="#6fc0e8"/>`
   };
   const necks={
+    jewel:`<path d="M64,133 Q100,153 136,133" stroke="#e0b030" stroke-width="2.6" fill="none"/>${[78,88,112,122].map(x=>`<circle cx="${x}" cy="${140+(1-Math.pow((x-100)/36,2))*7}" r="2.6" fill="#ff8fab" stroke="#d9607f" stroke-width=".8"/>`).join('')}<path d="M100,144 l11,9 -11,15 -11,-15z" fill="#5fd0e8" stroke="#2a8fb0" stroke-width="2" stroke-linejoin="round"/><path d="M95,152 l5,-4 3,3" stroke="#fff" stroke-width="1.6" fill="none" opacity=".85"/>`,
     bell:`<path d="M64,135 Q100,151 136,135" stroke="#e2556a" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="100" cy="150" r="7.5" fill="#f6c94c" stroke="#c9962a" stroke-width="2"/><path d="M100,151 v5" stroke="#c9962a" stroke-width="2"/>`,
     scarf:`<path d="M62,133 Q100,154 138,133" stroke="#4fae9c" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M112,142 l10,28 l13,-5 l-9,-25 Z" fill="#4fae9c" stroke="#368a7a" stroke-width="2" stroke-linejoin="round"/><path d="M116,152 l12,-4 M119,160 l12,-4" stroke="#bfe8de" stroke-width="2.5"/>`,
     medal:`<path d="M88,132 L96,150 M112,132 L104,150" stroke="#4f86bb" stroke-width="6"/><circle cx="100" cy="158" r="10" fill="#ffd43b" stroke="#c9962a" stroke-width="2.5"/><path d="M100,152 l2,4 4,.5 -3,3 1,4 -4,-2 -4,2 1,-4 -3,-3 4,-.5z" fill="#fff"/>`,
@@ -768,6 +780,7 @@ function catSVG(c,o={}){
     bowtie:`<path d="M100,145 L84,134 L84,156 Z M100,145 L116,134 L116,156 Z" fill="#e2556a" stroke="#b83b51" stroke-width="2" stroke-linejoin="round"/><rect x="95" y="140" width="10" height="10" rx="3" fill="#ff8199" stroke="#b83b51" stroke-width="2"/>`
   };
   const faces={
+    starglass:`${[78,122].map(x=>`<polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?8:17,a=-Math.PI/2+i*Math.PI/5;return(x+Math.cos(a)*r).toFixed(1)+','+(94+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="rgba(255,214,80,.35)" stroke="#e0a72a" stroke-width="2.6" stroke-linejoin="round"/>`).join('')}<path d="M94,90 Q100,86 106,90" stroke="#e0a72a" stroke-width="2.6" fill="none"/>`,
     glasses:`<circle cx="78" cy="93" r="15" fill="rgba(255,255,255,.18)" stroke="#3b3346" stroke-width="3"/><circle cx="122" cy="93" r="15" fill="rgba(255,255,255,.18)" stroke="#3b3346" stroke-width="3"/><path d="M93,91 Q100,86 107,91" stroke="#3b3346" stroke-width="3" fill="none"/>`,
     cheekstar:`${[[64,112],[136,112]].map(([x,y])=>`<polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?3.2:7.5,a=-Math.PI/2+i*Math.PI/5;return(x+Math.cos(a)*r).toFixed(1)+','+(y+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="#ffd43b" stroke="#e0a72a" stroke-width="1"/>`).join('')}`,
     eyepatch:`<path d="M46,72 L154,104" stroke="#2b2433" stroke-width="3"/><ellipse cx="122" cy="93" rx="15" ry="13" fill="#2b2433"/><path d="M116,88 l12,10 M128,88 l-12,10" stroke="#fff" stroke-width="2" opacity=".85"/>`,
@@ -782,6 +795,9 @@ function catSVG(c,o={}){
   const top=(fill,extra='')=>`<g clip-path="url(#${id}b)"><rect x="${100-W2}" y="${tY}" width="${W2*2}" height="${bry*1.25}" fill="${fill}"/>${extra}</g>`;
   const skirt=(fill,extra='')=>`<path d="M${100-W2*.82},${mY+2} L${100+W2*.82},${mY+2} L${100+W2*1.12},${bY-6} Q100,${bY+4} ${100-W2*1.12},${bY-6} Z" fill="${fill}" stroke="${shade(fill,-.25)}" stroke-width="2" stroke-linejoin="round"/>${extra}`;
   const clothes={
+    wdress:top('#ffffff',`<path d="M${100-W2},${tY+6} Q100,${tY+22} ${100+W2},${tY+6}" stroke="#f0e8f2" stroke-width="3" fill="none"/>${[0,1,2,3,4].map(i=>`<circle cx="${100-W2*.6+i*W2*.3}" cy="${tY+12+Math.sin(i)*2}" r="2.4" fill="#f4eef8"/>`).join('')}<path d="M${100-W2},${mY-4} h${W2*2}" stroke="#ffc4d6" stroke-width="5"/>`)+`<path d="M${100-W2*.85},${mY} L${100+W2*.85},${mY} L${100+W2*1.4},${bY+2} Q100,${bY+12} ${100-W2*1.4},${bY+2} Z" fill="#ffffff" stroke="#e3dcea" stroke-width="2.2" stroke-linejoin="round"/>${[0,1,2,3,4,5,6].map(i=>`<circle cx="${100-W2*1.2+i*W2*.4}" cy="${bY+3+(i%2)*3}" r="5" fill="#fff" stroke="#e3dcea" stroke-width="1.5"/>`).join('')}<path d="M${100-W2*.4},${mY+12} q6,4 12,0 M${100+W2*.1},${mY+20} q6,4 12,0" stroke="#efe6f3" stroke-width="2" fill="none"/><circle cx="${100+W2*.55}" cy="${mY-4}" r="5" fill="#ff9fb3"/>`,
+    tux:top('#2b2b36',`<path d="M100,${tY} L${100-W2*.32},${tY} L100,${mY+10} L${100+W2*.32},${tY} Z" fill="#ffffff"/><path d="M${100-W2*.32},${tY} L100,${mY+10} L${100-W2*.55},${tY+4} Z M${100+W2*.32},${tY} L100,${mY+10} L${100+W2*.55},${tY+4} Z" fill="#3c3c4c"/><path d="M100,${tY+6} L91,${tY+1} L91,${tY+11} Z M100,${tY+6} L109,${tY+1} L109,${tY+11} Z" fill="#1c1c24"/><circle cx="100" cy="${tY+6}" r="2.6" fill="#1c1c24"/>${[0,1].map(i=>`<circle cx="100" cy="${tY+18+i*9}" r="1.8" fill="#2b2b36"/>`).join('')}<path d="M${100+W2*.5},${tY+14} l6,-3 l-1,6 z" fill="#fff"/>`),
+    astronaut:top('#eef1f6',`<path d="M${100-W2},${tY+4} Q100,${tY+16} ${100+W2},${tY+4}" stroke="#b9c1cf" stroke-width="7" fill="none"/><rect x="${100-W2*.38}" y="${tY+18}" width="${W2*.76}" height="20" rx="4" fill="#d6dce8" stroke="#9aa5b8" stroke-width="2"/><circle cx="${100-W2*.18}" cy="${tY+28}" r="3.2" fill="#e2453c"/><circle cx="100" cy="${tY+28}" r="3.2" fill="#4dabf7"/><circle cx="${100+W2*.18}" cy="${tY+28}" r="3.2" fill="#ffd43b"/><path d="M${100-W2},${mY+12} h${W2*2}" stroke="#ff9f43" stroke-width="4"/>`),
     pajama:top('#c7d9f7',[[86,8],[112,14],[96,26],[120,32],[80,30]].map(([x,dy])=>`<polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?2:4.5,a=-Math.PI/2+i*Math.PI/5;return(x+Math.cos(a)*r).toFixed(1)+','+(tY+dy+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="#ffe27a"/>`).join('')+`<path d="M100,${tY} V${bY}" stroke="#a9c0ea" stroke-width="2" stroke-dasharray="3 4"/>`),
     overall:top('#ffffff',`<rect x="${100-W2}" y="${mY-6}" width="${W2*2}" height="${bry*1.3}" fill="#6f98cc"/><path d="M${100-W2*.45},${tY} L${100-W2*.35},${mY-4} M${100+W2*.45},${tY} L${100+W2*.35},${mY-4}" stroke="#6f98cc" stroke-width="7"/><rect x="${100-W2*.3}" y="${mY}" width="${W2*.6}" height="12" rx="3" fill="#5b84b8"/><circle cx="${100-W2*.35}" cy="${mY-4}" r="3" fill="#ffd166"/><circle cx="${100+W2*.35}" cy="${mY-4}" r="3" fill="#ffd166"/>`),
     sailor:top('#ffffff',`<path d="M${100-W2},${tY} L100,${mY} L${100+W2},${tY} Z" fill="#2f4f8f"/><path d="M${100-W2*.8},${tY+4} L100,${mY-6} L${100+W2*.8},${tY+4}" stroke="#fff" stroke-width="2" fill="none"/><path d="M100,${mY-8} l-9,13 h18 z" fill="#e2453c"/>`),
@@ -802,10 +818,12 @@ function catSVG(c,o={}){
   const star4=(x,y,r)=>`M${x},${y-r} Q${x+r*.18},${y-r*.18} ${x+r},${y} Q${x+r*.18},${y+r*.18} ${x},${y+r} Q${x-r*.18},${y+r*.18} ${x-r},${y} Q${x-r*.18},${y-r*.18} ${x},${y-r}Z`;
   const hrt=(x,y,k)=>`M${x},${y+6*k} s-9,-6 -9,-11 a4.5,4.5 0 0 1 9,-2 a4.5,4.5 0 0 1 9,2 c0,5 -9,11 -9,11z`;
   const AB={
+    aurora:`<g opacity=".7"${fx('fxp',0)}>${[['#7ef0c4',30],['#8fb7ff',48],['#d29bff',66]].map(([c,y],i)=>`<path d="M0,${y+20} Q50,${y-6} 100,${y+14} T200,${y+4} V${y+34} Q150,${y+20} 100,${y+40} T0,${y+44} Z" fill="${c}" opacity=".55"/>`).join('')}</g>`,
     rainbow:`<g opacity=".75"${fx('fxp',0)}>${['#ff6b6b','#ffa94d','#ffd43b','#69db7c','#4dabf7','#9775fa'].map((c,i)=>`<path d="M${22+i*7},128 A${78-i*7},${78-i*7} 0 0 1 ${178-i*7},128" stroke="${c}" stroke-width="7" fill="none"/>`).join('')}</g>`,
     gold:`<ellipse cx="100" cy="120" rx="92" ry="96" fill="url(#${id}g)"${fx('fxp',0)}/>`
   };
   const AF={
+    stardust:[[30,24,0],[150,14,1.1],[176,70,2.2],[50,78,1.6]].map(([x,y,d])=>`<g${fx('fxs',d)}><path d="M${x},${y} l-22,12" stroke="#fff3b0" stroke-width="2.5" stroke-linecap="round" opacity=".8"/><polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?2.4:6,a=-Math.PI/2+i*Math.PI/5;return(x+Math.cos(a)*r).toFixed(1)+','+(y+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="#ffd43b" stroke="#e0a72a" stroke-width=".8"/></g>`).join(''),
     autumn:[[30,30,0,0],[164,20,1.3,1],[96,6,2.5,0],[176,84,.7,1],[20,96,1.9,0]].map(([x,y,d,g])=>`<g${fx('fxf',d)}>${g?GINKGO(x,y,1.1):MAPLE(x,y,.9,'#e8562a',x)}</g>`).join(''),
     fireworks:[[40,40,0,'#ff8fab'],[160,30,.7,'#ffd43b'],[100,8,1.4,'#7fd1c0'],[172,100,2,'#b9a2e6'],[26,110,1.1,'#ffb98a']].map(([x,y,d,c])=>`<g${fx('fxs',d)}>${Array.from({length:8},(_,i)=>{const a=i*Math.PI/4;return`<path d="M${(x+Math.cos(a)*4).toFixed(1)},${(y+Math.sin(a)*4).toFixed(1)} L${(x+Math.cos(a)*12).toFixed(1)},${(y+Math.sin(a)*12).toFixed(1)}" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>`}).join('')}<circle cx="${x}" cy="${y}" r="2.5" fill="#fff"/></g>`).join(''),
     clover:[[32,80,0],[168,70,1],[56,30,2],[150,26,1.5]].map(([x,y,d])=>`<g${fx('fxa',d)}>${[[0,-5],[5,0],[0,5],[-5,0]].map(([dx,dy])=>`<circle cx="${x+dx}" cy="${y+dy}" r="5" fill="#6fcf6a" stroke="#3f9a45" stroke-width="1"/>`).join('')}<path d="M${x},${y} q4,8 2,14" stroke="#3f9a45" stroke-width="2" fill="none"/></g>`).join(''),
@@ -1022,6 +1040,7 @@ async function afterLogin(){
   // daily bonus
   const d=kstDay();
   await attendance();
+  {const m=/^#w=(.+)$/.exec(location.hash||'');if(m&&!PET){const wid=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>{if(wedById(wid)){clearLayer();goWedding(wid)}else toast('결혼식을 찾지 못했어요')},800)}}
   if(window.nyangDesk&&PET&&!window.nyangDesk.version&&window.nyangDesk.getSettings){setInterval(async()=>{try{const st=await window.nyangDesk.getSettings();if(st&&st.showPet)window.nyangDesk.setPetVisible(true)}catch(e){}},2500)}
   {const r=await Store.tx('users/'+S.me,u=>{if(!u||u.kibbleInit)return;u.kibbleInit=1;u.inv=u.inv||{};u.inv.kibble=(u.inv.kibble||0)+10;return u});if(r.committed&&!PET)setTimeout(()=>toast('이제 사료도 사서 먹여요. 사료 10개를 선물로 드렸어요!',4000),2500)}
   // persist decay
@@ -1453,6 +1472,19 @@ async function recordVisit(owner){
   await Store.tx(`users/${owner}/visitTotal`,v=>(v||0)+1);
   qEvent('visit');log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집에 놀러 갔어요.`);
 }
+function openBookReply(o,k){
+  const b=((S.users[o]||{}).book||{})[k];if(!b)return;
+  openSheet(`<h2>답글 달기</h2><p class="lead"><b>${esc(ownerName(b.by))}</b>: ${esc(b.text)}</p><textarea id="ret" maxlength="100" rows="3" aria-label="답글" placeholder="답글 (100자까지)" style="width:100%;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-family:var(--body);font-size:16px;resize:none"></textarea><button class="btn block" style="margin-top:10px" data-a="resend" data-o="${o}" data-v="${k}">답글 남기기</button>`);
+  setTimeout(()=>{const t=$('#ret');if(t)t.focus()},100);
+}
+async function sendBookReply(o,k){
+  const t=String(($('#ret')||{}).value||'').replace(/\s+/g,' ').trim().slice(0,100);if(!t)return toast('남길 말을 적어주세요');
+  const b=((S.users[o]||{}).book||{})[k];if(!b)return;
+  await Store.push(`users/${o}/book/${k}/re`,{by:S.me,text:t,at:now()});
+  if(S.me===o)log(`${ownerName(S.me)}님이 ${ownerName(b.by)}님의 방명록 글에 답글을 달았어요.`);
+  else log(`${ownerName(S.me)}님이 ${ownerName(o)}님의 방명록에 답글을 달았어요.`);
+  closeSheet();toast('답글을 남겼어요');
+}
 async function writeBook(owner){
   const ta=$('#bookt');const text=String(ta&&ta.value||'').replace(/\s+/g,' ').trim().slice(0,100);if(!text)return toast('남길 말을 적어주세요');
   const book=(S.users[owner]&&S.users[owner].book)||{},D=kstDay();
@@ -1474,7 +1506,9 @@ function viewVisit(){
   <div class="scene">${roomScene(u)}${cats.map((c,i)=>`<div class="catwrap" style="left:${posx[i]}%;width:${i?28:42}%;bottom:${i?6:4}%;z-index:${i?1:2};cursor:default">${c.status==='runaway'?'':catSVG(c,{expr:c.sleepUntil>now()?'sleep':'normal'})}</div>`).join('')}</div>
   <div class="sect">방명록 · ${book.length}개</div>
   ${mine?'':`<div class="panel stack"><textarea id="bookt" maxlength="100" rows="2" placeholder="${esc(u.name)}님에게 한마디 (100자까지)" aria-label="방명록 내용" style="width:100%;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-family:var(--body);font-size:16px;resize:none"></textarea><div class="row"><span class="grow" style="flex:1">오늘 이 집에 ${myToday}/2개 남겼어요</span><button class="btn small" data-a="bookw" data-v="${o}" ${myToday>=2?'disabled':''}>남기기</button></div></div>`}
-  ${book.length?`<div class="list">${book.map(b=>`<div class="item" style="align-items:flex-start"><div class="tx"><b>${esc(ownerName(b.by))}</b><span style="display:block;color:var(--ink);font-size:.92rem;margin:2px 0">${esc(b.text)}</span><span>${ago(b.at)}</span></div>${mine||b.by===S.me?`<button class="btn small ghost" data-a="bookdel" data-o="${o}" data-v="${b.k}">지우기</button>`:''}</div>`).join('')}</div>`:`<div class="empty">${mine?'아직 방명록이 없어요. 친구들이 놀러 오면 여기에 글이 남아요.':'첫 번째 방명록을 남겨 보세요!'}</div>`}`;
+  ${book.length?`<div class="list">${book.map(b=>{const re=Object.entries(b.re||{}).map(([k,r])=>Object.assign({k},r)).sort((x,y)=>x.at-y.at);const canRe=mine||b.by===S.me;
+    return`<div class="item" style="align-items:flex-start;flex-direction:column;gap:6px"><div class="row" style="width:100%;align-items:flex-start"><div class="tx" style="flex:1"><b>${esc(ownerName(b.by))}</b><span style="display:block;color:var(--ink);font-size:.92rem;margin:2px 0">${esc(b.text)}</span><span>${ago(b.at)}</span></div><div class="row" style="gap:6px">${canRe?`<button class="btn small" data-a="bookre" data-o="${o}" data-v="${b.k}">답글</button>`:''}${mine||b.by===S.me?`<button class="btn small ghost" data-a="bookdel" data-o="${o}" data-v="${b.k}">지우기</button>`:''}</div></div>
+    ${re.map(r=>`<div class="row" style="width:100%;align-items:flex-start;gap:8px;padding:8px 10px;margin-left:14px;max-width:calc(100% - 14px);background:${r.by===o?'var(--pink-l)':'#f4f2f7'};border-radius:12px"><span style="color:var(--muted)">ㄴ</span><div class="tx" style="flex:1"><b style="font-size:.88rem">${esc(ownerName(r.by))}${r.by===o?' <span class="chip pink">집주인</span>':''}</b><span style="display:block;color:var(--ink);font-size:.9rem;margin:2px 0">${esc(r.text)}</span><span>${ago(r.at)}</span></div>${r.by===S.me||mine?`<button class="btn small ghost" data-a="redel" data-o="${o}" data-k="${b.k}" data-v="${r.k}">지우기</button>`:''}</div>`).join('')}</div>`}).join('')}</div>`:`<div class="empty">${mine?'아직 방명록이 없어요. 친구들이 놀러 오면 여기에 글이 남아요.':'첫 번째 방명록을 남겨 보세요!'}</div>`}`;
 }
 
 /* ================= talk ================= */
@@ -1587,6 +1621,152 @@ function celebNews(){
     return`<div class="item" style="background:#fff7e8;border-color:#f6e0b0"><div class="thumb" style="width:52px;height:52px;flex-basis:52px">${catSVG(live(x.cat),{still:true,expr:'happy'})}</div><div class="tx"><b>${esc(celebText(x))}</b><span>${ago(x.e.at)} · 축하 ${ch.length}개${mine&&ch.length?' · '+ch.slice(0,4).map(k=>esc(ownerName(k))).join(', '):''}</span></div>${mine?'<span class="chip gold">우리 냥이</span>':did?'<span class="chip gray">축하했어요</span>':`<button class="btn small" data-a="cheer" data-v="${x.cat.id}" data-k="${x.k}">축하하기</button>`}</div>`}).join('')}</div>`;
 }
 setInterval(()=>{celebPop();wrClaim();gogClaim()},5000);
+
+/* ================= wedding ================= */
+const WDECOR={w_light:{n:'반짝이 전구',p:300,d:'천장에 줄 전구'},w_carpet:{n:'꽃길 카펫',p:250,d:'하얀 꽃길'},w_balloon:{n:'하트 풍선',p:200,d:'둥실둥실 하트 풍선'},w_arch:{n:'꽃 아치',p:450,d:'신랑 신부 뒤 꽃 아치'},w_cake:{n:'웨딩 케이크 타워',p:600,s:2,d:'3단 케이크'},w_dove:{n:'흰 비둘기',p:500,s:3,d:'축복의 비둘기'},w_chand:{n:'샹들리에',p:900,s:4,d:'반짝반짝 샹들리에'}};
+const WFOOD={noodle:{n:'잔치국수',p:60,h:30,m:10},ricecake:{n:'떡',p:40,h:15,m:10},cookie:{n:'웨딩 쿠키',p:80,h:10,m:25},juice:{n:'과일 주스',p:50,h:5,m:15}};
+const WEAR=['wdress','tux'];
+const wedId=(a,b)=>[a,b].sort()[0];
+function wedById(id){const c=S.cats[id];return c&&c.wedding?Object.assign({id},c.wedding):null}
+function wedOfCat(c){if(!c||!c.spouse)return null;return wedById(wedId(c.id,c.spouse))}
+function wedHosts(w){return[...new Set([(S.cats[w.a]||{}).owner,(S.cats[w.b]||{}).owner].filter(Boolean))]}
+const isHost=w=>wedHosts(w).includes(S.me);
+function wedPhase(w){if(!w.start)return'prep';const t=now();if(t>=w.end)return'done';if(t>=w.start)return w.sent?'live':'prep';return w.sent?'soon':'prep'}
+const wedNames=w=>`${(S.cats[w.a]||{}).name||'?'} ♥ ${(S.cats[w.b]||{}).name||'?'}`;
+function wedWhen(w){if(!w.start)return'날짜 미정';const f=t=>new Date(t+9*HOUR).toISOString();const d=f(w.start),dd=new Date(w.start+9*HOUR);return`${dd.getUTCMonth()+1}월 ${dd.getUTCDate()}일(${'일월화수목금토'[dd.getUTCDay()]}) ${d.slice(11,16)}~${f(w.end).slice(11,16)}`}
+function wedCheck(w){const A=S.cats[w.a],B=S.cats[w.b];const decor=Object.keys(w.decor||{}).length,food=Object.values(w.food||{}).reduce((s,n)=>s+n,0);
+  return[['time','날짜와 시간 정하기',!!(w.start&&w.end)],['wear',`두 고양이 모두 웨딩드레스나 턱시도 입히기`,!!(A&&B&&WEAR.includes((A.eq||{}).body)&&WEAR.includes((B.eq||{}).body))],['decor',`결혼식장 꾸미기 2개 이상 (지금 ${decor}개)`,decor>=2],['food',`하객 음식 10인분 이상 (지금 ${food}인분)`,food>=10]]}
+function myWeddings(){return Object.values(S.cats).filter(c=>c&&c.wedding).map(c=>Object.assign({id:c.id},c.wedding))}
+function wedInvites(){return myWeddings().filter(w=>(w.inv||{})[S.me]&&!isHost(w)&&(wedPhase(w)!=='done'||now()-w.end<DAY))}
+async function wedOpen(catId){
+  const c=S.cats[catId];if(!c||!c.spouse)return toast('결혼한 고양이만 결혼식을 할 수 있어요');
+  const wid=wedId(c.id,c.spouse);
+  if(!wedById(wid)){const [a,b]=[c.id,c.spouse].sort();await Store.set(`cats/${wid}/wedding`,{a,b,by:S.me,created:now()})}
+  goWedding(wid);
+}
+function goWedding(wid){closeSheet();markHist();S.wid=wid;S.view='wedding';window.scrollTo(0,0);render();
+  const w=wedById(wid);if(w&&(w.inv||{})[S.me]&&!(w.seen||{})[S.me])Store.set(`cats/${wid}/wedding/seen/${S.me}`,true)}
+async function wedSetTime(wid){
+  const d=$('#wdate').value,a=$('#wst').value,b=$('#wen').value;if(!d||!a||!b)return toast('날짜와 시간을 모두 정해주세요');
+  const st=Date.parse(`${d}T${a}:00+09:00`),en=Date.parse(`${d}T${b}:00+09:00`);
+  if(!(st>now()))return toast('지금보다 뒤의 시간으로 정해주세요');
+  if(!(en>st))return toast('끝나는 시간이 시작보다 뒤여야 해요');
+  if(en-st<30*MIN)return toast('결혼식은 30분 이상이어야 해요');
+  if(en-st>12*HOUR)return toast('결혼식은 12시간까지 할 수 있어요');
+  if(st-now()>30*DAY)return toast('30일 안의 날짜로 정해주세요');
+  const w=wedById(wid);await Store.update({[`cats/${wid}/wedding/start`]:st,[`cats/${wid}/wedding/end`]:en});
+  if(w&&w.sent)log(`${wedNames(w)} 결혼식 시간이 ${wedWhen(Object.assign({},w,{start:st,end:en}))}(으)로 바뀌었어요.`);
+  toast('결혼식 시간을 정했어요');
+}
+async function wedBuyDecor(wid,k){
+  const it=WDECOR[k];if(!it)return;const w=wedById(wid);if(!w||(w.decor||{})[k])return;let why='';
+  await Store.tx('users/'+S.me,u=>{if(!u)return u;why='';if((u.coins||0)<it.p){why='코인이 부족해요';return}if((u.stars||0)<(it.s||0)){why='스타가 부족해요';return}u.coins-=it.p;if(it.s)u.stars-=it.s;return u});
+  if(why)return toast(why);
+  await Store.set(`cats/${wid}/wedding/decor/${k}`,S.me);toast(`${it.n}${iGa(it.n).slice(-1)} 설치됐어요`);
+}
+async function wedBuyFood(wid,k){
+  const f=WFOOD[k];if(!f)return;let why='';
+  await Store.tx('users/'+S.me,u=>{if(!u)return u;why='';if((u.coins||0)<f.p){why='코인이 부족해요';return}u.coins-=f.p;return u});
+  if(why)return toast(why);
+  await Store.tx(`cats/${wid}/wedding/food/${k}`,v=>(v||0)+5);toast(`${f.n} 5인분을 준비했어요`);
+}
+async function wedInvite(wid){
+  const w=wedById(wid);if(!w)return;if(!wedCheck(w).every(x=>x[2]))return toast('준비를 모두 마쳐야 청첩장을 보낼 수 있어요');
+  const sel=[...document.querySelectorAll('.winv:checked')].map(x=>x.value).filter(k=>!(w.inv||{})[k]);if(!sel.length)return toast('초대할 친구를 골라주세요');
+  const up={[`cats/${wid}/wedding/sent`]:true};sel.forEach(k=>up[`cats/${wid}/wedding/inv/${k}`]=now());await Store.update(up);
+  log(`${wedNames(w)} 결혼식 청첩장을 ${sel.map(k=>ownerName(k)+'님에게').join(', ')} 보냈어요. (${wedWhen(w)})`);
+  toast(`청첩장 ${sel.length}장을 보냈어요`);
+}
+function wedLink(wid){return location.origin+location.pathname.replace(/index\.html$/,'')+'#w='+wid}
+async function wedAttend(wid){
+  const w=wedById(wid);if(!w||wedPhase(w)!=='live')return toast('결혼식 시간이 아니에요');
+  if(!(w.inv||{})[S.me]&&!isHost(w))return toast('청첩장을 받은 친구만 참석할 수 있어요');
+  let ok=false;await Store.tx(`cats/${wid}/wedding/guests/${S.me}`,g=>{if(g){ok=false;return}ok=true;return{at:now()}});
+  if(ok){if(!isHost(w))await addCoins(30);log(`${ownerName(S.me)}님이 ${wedNames(w)} 결혼식에 참석했어요.`);toast(isHost(w)?'입장했어요':'참석했어요! 참석 선물 30코인')}
+}
+async function wedGift(wid,amt){
+  const w=wedById(wid);if(!w||wedPhase(w)!=='live')return;const hosts=wedHosts(w);if(hosts.includes(S.me))return;
+  let why='';await Store.tx('users/'+S.me+'/coins',v=>{why='';if((v||0)<amt){why='코인이 부족해요';return}return v-amt});if(why)return toast(why);
+  const each=Math.floor(amt/hosts.length);for(const h of hosts)await Store.tx(`users/${h}/coins`,v=>(v||0)+each);
+  await Store.tx(`cats/${wid}/wedding/guests/${S.me}`,g=>{g=g||{at:now()};g.gift=(g.gift||0)+amt;return g});
+  toast(`축의금 ${amt}코인을 냈어요`);
+}
+async function wedMsg(wid){
+  const t=String(($('#wmsg')||{}).value||'').replace(/\s+/g,' ').trim().slice(0,60);if(!t)return toast('축하 메시지를 적어주세요');
+  await Store.tx(`cats/${wid}/wedding/guests/${S.me}`,g=>{g=g||{at:now()};g.msg=t;return g});toast('축하 메시지를 남겼어요');
+}
+async function wedEat(wid,k){
+  const w=wedById(wid),f=WFOOD[k];if(!w||!f||wedPhase(w)!=='live')return;if(((w.ate||{})[S.me]||{})[k])return toast('이미 먹었어요');
+  let ok=false;await Store.tx(`cats/${wid}/wedding/food/${k}`,v=>{if(!(v>0)){ok=false;return}ok=true;return v-1});
+  if(!ok)return toast('음식이 다 떨어졌어요');
+  await Store.set(`cats/${wid}/wedding/ate/${S.me}/${k}`,true);
+  const c=activeCat();if(c)await catTx(c.id,(c)=>{c.st.hunger=clamp(c.st.hunger+f.h);c.st.mood=clamp(c.st.mood+f.m)});
+  toast(`${f.n} 냠냠! 배부름 +${f.h} · 기분 +${f.m}`);
+}
+function hallSVG(w){const D=w.decor||{};
+  return`<svg viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="hw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff8fb"/><stop offset="1" stop-color="#fde8ef"/></linearGradient></defs>
+  <rect width="400" height="300" fill="url(#hw)"/><rect y="212" width="400" height="88" fill="#f1e2d6"/><path d="M0 212 H400" stroke="#e6cfc0" stroke-width="3"/>
+  ${[24,356].map(x=>`<rect x="${x}" y="36" width="20" height="176" fill="#fff" stroke="#efdbe3" stroke-width="2"/><rect x="${x-4}" y="30" width="28" height="10" rx="3" fill="#fff" stroke="#efdbe3" stroke-width="2"/>`).join('')}
+  ${D.w_chand?`<g><path d="M200 0 V30" stroke="#c9a54a" stroke-width="2"/><path d="M160 46 Q200 70 240 46" stroke="#c9a54a" stroke-width="3" fill="none"/><ellipse cx="200" cy="38" rx="12" ry="8" fill="#ffe8a0" stroke="#c9a54a" stroke-width="2"/>${[160,180,200,220,240].map((x,i)=>`<path d="M${x} ${46+(i%4?6:0)-(i===2?-12:0)} v-8" stroke="#c9a54a" stroke-width="2"/><ellipse cx="${x}" cy="${36+(i%4?6:0)+(i===2?12:0)}" rx="3" ry="5" fill="#fff6c8" class="mpglow"/><path d="M${x} ${52+(i===2?12:0)} l-3 6 3 6 3 -6z" fill="#bfe8ff" opacity=".85"/>`).join('')}</g>`:''}
+  ${D.w_light?`<path d="M0 18 Q100 50 200 22 T400 20" stroke="#8a7a6a" stroke-width="1.5" fill="none"/>${Array.from({length:14},(_,i)=>{const x=14+i*28,y=i<7?18+Math.sin((i/7)*Math.PI)*24:22+Math.sin(((i-7)/7)*Math.PI)*22;return`<circle cx="${x}" cy="${y+4}" r="4.5" fill="${['#ffd166','#ff8fab','#7fd1c0','#8cc4f0'][i%4]}" class="mpglow"/>`}).join('')}`:''}
+  ${D.w_arch?`<path d="M128 214 V140 A72 72 0 0 1 272 140 V214" stroke="#7cbf7a" stroke-width="9" fill="none"/>${Array.from({length:17},(_,i)=>{const a=Math.PI*(i/16);const x=200-Math.cos(a)*72,y=140-Math.sin(a)*72;return`<circle cx="${x}" cy="${y}" r="${6+(i%3)}" fill="${['#fff','#ff9fb3','#ffd6e3'][i%3]}" stroke="#f08aa4" stroke-width="1"/>`}).join('')}${[160,180,200].map((y,i)=>`<circle cx="128" cy="${y}" r="6" fill="${i%2?'#fff':'#ff9fb3'}"/><circle cx="272" cy="${y}" r="6" fill="${i%2?'#ff9fb3':'#fff'}"/>`).join('')}`:''}
+  ${D.w_carpet?`<path d="M178 214 L222 214 L262 300 L138 300 Z" fill="#fffdfd" stroke="#ffc4d6" stroke-width="3"/>${[[170,250],[230,262],[160,284],[240,290],[200,240]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.5" fill="#ff9fb3"/>`).join('')}`:''}
+  ${D.w_balloon?[[52,120,'#ff6f91'],[74,100,'#ffb3c6'],[326,104,'#ff6f91'],[348,124,'#ffd6e3']].map(([x,y,c])=>`<path d="M${x} ${y+14} Q${x+4} ${y+50} ${x} ${y+92}" stroke="#c9b6c0" stroke-width="1.2" fill="none"/><path d="M${x} ${y+16} s-16,-10 -16,-21 a8,8 0 0 1 16,-3 a8,8 0 0 1 16,3 c0,11 -16,21 -16,21z" fill="${c}" stroke="${shade(c,-.25)}" stroke-width="1.5"/>`).join(''):''}
+  ${D.w_cake?`<g transform="translate(318,150)"><rect x="-6" y="62" width="44" height="4" fill="#d9c7a3"/><rect x="0" y="40" width="32" height="22" rx="3" fill="#fff" stroke="#eadbe2" stroke-width="2"/><rect x="5" y="22" width="22" height="18" rx="3" fill="#fff" stroke="#eadbe2" stroke-width="2"/><rect x="9" y="8" width="14" height="14" rx="3" fill="#fff" stroke="#eadbe2" stroke-width="2"/><path d="M0 46 h32 M5 28 h22" stroke="#ffc4d6" stroke-width="3"/><path d="M16 8 s-4,-3 -4,-6 a2,2 0 0 1 4,-1 a2,2 0 0 1 4,1 c0,3 -4,6 -4,6z" fill="#ff6f91"/></g>`:''}
+  ${D.w_dove?[[86,64,0],[310,56,1]].map(([x,y,f])=>`<g transform="translate(${x},${y}) scale(${f?-1:1},1)"><g class="mphop"><path d="M-14 0 Q0 -8 12 -2 Q16 0 18 -4 L16 2 Q8 10 -6 6 Z" fill="#fff" stroke="#c9c2d4" stroke-width="1.5"/><path d="M-2 -2 Q4 -18 14 -16 Q8 -6 4 0" fill="#fff" stroke="#c9c2d4" stroke-width="1.5"/><circle cx="12" cy="-3" r="1.2" fill="#3b3346"/></g></g>`).join(''):''}
+  </svg>`}
+function viewWedding(){
+  const w=wedById(S.wid);if(!w)return`<div class="empty">결혼식을 찾지 못했어요.<br><button class="btn small" data-a="go" data-v="home" style="margin-top:10px">우리집으로</button></div>`;
+  const A=S.cats[w.a]&&live(S.cats[w.a]),B=S.cats[w.b]&&live(S.cats[w.b]);if(!A||!B)return'<div class="empty">신랑·신부 고양이를 찾지 못했어요.</div>';
+  const host=isHost(w),ph=wedPhase(w),inv=!!(w.inv||{})[S.me],G=w.guests||{},me_=G[S.me];
+  const chk=wedCheck(w),ready=chk.every(x=>x[2]);
+  const gl=Object.entries(G).filter(([k])=>!wedHosts(w).includes(k));
+  const phTxt={prep:'준비 중',soon:'청첩장 발송 완료 · 곧 시작해요',live:'결혼식 진행 중!',done:'결혼식이 끝났어요'}[ph];
+  const guests=gl.slice(0,8).map(([k])=>S.users[k]&&S.cats[S.users[k].main]).filter(Boolean);
+  let h=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(wedNames(w))} 결혼식</h2><button class="btn small ghost" data-a="go" data-v="${host?'cats':'news'}">나가기</button></div>
+  <p class="grow" style="margin:2px 0 8px">${wedWhen(w)} · <b style="color:${ph==='live'?'var(--pink-d)':'inherit'}">${phTxt}</b>${ph==='soon'?` · ${dur(w.start-now())} 뒤 시작`:ph==='live'?` · ${dur(w.end-now())} 남음`:''}</p>
+  <div class="scene hall" style="aspect-ratio:4/3">${hallSVG(w)}
+   <div class="catwrap" style="left:39%;width:30%;bottom:20%;z-index:3;cursor:default">${catSVG(A,{expr:'happy'})}</div><div class="catwrap" style="left:61%;width:30%;bottom:20%;z-index:3;cursor:default"><div class="flip" style="transform:scaleX(-1)">${catSVG(B,{expr:'happy'})}</div></div>
+   ${guests.map((g,i)=>`<div class="catwrap" style="left:${10+i*11.5}%;width:15%;bottom:2%;z-index:4;cursor:default">${catSVG(live(g),{still:true,expr:'happy'})}</div>`).join('')}
+   ${S.petal&&S.petal>now()?`<div class="confetti" style="z-index:5">${confettiHTML(30).replace(/border-radius:2px/g,'')}</div>`:''}</div>`;
+  if(host&&ph!=='done'&&ph!=='live'){
+    const dflt=new Date(now()+9*HOUR+DAY).toISOString().slice(0,10);
+    const ds=w.start?new Date(w.start+9*HOUR).toISOString():null,de=w.end?new Date(w.end+9*HOUR).toISOString():null;
+    h+=`<div class="sect">결혼식 준비 <small class="grow">· 두 주인 모두 함께 준비할 수 있어요</small></div>
+    <div class="list">${chk.map(([k,l,ok])=>`<div class="item" style="${ok?'background:#eefaf3;border-color:#c6ead4':''}"><b style="width:22px;color:${ok?'#2f9e6e':'var(--muted)'}">${ok?'✓':'○'}</b><div class="tx"><b>${l}</b></div></div>`).join('')}</div>
+    <div class="panel stack" style="margin-top:10px"><b>날짜와 시간</b><div class="row" style="flex-wrap:wrap;gap:8px"><input type="date" id="wdate" value="${ds?ds.slice(0,10):dflt}" style="flex:1 1 140px;border:1.5px solid var(--line);border-radius:12px;padding:9px"><input type="time" id="wst" value="${ds?ds.slice(11,16):'14:00'}" style="flex:1 1 90px;border:1.5px solid var(--line);border-radius:12px;padding:9px"><span>~</span><input type="time" id="wen" value="${de?de.slice(11,16):'16:00'}" style="flex:1 1 90px;border:1.5px solid var(--line);border-radius:12px;padding:9px"></div><button class="btn small" data-a="wtime" data-v="${w.id}">${w.start?'시간 바꾸기':'시간 정하기'}</button></div>
+    <div class="sect">의상</div><div class="panel stack"><p class="lead" style="margin:0">신랑·신부 고양이 모두 <b>웨딩드레스</b>나 <b>턱시도</b>를 입어야 해요. 각자 주인이 상점 '옷' 탭에서 사서 꾸미기에서 입혀요. 면사포도 있어요.</p><div class="row" style="gap:10px">${[A,B].map(c=>`<span class="chip ${WEAR.includes((c.eq||{}).body)?'':'gray'}">${esc(c.name)}: ${WEAR.includes((c.eq||{}).body)?ITEMS[c.eq.body].n:'아직 안 입었어요'}</span>`).join('')}</div><button class="btn small ghost" data-a="wshop">상점 옷 탭 가기</button></div>
+    <div class="sect">결혼식장 꾸미기</div><div class="list">${Object.entries(WDECOR).map(([k,it])=>{const by=(w.decor||{})[k];return`<div class="item"><div class="tx"><b>${it.n}</b><span>${it.d}${by?` · ${esc(ownerName(by))}님이 설치`:''}</span></div>${by?'<span class="chip gray">설치됨</span>':`<button class="btn small" data-a="wdecor" data-v="${w.id}" data-k="${k}">${it.p}코인${it.s?' ⭐'+it.s:''}</button>`}</div>`}).join('')}</div>
+    <div class="sect">하객 음식</div><div class="list">${Object.entries(WFOOD).map(([k,f])=>`<div class="item"><div class="tx"><b>${f.n}</b><span>하객 1명당 배부름 +${f.h} · 기분 +${f.m} · 준비 ${(w.food||{})[k]||0}인분</span></div><button class="btn small" data-a="wfood" data-v="${w.id}" data-k="${k}">5인분 ${f.p}코인</button></div>`).join('')}</div>
+    <div class="sect">청첩장</div><div class="panel stack">${ready?`<p class="lead" style="margin:0">초대할 친구를 골라 청첩장을 보내요. 받은 친구는 '소식'에서 청첩장을 눌러 결혼식장으로 올 수 있어요.</p>
+      <div class="list">${Object.entries(S.users).filter(([k,u])=>u&&u.name&&!wedHosts(w).includes(k)).map(([k,u])=>`<label class="item" style="cursor:pointer"><input type="checkbox" class="winv" value="${esc(k)}" ${(w.inv||{})[k]?'checked disabled':''} style="width:20px;height:20px"><div class="tx"><b>${esc(u.name)}</b><span>${(w.inv||{})[k]?'청첩장 보냄':''}</span></div></label>`).join('')||'<p class="grow">초대할 친구가 아직 없어요.</p>'}</div>
+      <div class="row"><button class="btn" style="flex:1" data-a="winvite" data-v="${w.id}">청첩장 보내기</button><button class="btn ghost" style="flex:1" data-a="wlink" data-v="${w.id}">청첩장 링크 복사</button></div>`:`<p class="grow" style="margin:0">위 준비를 모두 마치면 청첩장을 보낼 수 있어요.</p>`}</div>`;
+  }
+  if(!host&&ph!=='done'&&ph!=='live'){
+    h+=`<div class="panel stack" style="margin-top:10px;background:#fff7fa;border-color:#ffd6e3;text-align:center"><b style="font-family:var(--display);font-size:1.2rem;font-weight:400">${inv?'청첩장을 받았어요':'준비 중인 결혼식이에요'}</b><p class="lead" style="margin:0">${w.start?`${wedWhen(w)}에 이곳에서 결혼식이 열려요.`:'아직 날짜가 정해지지 않았어요.'}${inv?' 시간이 되면 참석하고 축하해 주세요!':''}</p></div>`;
+  }
+  if(ph==='live'){
+    if(!inv&&!host)h+=`<div class="panel" style="margin-top:10px"><p class="lead" style="margin:0">청첩장을 받은 친구만 참석할 수 있어요. 구경은 자유예요!</p></div>`;
+    else if(!me_)h+=`<button class="btn block" style="margin-top:10px" data-a="wattend" data-v="${w.id}">${host?'입장하기':'참석하기 · 참석 선물 30코인'}</button>`;
+    else{
+      h+=`<div class="row" style="margin-top:10px;gap:8px"><button class="btn teal" style="flex:1" data-a="wpetal" data-v="${w.id}">꽃잎 뿌리기</button></div>`;
+      if(!host)h+=`<div class="sect">축의금 <small class="grow">· 신랑·신부 주인에게 나눠서 전달돼요</small></div><div class="row" style="gap:8px">${[50,100,300].map(a=>`<button class="btn small" style="flex:1" data-a="wgift" data-v="${w.id}" data-k="${a}">${a}코인</button>`).join('')}</div>${me_.gift?`<p class="grow">낸 축의금 ${me_.gift}코인</p>`:''}
+        <div class="sect">축하 메시지</div><div class="row"><input id="wmsg" maxlength="60" value="${esc(me_.msg||'')}" placeholder="축하 한마디 (60자까지)" aria-label="축하 메시지" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px"><button class="btn" data-a="wmsgsend" data-v="${w.id}">남기기</button></div>`;
+      h+=`<div class="sect">음식 <small class="grow">· 종류마다 한 번씩 먹을 수 있어요</small></div><div class="list">${Object.entries(WFOOD).filter(([k])=>(w.food||{})[k]!=null).map(([k,f])=>{const ate=((w.ate||{})[S.me]||{})[k],left=(w.food||{})[k]||0;return`<div class="item"><div class="tx"><b>${f.n}</b><span>배부름 +${f.h} · 기분 +${f.m} · 남은 음식 ${left}인분</span></div>${ate?'<span class="chip gray">먹었어요</span>':`<button class="btn small" data-a="weat" data-v="${w.id}" data-k="${k}" ${left?'':'disabled'}>먹기</button>`}</div>`}).join('')}</div>`;
+    }
+  }
+  const msgs=gl.filter(([k,g])=>g.msg||g.gift);
+  if(ph==='live'||ph==='done'){
+    const tot=gl.reduce((s,[k,g])=>s+(g.gift||0),0);
+    h+=`<div class="sect">하객 ${gl.length}명${host||ph==='done'?` · 축의금 합계 ${tot}코인`:''}</div>${msgs.length?`<div class="list">${msgs.map(([k,g])=>`<div class="item"><div class="tx"><b>${esc(ownerName(k))}</b><span style="color:var(--ink)">${esc(g.msg||'(메시지 없음)')}</span></div>${(host||k===S.me)&&g.gift?`<span class="chip gold">${g.gift}코인</span>`:''}</div>`).join('')}</div>`:`<p class="grow">${ph==='done'?'남겨진 메시지가 없어요.':'아직 남겨진 메시지가 없어요.'}</p>`}`;
+  }
+  return h;
+}
+function weddingNews(){
+  const L=wedInvites();const H=myWeddings().filter(w=>isHost(w)&&wedPhase(w)!=='done');
+  if(!L.length&&!H.length)return'';
+  return`<div class="sect">청첩장</div><div class="list">${[...H,...L].map(w=>{const ph=wedPhase(w);return`<div class="item" style="background:linear-gradient(90deg,#fff7fa,#fffdf5);border-color:#ffd6e3"><div class="thumb" style="background:#fff;width:52px;height:52px;flex-basis:52px"><svg viewBox="0 0 60 60"><rect x="8" y="14" width="44" height="32" rx="4" fill="#fff" stroke="#ff9fb3" stroke-width="2.5"/><path d="M8 16 L30 32 L52 16" stroke="#ff9fb3" stroke-width="2.5" fill="none"/><path d="M30 38 s-7,-4.5 -7,-9 a3.5,3.5 0 0 1 7,-1.5 a3.5,3.5 0 0 1 7,1.5 c0,4.5 -7,9 -7,9z" fill="#ff6f91"/></svg></div><div class="tx"><b>${esc(wedNames(w))} 결혼식${isHost(w)?' <span class="chip gold">우리 결혼식</span>':!(w.seen||{})[S.me]?' <span class="chip pink">새 청첩장</span>':''}</b><span>${wedWhen(w)} · ${{prep:'준비 중',soon:'곧 시작',live:'지금 진행 중!',done:'끝났어요'}[ph]}</span></div><button class="btn small" data-a="wgo" data-v="${w.id}">결혼식장 가기</button></div>`}).join('')}</div>`;
+}
 
 /* ================= autumn (November) ================= */
 const isAutumn=()=>{try{if(localStorage.getItem('nyang-autumn')==='1')return true}catch(e){}return new Date(now()+9*HOUR).getUTCMonth()===10};
@@ -1891,7 +2071,8 @@ function viewPlaza(){
   const list=Object.entries(S.users).map(([k,u])=>S.cats[u.main]).filter(Boolean);
   const online=Object.values(S.users).filter(u=>u.seen&&now()-u.seen<3*MIN).length;
   const XB=isXmas()?xboxes().filter(b=>b.open&&!b.got):[];const LV=isAutumn()?leaves().filter(l=>l.open&&!l.got):[];
-  return`${isAutumn()?`<div class="abanner"><svg viewBox="-12 -12 24 24" style="width:30px;flex:none">${MAPLE(0,0,1.1,'#e8562a',-15)}</svg><div><b>가을 낙엽 줍기</b><br>${LV.length?`광장에 낙엽 ${LV.length}장이 떨어져 있어요. 눌러서 주워요!`:'지금 떨어진 낙엽은 다 주웠어요.'} (모은 낙엽 ${leafState().n}장)</div></div>`:''}${isXmas()?`<div class="xbanner"><div style="width:34px;flex:none">${GIFT_SVG()}</div><div><b>메리 크리스마스!</b><br>${XB.length?`광장에 선물상자 ${XB.length}개가 숨어 있어요. 찾아보세요!`:'오늘 나온 선물상자는 다 찾았어요.'} (${Math.min(xmasState().n,XMAS_GOAL)}/${XMAS_GOAL})</div></div>`:''}<div class="plaza" id="plaza">${plazaBG}${isAutumn()?leafFallHTML()+LV.map(l=>`<button class="leafp" data-a="leaf" data-v="${l.i}" style="left:${l.x}%;top:${l.y}%;z-index:${Math.round(l.y)+1}" aria-label="${l.gold?'황금 은행잎':'낙엽'} 줍기"><svg viewBox="-12 -12 24 24">${l.gold?GINKGO(0,0,1.15):MAPLE(0,0,1,'#e8562a',l.rot)}</svg></button>`).join(''):''}${isXmas()?snowHTML()+XB.map(b=>`<button class="xbox" data-a="xbox" data-v="${b.i}" style="left:${b.x}%;top:${b.y}%;z-index:${Math.round(b.y)+1}" aria-label="선물상자 열기">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</button>`).join(''):''}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
+  const LW=myWeddings().filter(w=>wedPhase(w)==='live'&&((w.inv||{})[S.me]||isHost(w)));
+  return`${LW.map(w=>`<div class="abanner" style="background:linear-gradient(90deg,#fff0f5,#fff8e8);border-color:#ffd6e3"><svg viewBox="0 0 24 24" style="width:28px;flex:none"><path d="M12 21 s-9,-6 -9,-12 a4.5,4.5 0 0 1 9,-2 a4.5,4.5 0 0 1 9,2 c0,6 -9,12 -9,12z" fill="#ff6f91"/></svg><div style="flex:1"><b style="color:var(--pink-d)">지금 결혼식 중!</b><br>${esc(wedNames(w))} · ${dur(w.end-now())} 남음</div><button class="btn small" data-a="wgo" data-v="${w.id}">가기</button></div>`).join('')}${isAutumn()?`<div class="abanner"><svg viewBox="-12 -12 24 24" style="width:30px;flex:none">${MAPLE(0,0,1.1,'#e8562a',-15)}</svg><div><b>가을 낙엽 줍기</b><br>${LV.length?`광장에 낙엽 ${LV.length}장이 떨어져 있어요. 눌러서 주워요!`:'지금 떨어진 낙엽은 다 주웠어요.'} (모은 낙엽 ${leafState().n}장)</div></div>`:''}${isXmas()?`<div class="xbanner"><div style="width:34px;flex:none">${GIFT_SVG()}</div><div><b>메리 크리스마스!</b><br>${XB.length?`광장에 선물상자 ${XB.length}개가 숨어 있어요. 찾아보세요!`:'오늘 나온 선물상자는 다 찾았어요.'} (${Math.min(xmasState().n,XMAS_GOAL)}/${XMAS_GOAL})</div></div>`:''}<div class="plaza" id="plaza">${plazaBG}${isAutumn()?leafFallHTML()+LV.map(l=>`<button class="leafp" data-a="leaf" data-v="${l.i}" style="left:${l.x}%;top:${l.y}%;z-index:${Math.round(l.y)+1}" aria-label="${l.gold?'황금 은행잎':'낙엽'} 줍기"><svg viewBox="-12 -12 24 24">${l.gold?GINKGO(0,0,1.15):MAPLE(0,0,1,'#e8562a',l.rot)}</svg></button>`).join(''):''}${isXmas()?snowHTML()+XB.map(b=>`<button class="xbox" data-a="xbox" data-v="${b.i}" style="left:${b.x}%;top:${b.y}%;z-index:${Math.round(b.y)+1}" aria-label="선물상자 열기">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</button>`).join(''):''}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
     return`<div class="pcat" data-a="card" data-v="${c.id}" data-id="${c.id}" style="left:${p.x}%;top:${p.y}%;z-index:${Math.round(p.y)}" role="button" tabindex="0" aria-label="${esc(title(v))}"><div class="flip" style="transform:scaleX(${p.f})">${v.status==='runaway'?`<svg viewBox="0 0 200 210"><text x="100" y="150" font-size="34" text-anchor="middle" fill="#857c8f" font-family="Jua">가출 중</text></svg>`:catSVG(v,{expr:v.st.mood<25?'sulky':'normal'})}</div><span class="tag"><i class="${on?'on':''}"></i>${esc(title(v))}${v.pop?` · 인기 ${v.pop}`:''}</span></div>`}).join('')}</div>
   ${(()=>{const top=Object.values(S.cats).filter(c=>c&&c.pop>0).sort((a,b)=>b.pop-a.pop).slice(0,5);return top.length?`<div class="sect">인기 랭킹</div><div class="list">${top.map((c,i)=>`<div class="item" data-a="card" data-v="${c.id}" role="button" tabindex="0" style="cursor:pointer"><b style="font-family:var(--display);font-weight:400;width:22px;color:${i===0?'#d99a1e':'var(--muted)'}" class="num">${i+1}</b><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(title(c))}</b><span>${FLOWER_IDS.filter(f=>(c.flowers||{})[f]).map(f=>ITEMS[f].n+' '+c.flowers[f]).join(' · ')}</span></div><span class="chip gold num">인기 ${c.pop}</span></div>`).join('')}</div>`:''})()}
   <p class="online" style="margin:10px 2px">지금 ${online}명 접속 중 · 고양이를 누르면 쓰다듬기, 말 걸기, 꽃 선물, 청혼을 할 수 있어요. 쓰다듬을수록 친밀도가 올라요.${DEMO?' 예시 친구 3명이 함께 있어요.':''}</p>`;
@@ -1904,7 +2085,7 @@ function viewCats(){
   const u=me(),cats=myCats();
   return`<div class="list">${cats.map(c0=>{const c=live(c0);const sp=c.spouse&&S.cats[c.spouse];
     return`<div class="item" style="align-items:flex-start"><div class="thumb" style="width:72px;height:72px;flex-basis:72px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(c.name)}${c.id===u.main?' <span class="chip gold">광장 대표</span>':''}</b><span>${STAGE[c.stage]} · Lv.${c.lv} · ${c.look.gender==='m'?'수컷':'암컷'} · ${personality(c).join(' · ')}${c.status==='runaway'?' · 가출 중':''}</span>${sp?`<span style="display:block">${esc(title(sp))}${waGwa(sp.name).slice(-1)} 결혼했어요</span>`:''}${c.parents?`<span style="display:block">부모: ${esc((S.cats[c.parents.a]||{}).name||'?')} · ${esc((S.cats[c.parents.b]||{}).name||'?')}</span>`:''}
-    <div class="row" style="margin-top:8px"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?`<button class="btn small teal" data-a="baby" data-v="${c.id}">아기 갖기</button>`:''}</div></div></div>`}).join('')}</div>
+    <div class="row" style="margin-top:8px"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?`<button class="btn small teal" data-a="baby" data-v="${c.id}">아기 갖기</button>`:''}${sp&&c.owner===S.me?(()=>{const w=wedOfCat(c);const ph=w&&wedPhase(w);return`<button class="btn small" style="background:#ff9fb3" data-a="wedopen" data-v="${c.id}">${!w?'결혼식 준비':ph==='done'?'결혼식 앨범':ph==='live'?'결혼식 진행 중':'결혼식 준비'}</button>`})():''}</div></div></div>`}).join('')}</div>
   <div class="row" style="margin-top:12px"><button class="btn teal block" data-a="visit" data-v="${S.me}">우리 집 방명록 보기 (${Object.keys(u.book||{}).length}개 · 누적 방문 ${u.visitTotal||0}명)</button></div>
   <div class="panel" style="margin-top:12px"><p class="lead" style="margin:0 0 10px">광장에는 대표 고양이 한 마리만 나가요. 결혼한 고양이는 조건을 채우면 아기를 가질 수 있어요(결혼 2일 뒤부터, 5일에 한 번, 800코인).</p>${(u.inv||{}).adopt?`<button class="btn block" data-a="adopt">분양권으로 새 고양이 데려오기</button>`:'<p class="grow" style="margin:0">분양권(1,000코인)이 있으면 새 고양이를 직접 만들어 데려올 수도 있어요.</p>'}</div>`;
 }
@@ -1924,14 +2105,14 @@ function viewNews(){
   const inbox=P.filter(p=>p.toOwner===S.me),sent=P.filter(p=>p.fromOwner===S.me);
   const feed=[...S.feed].reverse();
   S.seenFeed=feed[0]?feed[0].at:S.seenFeed;try{localStorage.setItem('nyang-seen-feed',S.seenFeed)}catch(e){}
-  return secHtml+celebNews()+`${inbox.length?`<div class="sect">받은 청혼</div><div class="list">${inbox.map(p=>{const a=S.cats[p.from],b=S.cats[p.to];if(!a||!b)return'';return`<div class="item"><div class="thumb">${catSVG(a,{still:true})}</div><div class="tx"><b>${esc(title(a))}</b><span>${esc(b.name)}에게 청혼했어요 · ${ago(p.at)}</span></div><div class="row"><button class="btn small" data-a="accept" data-v="${p.k}">수락</button><button class="btn small ghost" data-a="decline" data-v="${p.k}">거절</button></div></div>`}).join('')}</div>`:''}
+  return secHtml+weddingNews()+celebNews()+`${inbox.length?`<div class="sect">받은 청혼</div><div class="list">${inbox.map(p=>{const a=S.cats[p.from],b=S.cats[p.to];if(!a||!b)return'';return`<div class="item"><div class="thumb">${catSVG(a,{still:true})}</div><div class="tx"><b>${esc(title(a))}</b><span>${esc(b.name)}에게 청혼했어요 · ${ago(p.at)}</span></div><div class="row"><button class="btn small" data-a="accept" data-v="${p.k}">수락</button><button class="btn small ghost" data-a="decline" data-v="${p.k}">거절</button></div></div>`}).join('')}</div>`:''}
   ${sent.length?`<div class="sect">보낸 청혼</div><div class="list">${sent.map(p=>{const b=S.cats[p.to];return b?`<div class="item"><div class="thumb">${catSVG(b,{still:true})}</div><div class="tx"><b>${esc(title(b))}</b><span>대답을 기다리는 중 · ${ago(p.at)}</span></div></div>`:''}).join('')}</div>`:''}
   <div class="sect">마을 소식</div>${feed.length?`<div class="feed">${feed.map(f=>`<div><time>${ago(f.at)}</time><span>${esc(f.text)}</span></div>`).join('')}</div>`:'<div class="empty">아직 소식이 없어요.</div>'}`;
 }
 function nav(){
   const items=[['home','우리집',I.home],['plaza','광장',I.tree],['shop','상점',I.bag],['cats','내 고양이',I.paw],['events','이벤트',I.ticket],['news','소식',I.bell]];
   const newFeed=S.feed.length&&S.feed[S.feed.length-1].at>S.seenFeed&&S.feed[S.feed.length-1].by!==S.me;
-  const inbox=Object.values(S.props).some(p=>p.status==='pending'&&p.toOwner===S.me)||secretList().some(m=>!m.read);
+  const inbox=Object.values(S.props).some(p=>p.status==='pending'&&p.toOwner===S.me)||secretList().some(m=>!m.read)||wedInvites().some(w=>!(w.seen||{})[S.me]);
   return`<nav class="nav"><div class="in">${items.map(([k,l,i])=>`<button class="${S.view===k?'on':''}" data-a="go" data-v="${k}" aria-label="${l}">${i}${l}${(k==='news'&&(newFeed||inbox))||(k==='events'&&(qClaimable(me())||lottoPending(me()).length||!((me().lotto||{})[kstDay()])))?'<span class="dot"></span>':''}</button>`).join('')}</div></nav>`;
 }
 
@@ -2109,7 +2290,8 @@ function render(){
   else if(S.screen==='create')R.innerHTML=viewCreate();
   else if(S.screen==='app'){
     if(!me())return;
-    const v={home:viewHome,shop:viewShop,plaza:viewPlaza,cats:viewCats,news:viewNews,lotto:viewEvents,events:viewEvents,visit:viewVisit}[S.view]||viewHome;
+    {const ae=document.activeElement;if(ae&&ae.matches&&ae.matches('main input:not([type=checkbox]),main textarea')&&ae.value){clearTimeout(S.rdef);S.rdef=setTimeout(schedule,1500);return}}
+    const v={home:viewHome,shop:viewShop,plaza:viewPlaza,cats:viewCats,news:viewNews,lotto:viewEvents,events:viewEvents,visit:viewVisit,wedding:viewWedding}[S.view]||viewHome;
     const y=window.scrollY;
     R.innerHTML=header()+`<main class="stack">${v()}</main>`+nav();
     window.scrollTo(0,y);
@@ -2177,6 +2359,22 @@ document.addEventListener('click',async e=>{
     case'buy':buy(v);break;
     case'card':openCatCard(v);break;
     case'rank':openRank(v,el.dataset.k);break;
+    case'bookre':openBookReply(el.dataset.o,v);break;
+    case'resend':await sendBookReply(el.dataset.o,v);break;
+    case'redel':await Store.set(`users/${el.dataset.o}/book/${el.dataset.k}/re/${v}`,null);toast('지웠어요');break;
+    case'wedopen':await wedOpen(v);break;
+    case'wgo':goWedding(v);break;
+    case'wtime':await wedSetTime(v);break;
+    case'wdecor':await wedBuyDecor(v,el.dataset.k);break;
+    case'wfood':await wedBuyFood(v,el.dataset.k);break;
+    case'winvite':await wedInvite(v);break;
+    case'wlink':{const L=wedLink(v);try{await navigator.clipboard.writeText(L);toast('청첩장 링크를 복사했어요. 카톡에 붙여넣어 보내세요')}catch(e){openSheet(`<h2>청첩장 링크</h2><p class="lead">아래 링크를 길게 눌러 복사하세요.</p><input value="${esc(L)}" readonly style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px">`)}break}
+    case'wshop':S.tab.shop='body';closeSheet();markHist();S.view='shop';window.scrollTo(0,0);render();break;
+    case'wattend':await wedAttend(v);break;
+    case'wgift':await wedGift(v,+el.dataset.k);break;
+    case'wmsgsend':await wedMsg(v);break;
+    case'weat':await wedEat(v,el.dataset.k);break;
+    case'wpetal':S.petal=now()+3500;render();setTimeout(()=>{if(S.view==='wedding')render()},3600);break;
     case'xbox':await openXbox(+v);break;
     case'leaf':await pickLeaf(+v);break;
     case'leaftrade':await leafTrade(v);break;
