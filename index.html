@@ -1584,7 +1584,7 @@ async function talk(id,text,secret){
   if(v.status==='runaway'){toast('지금은 가출 중이에요');return null}
   talkT=now();addBond(id,2);qEvent('talk');dyAdd(id,'talk:'+ownerName(S.me));
   Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());bumpTr(c,{talk:1});const nt=ptypeOf(c);if(nt!==c.ptype&&c.ptype){const pn=PT[nt].n;setTimeout(()=>log(`${title(c)}의 성격이 '${pn}'${josa(pn,'으로','로').slice(pn.length)} 바뀌었어요.`),0)}c.ptype=nt;return roundCat(c)});
-  if(secret){await Store.push(`users/${v.owner}/secret`,{by:S.me,cat:v.id,text,at:now()});log(`${ownerName(S.me)}님이 ${title(v)}에게 비밀 메시지를 보냈어요.`)}
+  if(secret){await Store.push(`users/${v.owner}/secret`,{by:S.me,cat:v.id,text,at:now()})}
   else log(`${ownerName(S.me)}님이 ${title(v)}에게 말을 걸었어요: "${text}"`);
   return talkReply(v,text);
 }
@@ -1594,7 +1594,7 @@ function openTalk(id){
   <div class="list" id="tlog" data-live="1"></div>
   <div class="ch" style="margin:10px 0">${TALK_QUICK.map(q=>`<button data-a="tquick" data-id="${id}" data-v="${esc(q)}">${esc(q)}</button>`).join('')}</div>
   <div class="row"><input id="tin" maxlength="40" placeholder="하고 싶은 말 (40자까지)" aria-label="하고 싶은 말" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:14px;padding:11px 14px"><button class="btn" data-a="tsend" data-id="${id}">보내기</button></div>
-  <label class="row" style="margin-top:10px;gap:8px;font-size:.88rem;cursor:pointer"><input type="checkbox" id="tsec" style="width:20px;height:20px"> <span><b>비밀로 보내기</b> · 마을 소식과 알림에 내용이 안 보이고, ${esc(ownerName(v.owner))}님만 '소식'에서 읽을 수 있어요</span></label>`);
+  <label class="row" style="margin-top:10px;gap:8px;font-size:.88rem;cursor:pointer"><input type="checkbox" id="tsec" style="width:20px;height:20px"> <span><b>비밀로 보내기</b> · 마을 소식에 올라가지 않고, ${esc(ownerName(v.owner))}님에게만 알림이 가요 (알림에도 내용은 안 보여요)</span></label>`);
 }
 async function talkUI(id,text){
   const said=String(text||'').trim();const sec=!!($('#tsec')&&$('#tsec').checked);const r=await talk(id,said,sec);if(r==null)return;if(sec)toast('비밀 메시지를 보냈어요');
@@ -2414,11 +2414,11 @@ function viewCats(){
 }
 function secretList(){return Object.entries((me()&&me().secret)||{}).map(([k,m])=>Object.assign({k},m)).sort((a,b)=>b.at-a.at)}
 function openSecretReply(to){
-  openSheet(`<h2>${esc(ownerName(to))}님에게 비밀 답장</h2><p class="lead">마을 소식과 알림에는 내용이 안 보여요.</p><textarea id="srep" maxlength="100" rows="3" aria-label="비밀 답장" style="width:100%;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-family:var(--body);font-size:16px;resize:none" placeholder="100자까지"></textarea><button class="btn block" style="margin-top:10px" data-a="srsend" data-v="${to}">비밀로 보내기</button>`);
+  openSheet(`<h2>${esc(ownerName(to))}님에게 비밀 답장</h2><p class="lead">마을 소식에 올라가지 않고, 받는 사람에게만 알림이 가요.</p><textarea id="srep" maxlength="100" rows="3" aria-label="비밀 답장" style="width:100%;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-family:var(--body);font-size:16px;resize:none" placeholder="100자까지"></textarea><button class="btn block" style="margin-top:10px" data-a="srsend" data-v="${to}">비밀로 보내기</button>`);
 }
 async function sendSecret(to){
   const t=String(($('#srep')||{}).value||'').replace(/\s+/g,' ').trim().slice(0,100);if(!t)return toast('보낼 말을 적어주세요');
-  await Store.push(`users/${to}/secret`,{by:S.me,text:t,at:now()});log(`${ownerName(S.me)}님이 ${ownerName(to)}님에게 비밀 메시지를 보냈어요.`);closeSheet();toast('비밀 답장을 보냈어요');
+  await Store.push(`users/${to}/secret`,{by:S.me,text:t,at:now()});closeSheet();toast('비밀 답장을 보냈어요');
 }
 function viewNews(){
   const SM=secretList();const unread=SM.filter(m=>!m.read);
@@ -2924,8 +2924,15 @@ function deskNotify(){
   const body=k[0]==='away'?`${c.name}${iGa(c.name).slice(-1)} 집을 나갔어요. 츄르를 들고 찾으러 가 주세요.`:k[0]==='sick'?`${c.name}${iGa(c.name).slice(-1)} 아파요. 알약을 먹여주세요.`:k[0]==='hungry'?`${c.name}${iGa(c.name).slice(-1)} 배고파해요.`:`${c.name}${iGa(c.name).slice(-1)} 외로워해요. 쓰다듬어 주세요.`;
   try{const n=new Notification('냥이마을',{body,icon:'icons/icon-192.png'});n.onclick=()=>DK&&DK.openMain()}catch(e){}
 }
+let deskSecSeen=null;
+function deskSecret(){
+  const L=secretList(),ids=L.map(m=>m.k);if(deskSecSeen===null){deskSecSeen=new Set(ids);return}
+  const nw=L.filter(m=>!deskSecSeen.has(m.k)&&!m.read);ids.forEach(k=>deskSecSeen.add(k));if(!nw.length)return;
+  const m=activeCat();const t=`${ownerName(nw[0].by)}님에게서 비밀 메시지가 왔어요. '소식'에서 확인해요`;
+  if(m)deskSay(m.id,t,7000);try{const n=new Notification('냥이마을',{body:t,icon:'icons/icon-192.png'});n.onclick=()=>DK&&DK.openMain()}catch(e){}
+}
 function deskFeed(){
-  if(!PET||!S.me)return;const m=activeCat();const myName=ownerName(S.me);
+  if(!PET||!S.me)return;deskSecret();const m=activeCat();const myName=ownerName(S.me);
   for(const f of S.feed){if(f.at<=deskFeedSeen)continue;deskFeedSeen=f.at;if(f.by===S.me)continue;
     const aboutMe=m&&(f.text.includes(m.name)||f.text.includes(myName+'의')||f.text.includes(myName+'님의')||f.text.includes(myName+'님에게'));
     const friendCat=Object.values(S.cats).find(c=>c.owner===f.by&&S.users[f.by]&&S.users[f.by].main===c.id);
