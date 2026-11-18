@@ -385,6 +385,7 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 #bob.bite{transform:translateY(9px)}
 @keyframes bobf{50%{transform:translateY(2px)}}
 @keyframes bobn{25%{transform:translate(-2px,3px)}75%{transform:translate(2px,1px)}}
+.pond.shake{animation:shk .12s linear 5}@keyframes shk{25%{transform:translate(-4px,2px)}75%{transform:translate(4px,-2px)}}
 .fbite{position:absolute;font-family:var(--display);font-size:2.2rem;color:#e2453c;transform:translate(-50%,-100%);animation:pop .25s}
 </style>
 </head>
@@ -482,6 +483,7 @@ const TAILS=[['long','긴 꼬리'],['short','짧은 꼬리'],['fluffy','풍성 �
 const BUILDS=[['slim','날씬'],['normal','보통'],['chubby','통통']];
 const NOSES=[['분홍','#f39bb1'],['살구','#f0b49a'],['갈색','#8a5a44'],['검정','#3a3036']];
 const ITEMS={
+  bait:{n:'낚시 미끼',t:'fish',p:0,ex:true,d:'낚시할 때 1번에 1개 써요'},
   kibble:{n:'사료',t:'food',p:10,d:'배부름 +25 (1회분)'},
   kibble10:{n:'사료 10개 묶음',t:'food',p:90,pack:['kibble',10],d:'사료 10회분 · 10% 할인'},
   churu:{n:'츄르',t:'food',p:30,d:'배부름 +10 · 기분 +20 · 애정 +2'},
@@ -597,7 +599,7 @@ const ITEMS={
   lights:{n:'꼬마전구',t:'room',slot:'lights',p:250,d:'벽 위쪽을 반짝반짝'},
   throne:{n:'고양이 왕좌',t:'room',slot:'throne',p:1500,s:8,d:'마을의 왕'}
 };
-const STACK=new Set(['rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
+const STACK=new Set(['bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
 const STAGE={kitten:'아기냥',junior:'청소년냥',adult:'어른냥'};
 const need=lv=>40+lv*25;
@@ -1419,7 +1421,7 @@ function petBonus(amt=50){
 }
 
 /* ================= sickness ================= */
-const SICK={cold:'감기',skin:'피부 가려움'};
+const SICK={cold:'감기',skin:'피부 가려움',bite:'상어에게 물린 상처'};
 async function givePill(){
   const c=activeCat();if(!c)return;const v=live(c);
   if(!v.sick)return toast('지금은 아프지 않아요');
@@ -1879,28 +1881,44 @@ function viewXmas(){
 }
 
 /* ================= fishing ================= */
-const FISH=[{k:'smelt',n:'열빙어',p:.42,win:1000,sz:[12,22],it:'smelt'},{k:'fish',n:'고등어',p:.27,win:850,sz:[25,45],it:'fish'},{k:'shell',n:'반짝 조개',p:.1,win:900,sz:[5,9],c:30},{k:'boot',n:'낡은 장화',p:.14,win:1100,sz:[24,28],c:5},{k:'gold',n:'황금 잉어',p:.07,win:600,sz:[40,70],c:150}];
+const FISH=[{k:'smelt',n:'열빙어',p:.24,win:620,sz:[12,22],it:'smelt',esc:.15},{k:'fish',n:'고등어',p:.15,win:520,sz:[25,45],it:'fish',esc:.25},{k:'shell',n:'반짝 조개',p:.07,win:560,sz:[5,9],c:30,esc:.1},{k:'gold',n:'황금 잉어',p:.04,win:380,sz:[40,70],c:150,esc:.4},
+  {k:'boot',n:'낡은 장화',p:.12,win:800,sz:[24,28],c:2,junk:1},{k:'can',n:'빈 깡통',p:.12,win:800,sz:[8,12],c:1,junk:1},{k:'bag',n:'비닐봉지',p:.11,win:800,sz:[20,30],c:0,junk:1},{k:'weed',n:'해초 뭉치',p:.1,win:800,sz:[15,40],c:0,junk:1},
+  {k:'shark',n:'상어',p:.05,win:900,sz:[150,300],shark:1}];
+const BAIT_PACK={n:10,p:50};
 const FISH_N=5,FISH_REST=10*MIN;
+const fishInfo=x=>x.shark?'물리면 다쳐요!':x.it?ITEMS[x.it].n+' +1':x.c?x.c+'코인':'꽝';
 function fishPic(k){return{smelt:itemPic('smelt'),fish:itemPic('fish'),
   shell:`<svg viewBox="0 0 100 100"><path d="M50 22 L20 70 Q50 86 80 70 Z" fill="#ffd9e3" stroke="#e48aa6" stroke-width="3" stroke-linejoin="round"/><path d="M50 22 L34 74 M50 22 L50 78 M50 22 L66 74" stroke="#e48aa6" stroke-width="2.5"/><circle cx="64" cy="40" r="4" fill="#fff"/></svg>`,
+  can:`<svg viewBox="0 0 100 100"><g transform="rotate(-20 50 50)"><rect x="32" y="22" width="36" height="56" rx="5" fill="#c9d1db" stroke="#7d8896" stroke-width="3"/><rect x="32" y="38" width="36" height="22" fill="#e2453c"/><ellipse cx="50" cy="24" rx="18" ry="4" fill="#e6ebf1" stroke="#7d8896" stroke-width="2"/></g><path d="M72 30 q6 -4 10 0" stroke="#6fa8c9" stroke-width="3" fill="none"/></svg>`,
+  bag:`<svg viewBox="0 0 100 100"><path d="M26 30 Q22 70 30 84 Q50 92 70 84 Q78 70 74 30 Z" fill="rgba(235,240,245,.85)" stroke="#a9b4c0" stroke-width="3" stroke-linejoin="round"/><path d="M34 30 q-2 -14 8 -14 q6 0 6 14 M52 30 q0 -14 8 -14 q10 0 6 14" stroke="#a9b4c0" stroke-width="3" fill="none"/><path d="M40 50 q10 6 20 0" stroke="#c9d1db" stroke-width="2.5" fill="none"/></svg>`,
+  weed:`<svg viewBox="0 0 100 100"><path d="M30 86 Q20 60 34 40 Q42 28 36 14 M50 88 Q58 60 46 40 Q40 26 52 12 M68 86 Q78 62 64 44 Q58 32 70 18" stroke="#3f8f5a" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M34 60 q10 -4 14 4 M60 56 q8 -6 12 2" stroke="#6fbf7f" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
+  shark:`<svg viewBox="0 0 100 100"><path d="M8 58 Q30 30 66 40 L84 26 L80 50 L94 64 L74 60 Q40 78 8 58Z" fill="#7d93a8" stroke="#4e6377" stroke-width="3" stroke-linejoin="round"/><path d="M40 38 L48 18 L56 40" fill="#7d93a8" stroke="#4e6377" stroke-width="3" stroke-linejoin="round"/><path d="M14 60 Q34 70 56 62" fill="#eef2f6"/><circle cx="24" cy="50" r="3" fill="#2b2433"/><path d="M14 60 l5 4 4 -4 4 4 4 -4 4 4" stroke="#fff" stroke-width="2" fill="none"/></svg>`,
   boot:`<svg viewBox="0 0 100 100"><path d="M34 18 h26 v44 l22 8 v14 H30 Z" fill="#8a7a6a" stroke="#5a4c3e" stroke-width="3" stroke-linejoin="round"/><path d="M34 30 h26" stroke="#5a4c3e" stroke-width="3"/><path d="M70 84 q4 -8 8 -6" stroke="#6fa8c9" stroke-width="3" fill="none"/></svg>`,
   gold:`<svg viewBox="0 0 100 100"><path d="M14 50 Q40 22 72 44 L88 30 L86 70 L72 56 Q40 78 14 50Z" fill="#ffc83d" stroke="#d99a1e" stroke-width="3" stroke-linejoin="round"/><circle cx="28" cy="46" r="3.5" fill="#3b3346"/><path d="M44 40 q6 10 0 20 M54 40 q6 10 0 20" stroke="#e6a92a" stroke-width="2.5" fill="none"/></svg>`}[k]}
 function fishLeft(u){const f=(u||me()||{}).fish||{};if(f.until>now())return 0;if(f.until&&f.until<=now())return FISH_N;return f.left==null?FISH_N:f.left}
+function baitPic(){return`<svg viewBox="0 0 100 100"><rect x="22" y="30" width="56" height="50" rx="8" fill="#c9a37a" stroke="#8a6a48" stroke-width="3"/><rect x="22" y="30" width="56" height="12" rx="6" fill="#8fbfa0"/>${[[40,58],[56,64],[48,70],[62,54]].map(([x,y])=>`<path d="M${x-8} ${y} q4 -6 8 0 q4 6 8 0" stroke="#e98a8a" stroke-width="5" fill="none" stroke-linecap="round"/>`).join('')}</svg>`}
+async function buyBait(){
+  let why='';await Store.tx('users/'+S.me,u=>{if(!u)return u;why='';if((u.coins||0)<BAIT_PACK.p){why='코인이 부족해요';return}u.coins-=BAIT_PACK.p;u.inv=u.inv||{};u.inv.bait=(u.inv.bait||0)+BAIT_PACK.n;return u});
+  toast(why||`미끼 ${BAIT_PACK.n}개를 샀어요`);const b=$('#fbait');if(b)b.textContent='미끼 '+(((me().inv||{}).bait)||0)+'개';
+}
 function viewFishTab(){
   const u=me(),f=u.fish||{},left=fishLeft(u),rest=f.until>now()?f.until-now():0;const B=f.best||{};
-  return`<div class="panel stack"><h2>냥이 낚시터</h2><p class="lead" style="margin:0">찌가 쑥 들어가며 <b>!</b>가 뜨면 재빨리 당겨요. 열빙어와 고등어는 간식 가방으로, 조개와 황금 잉어는 코인으로 바뀌어요. ${FISH_N}번 던지면 10분 쉬어요.</p>
-  <button class="btn teal block" data-a="fishgo" ${rest?'disabled':''}>${rest?`쉬는 중 · ${dur(rest)} 뒤에 다시`:`낚시하러 가기 · ${left}번 남음`}</button></div>
-  <div class="sect">내 도감 <small class="grow">· 잡은 횟수 ${f.cnt||0}번</small></div><div class="list">${FISH.map(x=>`<div class="item"><div class="thumb" style="width:44px;height:44px;flex-basis:44px;${B[x.k]?'':'filter:grayscale(1) brightness(1.4);opacity:.5'}">${fishPic(x.k)}</div><div class="tx"><b>${B[x.k]?x.n:'???'}</b><span>${B[x.k]?`최대 ${B[x.k]}cm`:'아직 못 잡았어요'}</span></div><span class="chip">${x.it?ITEMS[x.it].n+' +1':x.c+'코인'}</span></div>`).join('')}</div>`;
+  const bait=(u.inv||{}).bait||0;
+  return`<div class="panel stack"><h2>냥이 낚시터</h2><p class="lead" style="margin:0">미끼를 끼워 던지고, 찌가 쑥 들어가며 <b>!</b>가 뜨면 재빨리 당겨요. 물고기는 금방 도망가고 쓰레기도 자주 걸려요. <b style="color:#c43d3d">가끔 상어가 나타나는데, 당기면 고양이가 물려서 다쳐요</b> (알약으로 치료). ${FISH_N}번 던지면 10분 쉬어요.</p>
+  <div class="item" style="background:#f3f8fb"><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${baitPic()}</div><div class="tx"><b>미끼 ${bait}개</b><span>던질 때마다 1개 · ${BAIT_PACK.n}개 묶음 ${BAIT_PACK.p}코인</span></div><button class="btn small" data-a="buybait" ${(u.coins||0)<BAIT_PACK.p?'disabled':''}>${BAIT_PACK.n}개 사기</button></div>
+  <button class="btn teal block" data-a="fishgo" ${rest||!bait?'disabled':''}>${rest?`쉬는 중 · ${dur(rest)} 뒤에 다시`:!bait?'미끼가 있어야 낚시할 수 있어요':`낚시하러 가기 · ${left}번 남음`}</button></div>
+  <div class="sect">내 도감 <small class="grow">· 잡은 횟수 ${f.cnt||0}번</small></div><div class="list">${FISH.map(x=>`<div class="item"><div class="thumb" style="width:44px;height:44px;flex-basis:44px;${B[x.k]?'':'filter:grayscale(1) brightness(1.4);opacity:.5'}">${fishPic(x.k)}</div><div class="tx"><b>${B[x.k]?x.n:'???'}</b><span>${B[x.k]?`최대 ${B[x.k]}cm`:'아직 못 잡았어요'}</span></div><span class="chip ${x.shark?'pink':x.junk?'gray':''}">${fishInfo(x)}</span></div>`).join('')}</div>`;
 }
 function fishGame(){
   if(fishLeft()<=0)return toast('조금 쉬었다가 다시 낚시해요');
+  if(!((me().inv||{}).bait))return toast('미끼가 없어요. 낚시터에서 미끼를 사 주세요');
   const c=activeCat();
   openSheet(`<h2>냥이 낚시터</h2><p class="lead">던진 다음, 찌가 쑥 들어가며 <b>!</b>가 뜨면 바로 당기세요. 너무 빨리 당기면 물고기가 도망가요.</p>
   <div class="pond" data-live="1"><svg viewBox="0 0 320 200" preserveAspectRatio="none"><rect width="320" height="200" fill="#bfe3f5"/><path d="M0 70 Q80 60 160 68 T320 64 V200 H0Z" fill="#6fb7de"/><path d="M0 70 Q80 60 160 68 T320 64" stroke="#e7f6ff" stroke-width="3" fill="none"/>${[[60,110],[150,140],[240,100],[280,160],[110,175]].map(([x,y])=>`<path d="M${x-14} ${y} q14 -6 28 0" stroke="#a8d8f0" stroke-width="2.5" fill="none" opacity=".8"/>`).join('')}<path d="M0 150 Q30 120 70 140 L90 200 H0Z" fill="#8bc47a"/><path d="M286 200 l6 -46 M296 200 l2 -54 M306 200 l-4 -40" stroke="#5f9e55" stroke-width="4" stroke-linecap="round"/>
   <path id="rod" d="M70 128 L130 60" stroke="#8a5a32" stroke-width="4" stroke-linecap="round"/><path id="fline" d="M130 60 L130 60" stroke="#3b3346" stroke-width="1.2" fill="none"/>
   <g id="bobw" style="display:none"><g id="bob"><circle cx="0" cy="0" r="7" fill="#fff" stroke="#3b3346" stroke-width="1.5"/><path d="M-7 0 A7 7 0 0 1 7 0Z" fill="#e2453c"/></g></g></svg>
   <div class="fcat">${c?catSVG(live(c),{still:true}):''}</div><div class="fmsg" id="fmsg">던지기를 눌러보세요</div></div>
-  <div class="gstat num"><span id="fleft">남은 횟수 ${fishLeft()}</span><span id="fcnt">이번에 잡은 것 0</span></div>
+  <div class="gstat num"><span id="fleft">남은 횟수 ${fishLeft()}</span><span id="fbait">미끼 ${((me().inv||{}).bait)||0}개</span><span id="fcnt">잡은 것 0</span></div>
   <button class="btn teal block" id="fbtn">던지기</button><div class="list" id="fcatch" style="margin-top:10px"></div>`);
   let st='idle',fish=null,tm=[],bx=0,by=0,biteAt=0,caught=0;
   const clear=()=>{tm.forEach(clearTimeout);tm=[]};
@@ -1909,13 +1927,20 @@ function fishGame(){
   const bob=cls=>{const b=$('#bob');if(b)b.setAttribute('class',cls||'')};
   const pick=()=>{let r=Math.random(),a=0;for(const f of FISH){a+=f.p;if(r<a)return f}return FISH[0]};
   const btn=$('#fbtn');
-  const end=async(ok,why)=>{clear();st='busy';$('#bobw').style.display='none';$('#fline').setAttribute('d','M130 60 L130 60');document.querySelectorAll('.fbite').forEach(e=>e.remove());
+  const end=async(ok,why)=>{clear();st='busy';const wasShark=fish&&fish.shark;$('#bobw').style.display='none';$('#fline').setAttribute('d','M130 60 L130 60');document.querySelectorAll('.fbite').forEach(e=>e.remove());
+    if(ok&&fish.shark){const c=activeCat();msg('상어에게 물렸어요!');
+      if(c)await catTx(c.id,(c,res)=>{c.sick={k:'bite',at:now()};c.st.mood=clamp(c.st.mood-25);c.st.energy=clamp(c.st.energy-20)});
+      log(`${ownerName(S.me)}님의 ${c?c.name:'고양이'}${c?iGa(c.name).slice(-1):'가'} 낚시하다 상어에게 물렸어요!`);
+      $('#fcatch').insertAdjacentHTML('afterbegin',`<div class="item" style="background:#ffe3e3;border-color:#ffc4c4"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${fishPic('shark')}</div><div class="tx"><b>상어에게 물렸어요!</b><span>${c?esc(c.name):'고양이'}${c?iGa(c.name).slice(-1):'가'} 다쳤어요. 알약을 먹여 주세요.</span></div></div>`);
+      document.querySelector('.pond').classList.add('shake');setTimeout(()=>{const pd=$('.pond');if(pd)pd.classList.remove('shake')},600);
+      ok=false;fish=null}
+    else if(ok&&fish.esc&&Math.random()<fish.esc){msg(`앗! ${fish.n}${iGa(fish.n).slice(-1)} 줄을 끊고 도망갔어요`);ok=false;fish=null}
     if(ok){const sz=Math.round(fish.sz[0]+Math.random()*(fish.sz[1]-fish.sz[0]));let rec=false;
-      await Store.tx('users/'+S.me,u=>{if(!u)return u;u.fish=u.fish||{};u.fish.cnt=(u.fish.cnt||0)+1;u.fish.best=u.fish.best||{};rec=false;if(!u.fish.best[fish.k]||sz>u.fish.best[fish.k]){u.fish.best[fish.k]=sz;rec=true}if(fish.it){u.inv=u.inv||{};u.inv[fish.it]=(u.inv[fish.it]||0)+1}else u.coins=(u.coins||0)+fish.c;return u});
-      caught++;$('#fcnt').textContent='이번에 잡은 것 '+caught;msg(`${fish.n} ${sz}cm!${rec?' 새 기록!':''}`);
+      await Store.tx('users/'+S.me,u=>{if(!u)return u;u.fish=u.fish||{};u.fish.cnt=(u.fish.cnt||0)+1;u.fish.best=u.fish.best||{};rec=false;if(!u.fish.best[fish.k]||sz>u.fish.best[fish.k]){u.fish.best[fish.k]=sz;rec=true}if(fish.it){u.inv=u.inv||{};u.inv[fish.it]=(u.inv[fish.it]||0)+1}else u.coins=(u.coins||0)+(fish.c||0);return u});
+      caught++;$('#fcnt').textContent='이번에 잡은 것 '+caught;msg(fish.junk?`${fish.n}... 쓰레기네요`:`${fish.n} ${sz}cm!${rec?' 새 기록!':''}`);
       if(fish.k==='gold')log(`${ownerName(S.me)}님이 황금 잉어 ${sz}cm를 낚았어요!`);
-      $('#fcatch').insertAdjacentHTML('afterbegin',`<div class="item"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${fishPic(fish.k)}</div><div class="tx"><b>${fish.n} ${sz}cm${rec?' <span class="chip pink">새 기록</span>':''}</b><span>${fish.it?ITEMS[fish.it].n+' +1 (간식 가방)':fish.c+'코인'}</span></div></div>`)}
-    else msg(why);
+      $('#fcatch').insertAdjacentHTML('afterbegin',`<div class="item"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${fishPic(fish.k)}</div><div class="tx"><b>${fish.n} ${sz}cm${rec?' <span class="chip pink">새 기록</span>':''}</b><span>${fish.it?ITEMS[fish.it].n+' +1 (간식 가방)':fish.c?fish.c+'코인':'꽝 · 쓰레기는 버렸어요'}</span></div></div>`)}
+    else if(why)msg(wasShark&&!ok?'휴, 상어가 미끼만 먹고 갔어요':why);
     const left=fishLeft();$('#fleft').textContent='남은 횟수 '+left;
     if(left<=0){btn.textContent='오늘은 여기까지! 10분 뒤에 다시';btn.disabled=true;btn.onclick=null;const b2=document.createElement('button');b2.className='btn ghost block';b2.style.marginTop='8px';b2.textContent='닫기';b2.onclick=closeSheet;btn.after(b2)}
     else{btn.textContent='다시 던지기';st='idle'}};
@@ -1924,13 +1949,16 @@ function fishGame(){
       st='busy';let ok=false;
       await Store.tx('users/'+S.me+'/fish',f=>{f=f||{};if(f.until>now()){ok=false;return}if(f.until){delete f.until;f.left=FISH_N}const l=f.left==null?FISH_N:f.left;if(l<=0){ok=false;return}f.left=l-1;if(f.left<=0){f.until=now()+FISH_REST}ok=true;return f});
       if(!ok){toast('조금 쉬었다가 다시 낚시해요');st='idle';return}
+      const bt0=((me().inv||{}).bait)||0;
+      if(!(await useItem('bait'))){await Store.tx('users/'+S.me+'/fish',f=>{f=f||{};if(f.until){delete f.until;f.left=0}f.left=Math.min(FISH_N,(f.left||0)+1);return f});toast('미끼가 없어요. 낚시터에서 미끼를 사 주세요');st='idle';return}
+      $('#fbait').textContent='미끼 '+Math.max(0,bt0-1)+'개';
       $('#fleft').textContent='남은 횟수 '+fishLeft();
       fish=pick();bx=170+Math.random()*100;by=95+Math.random()*60;
       const w=$('#bobw');w.style.display='';w.setAttribute('transform',`translate(${bx},${by})`);$('#fline').setAttribute('d',`M130 60 Q${(130+bx)/2} ${by-10} ${bx} ${by}`);bob('float');msg('기다리는 중...');
       btn.textContent='당기기';st='wait';
       const wait=1500+Math.random()*3500;
       for(let t=600;t<wait-300;t+=900+Math.random()*900)T(()=>{if(st==='wait'){bob('nib');setTimeout(()=>{if(st==='wait')bob('float')},720)}},t);
-      T(()=>{st='bite';biteAt=now();bob('bite');msg('!!');$('.pond').insertAdjacentHTML('beforeend',`<div class="fbite" style="left:${bx/320*100}%;top:${by/200*100}%">!</div>`);
+      T(()=>{st='bite';biteAt=now();bob('bite');msg('!!');$('.pond').insertAdjacentHTML('beforeend',`<div class="fbite" style="left:${bx/320*100}%;top:${by/200*100}%">!</div>`+(fish.shark?`<div class="fbite" style="left:${(bx+24)/320*100}%;top:${(by+6)/200*100}%;width:12%"><svg viewBox="0 0 40 30" style="display:block;width:100%;height:auto"><path d="M4 28 Q18 22 22 2 Q28 18 38 28Z" fill="#6f8599" stroke="#4e6377" stroke-width="2"/></svg></div>`:''));
         T(()=>{if(st==='bite')end(false,'놓쳤어요... 더 빨리 당겨봐요')},fish.win)},wait);
     }else if(st==='wait')end(false,'너무 빨랐어요! 물고기가 도망갔어요');
     else if(st==='bite')end(true);
@@ -2042,7 +2070,7 @@ function viewHome(){
   const inst=!DK&&coarse&&!standalone&&!instHide?`<div class="panel row" style="padding:10px 12px;gap:10px;background:var(--gold-l);border-color:#f4dfa4"><span style="flex:1;min-width:0;font-size:.86rem">${ios?'공유 버튼 → <b>홈 화면에 추가</b>를 누르면 앱처럼 쓸 수 있어요.':'홈 화면에 추가하면 앱처럼 바로 열 수 있어요.'}</span>${S.installEvt?'<button class="btn small" data-a="install">추가</button>':''}<button class="btn small ghost" data-a="instdismiss">닫기</button></div>`:'';
   return`${inst}${sw}<div class="scene">${roomScene(u)}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
   <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping':''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div></div></div>
-  ${c.sick?`<div class="panel row" style="background:#ffe3e3;border-color:#ffc4c4;gap:10px;padding:10px 12px"><span style="flex:1;min-width:0;font-size:.9rem"><b style="font-family:var(--display);font-weight:400;color:#c43d3d">${esc(c.name)}${iGa(c.name).slice(-1)} 아파요 (${SICK[c.sick.k]||'감기'})</b><br>기분이 빨리 떨어지고 놀 수 없어요.${c.sick.k==='skin'?' 목욕을 자주 시켜 주세요.':''}</span><button class="btn small" data-a="pill">알약 먹이기 · ${(u.inv||{}).pill||0}개</button></div>`:''}
+  ${c.sick?`<div class="panel row" style="background:#ffe3e3;border-color:#ffc4c4;gap:10px;padding:10px 12px"><span style="flex:1;min-width:0;font-size:.9rem"><b style="font-family:var(--display);font-weight:400;color:#c43d3d">${esc(c.name)}${iGa(c.name).slice(-1)} 아파요 (${SICK[c.sick.k]||'감기'})</b><br>기분이 빨리 떨어지고 놀 수 없어요.${c.sick.k==='skin'?' 목욕을 자주 시켜 주세요.':c.sick.k==='bite'?' 낚시하다 상어에게 물렸어요. 알약을 먹여야 나아요.':''}</span><button class="btn small" data-a="pill">알약 먹이기 · ${(u.inv||{}).pill||0}개</button></div>`:''}
   <div class="panel stack"><div class="stats">${statBar('배부름',c.st.hunger,'var(--hunger)')}${statBar('기분',c.st.mood,'var(--mood)')}${statBar('청결',c.st.clean,'var(--clean)')}${statBar('기력',c.st.energy,'var(--energy)')}</div>
   <div class="meta"><div class="chips">${pers.map((p,i)=>`<span class="chip ${i?'':'pink'}">${p}</span>`).join('')}<span class="chip gold num">애정 ${Math.floor(c.aff)}</span><span class="chip gold num">인기도 ${c.pop||0}</span><span class="chip num">똑똑 ${Math.floor(c.smart)}</span><span class="chip num">튼튼 ${Math.floor(c.strong)}</span>${c.spouse&&S.cats[c.spouse]?`<span class="chip gold">${esc(title(S.cats[c.spouse]))}${waGwa(S.cats[c.spouse].name).slice(-1)} 결혼</span>`:''}</div>
   <div class="xp num">Lv.${c.lv}<div class="bar"><i style="width:${c.xp/need(c.lv)*100}%;background:var(--gold)"></i></div>${Math.floor(c.xp)}/${need(c.lv)}</div>
@@ -2380,6 +2408,7 @@ document.addEventListener('click',async e=>{
     case'leaftrade':await leafTrade(v);break;
     case'gogo':gogumaGame();break;
     case'fishgo':fishGame();break;
+    case'buybait':await buyBait();break;
     case'cheer':await cheer(v,el.dataset.k);break;
     case'celebgot':await celebGot(v,el.dataset.k);break;
     case'srep':openSecretReply(v);break;
