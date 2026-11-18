@@ -521,6 +521,7 @@ const BUILDS=[['slim','날씬'],['normal','보통'],['chubby','통통']];
 const NOSES=[['분홍','#f39bb1'],['살구','#f0b49a'],['갈색','#8a5a44'],['검정','#3a3036']];
 const ITEMS={
   bait:{n:'낚시 미끼',t:'fish',p:0,ex:true,d:'낚시할 때 1번에 1개 써요'},
+  biscuit:{n:'성장 비스킷',t:'food',p:150,d:'경험치 +50 · 고양이 한 마리당 하루 3개까지'},
   kibble:{n:'사료',t:'food',p:10,d:'배부름 +25 (1회분)'},
   kibble10:{n:'사료 10개 묶음',t:'food',p:90,pack:['kibble',10],d:'사료 10회분 · 10% 할인'},
   churu:{n:'츄르',t:'food',p:30,d:'배부름 +10 · 기분 +20 · 애정 +2'},
@@ -641,7 +642,7 @@ const ITEMS={
 };
 for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room'].includes(it.t))continue;const tier=it.p<150?1:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
 for(const it of Object.values(ITEMS)){if(it.ex||!['hat','neck','face','body','aura','room'].includes(it.t))continue;it.p=Math.round(it.p*1.07/10)*10}
-const STACK=new Set(['bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
+const STACK=new Set(['biscuit','bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
 const STAGE={kitten:'아기냥',junior:'청소년냥',adult:'어른냥'};
 const need=lv=>40+lv*25;
@@ -954,6 +955,7 @@ function itemPic(id,cat){
     fish:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="72" rx="40" ry="10" fill="#e8eef2"/><path d="M18 52 Q44 26 70 50 Q44 74 18 52z" fill="#8fb3c9" stroke="#5d8399" stroke-width="3"/><path d="M68 50 L86 38 L84 62 Z" fill="#8fb3c9" stroke="#5d8399" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="48" r="3" fill="#2c2433"/><path d="M40 44 l4 10 M48 42 l4 12 M56 44 l4 10" stroke="#c97f3a" stroke-width="3"/></svg>`,
     rawgoguma:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="78" rx="34" ry="7" fill="#e8eef2"/><path d="M14 56 Q20 30 52 32 Q84 34 88 54 Q84 74 50 72 Q18 72 14 56Z" fill="#a0569f" stroke="#6e3570" stroke-width="3"/><path d="M30 46 q4 4 0 8 M56 42 q4 4 0 8 M70 54 q4 4 0 8" stroke="#6e3570" stroke-width="2" fill="none"/><path d="M88 54 q6 2 8 -4" stroke="#6e3570" stroke-width="2.5" fill="none"/></svg>`,
     goguma:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="80" rx="36" ry="7" fill="#e8eef2"/><path d="M12 58 Q18 32 50 34 Q82 36 88 56 Q82 76 50 74 Q16 74 12 58Z" fill="#7a4a3a" stroke="#4e2c22" stroke-width="3"/><path d="M40 40 Q52 36 66 42 Q74 56 60 64 Q44 68 38 56 Q34 46 40 40Z" fill="#ffc94d" stroke="#e09a1e" stroke-width="2"/><path d="M42 24 q-4 -8 2 -14 M54 22 q-4 -8 2 -14 M66 26 q-4 -8 2 -14" stroke="#c9c2d4" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/></svg>`,
+    biscuit:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="78" rx="32" ry="7" fill="#e8eef2"/><path d="M50 18 L60 34 L78 30 L74 48 L88 58 L72 66 L74 84 L56 78 L50 92 L44 78 L26 84 L28 66 L12 58 L26 48 L22 30 L40 34Z" fill="#e8b56a" stroke="#b9823a" stroke-width="3" stroke-linejoin="round"/>${[[42,46],[58,48],[50,62],[38,62],[62,62]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3" fill="#b9823a"/>`).join('')}<path d="M44 40 q6 -6 12 0" stroke="#fff3d6" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
     kibble:`<svg viewBox="0 0 100 100"><path d="M14 52h72a36 26 0 0 1-72 0z" fill="#8fc7e8" stroke="#5d9fc4" stroke-width="3"/>${[30,42,54,66,36,60,48].map((x,i)=>`<circle cx="${x}" cy="${i>3?44:48}" r="6" fill="#c9884a"/>`).join('')}</svg>`,
     kibble10:`<svg viewBox="0 0 100 100"><rect x="24" y="18" width="52" height="68" rx="8" fill="#f2c38a" stroke="#c9884a" stroke-width="3"/><rect x="24" y="18" width="52" height="16" rx="6" fill="#ff8fab"/><circle cx="50" cy="58" r="14" fill="#fff8ec"/>${[44,50,56,47,53].map((x,i)=>`<circle cx="${x}" cy="${i>2?62:55}" r="3.5" fill="#c9884a"/>`).join('')}<text x="50" y="30" font-size="10" text-anchor="middle" fill="#fff" font-family="Jua">x10</text></svg>`,
     pill:`<svg viewBox="0 0 100 100"><g transform="rotate(-35 50 50)"><rect x="22" y="38" width="56" height="24" rx="12" fill="#fff" stroke="#9aa7bd" stroke-width="3"/><path d="M50 38 h16 a12 12 0 0 1 0 24 h-16z" fill="#ff8fab" stroke="#e0607f" stroke-width="3"/></g><circle cx="76" cy="26" r="3" fill="#ffd166"/><circle cx="26" cy="74" r="2.5" fill="#9fd0f0"/></svg>`,
@@ -1149,7 +1151,8 @@ async function catTx(id,fn){
 }
 const addCoins=n=>Store.tx('users/'+S.me+'/coins',v=>Math.max(0,(v||0)+n));
 async function useItem(id,n=1){const r=await Store.tx('users/'+S.me+'/inv/'+id,v=>{if((v||0)<n)return;return(v||0)-n});return r.committed}
-function xp(c,res,n){const r=addXP(c,n);if(r.ups){res.ups=r.ups;res.lvCoins=r.coins;res.coins=(res.coins||0)+r.coins}}
+const isWeekend=()=>{const d=new Date(now()+9*HOUR).getUTCDay();return d===0||d===6};
+function xp(c,res,n,raw){if(!raw&&isWeekend())n*=2;const r=addXP(c,n);if(r.ups){res.ups=r.ups;res.lvCoins=r.coins;res.coins=(res.coins||0)+r.coins}}
 function busy(c){if(c.status==='runaway')return'가출 중이에요';if(c.sleepUntil&&c.sleepUntil>now())return'쿨쿨 자는 중이에요';return null}
 
 let lastPet=0;
@@ -1168,7 +1171,7 @@ async function pet(ev){
     if(c.petN<=40)c.aff=clamp(c.aff+.4);
     c.petBurst=(c.petBurst||0)+1;bumpTr(c,{pet:1});{const dd=kstDay();if(c.petCoinDay!==dd){c.petCoinDay=dd;c.petCoinN=0}if(c.petCoinN<300){c.petCoinN++;res.coins=1}}
     if(c.petBurst>=100){c.petBurst=0;c.petRestUntil=now()+2*MIN;res.restNow=true;bumpTr(c,{pester:1})}
-    if(c.petN%10===0)xp(c,res,2);
+    if(c.petN%10===0)xp(c,res,3);
   });
   if(res&&res.refuse){say('하악!');return}
   if(res&&res.restNow){toast('100번 쓰다듬었어요! 잠시 쉬어야 해요 · 2분 뒤에 다시 가능해요',3200);say('너무 많이 만졌다냥... 좀 쉬자');schedule();return}
@@ -1191,12 +1194,19 @@ async function feed(kind){
   if(!(await useItem(kind)))return toast(`${ITEMS[kind].n}${iGa(ITEMS[kind].n).slice(-1)} 없어요. 상점 '간식' 탭에서 살 수 있어요`);
   const f=FOOD[kind];const T=tasteOf(c),fav=kind===T.fav,hate=kind===T.hate;let reveal='';
   qEvent('feed');dyAdd(c.id,'feed:'+kind);
-  await catTx(c.id,(c,res)=>{bumpTr(c,{feed:kind==='kibble'?.4:1.2});c.st.hunger=clamp(c.st.hunger+(hate?f.h*.6:f.h));c.st.mood=clamp(c.st.mood+(fav?f.m+12:hate?-5:f.m));c.aff=clamp(c.aff+f.a+(fav?1:0));c.neglect=0;xp(c,res,f.x);
+  await catTx(c.id,(c,res)=>{bumpTr(c,{feed:kind==='kibble'?.4:1.2});c.st.hunger=clamp(c.st.hunger+(hate?f.h*.6:f.h));c.st.mood=clamp(c.st.mood+(fav?f.m+12:hate?-5:f.m));c.aff=clamp(c.aff+f.a+(fav?1:0));c.neglect=0;xp(c,res,f.x*2);
     if(fav||hate){c.tk=c.tk||{};const kk=fav?'fav':'hate';c.tk[kk]=(c.tk[kk]||0)+1;if(c.tk[kk]===2)reveal=kk}});
   closeSheet();homeFx('eat',kind);if(!hate)S.happyUntil=now()+1200;
   say(fav?`${ITEMS[kind].n} 제일 좋아!! 최고야!`:hate?'...이건 별로냥':kind==='smelt'?'오독오독 열빙어!':kind==='churu'?'츄르 최고냥!!':kind==='cake'?'생일도 아닌데?!':'냠냠냠');
   if(reveal)setTimeout(()=>toast(reveal==='fav'?`${c.name}${iGa(c.name).slice(-1)} 제일 좋아하는 건 ${ITEMS[kind].n}인가 봐요!`:`${c.name}${eunNeun(c.name).slice(-1)} ${ITEMS[kind].n}${eulReul(ITEMS[kind].n).slice(-1)} 싫어하나 봐요...`,3500),1300);
   schedule();
+}
+async function eatBiscuit(){
+  const c=activeCat();if(!c)return;const v=live(c);const b=busy(v);if(b)return toast(b);
+  const D=kstDay();if(v.bisDay===D&&(v.bisN||0)>=3)return toast(`${c.name}${eunNeun(c.name).slice(-1)} 오늘 비스킷을 3개 다 먹었어요. 내일 또 줘요`);
+  if(!(await useItem('biscuit')))return toast("성장 비스킷이 없어요. 상점 '간식' 탭에서 살 수 있어요");
+  await catTx(c.id,(c,res)=>{if(c.bisDay!==D){c.bisDay=D;c.bisN=0}c.bisN++;c.st.hunger=clamp(c.st.hunger+5);c.neglect=0;xp(c,res,50,true)});
+  dyAdd(c.id,'feed:biscuit');closeSheet();homeFx('eat','biscuit');S.happyUntil=now()+1200;say('바삭바삭! 쑥쑥 크는 기분이다냥');schedule();
 }
 async function play(){
   const c=activeCat();if(!c)return;const v=live(c);const b=busy(v);if(b)return toast(b);
@@ -1211,7 +1221,7 @@ async function bath(){
   if(v.st.clean>85)return toast('이미 깨끗해요');
   const likes=v.aff>=60;
   qEvent('bath');
-  await catTx(c.id,(c,res)=>{c.st.clean=100;c.st.mood=clamp(c.st.mood+(likes?5:-12));c.neglect=0;xp(c,res,3)});
+  await catTx(c.id,(c,res)=>{c.st.clean=100;c.st.mood=clamp(c.st.mood+(likes?5:-12));c.neglect=0;xp(c,res,8)});
   homeFx('bath');say(likes?'뽀송뽀송~':'물 싫어!!');toast(likes?'뽀송뽀송해졌어요':'깨끗해졌지만 조금 삐졌어요');schedule();
 }
 async function nap(){
@@ -2355,7 +2365,7 @@ window.addEventListener('popstate',()=>{if(PET)return;if($('#layer .sheet')){cle
 function openFood(){
   const inv=(me().inv)||{};
   const row=(id,name,desc,n)=>`<div class="item"><div class="thumb">${id==='kibble'?`<svg viewBox="0 0 100 100"><path d="M14 52h72a36 26 0 0 1-72 0z" fill="#8fc7e8" stroke="#5d9fc4" stroke-width="3"/>${[30,42,54,66,36,60,48].map((x,i)=>`<circle cx="${x}" cy="${i>3?44:48}" r="6" fill="#c9884a"/>`).join('')}</svg>`:itemPic(id)}</div><div class="tx"><b>${name}</b><span>${desc}</span></div><button class="btn small" data-a="feed" data-v="${id}" ${!n?'disabled':''}>주기 · ${n||0}개</button></div>`;
-  openSheet(`<h2>밥 주기</h2><p class="lead">사료와 간식은 상점 '간식' 탭에서 살 수 있어요. 사료는 10개 묶음이 더 싸요.</p><div class="list">${row('kibble','사료','배부름 +25',inv.kibble)}${(live(activeCat())||{}).sick?row('pill','알약','아픈 걸 낫게 해요',inv.pill).replace('data-a="feed"','data-a="pill"'):''}${['churu','smelt','fish','cake',...(inv.goguma?['goguma']:[])].map(id=>row(id,ITEMS[id].n,ITEMS[id].d,inv[id])).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost block" data-a="go" data-v="shop">상점 가기</button></div>`);
+  openSheet(`<h2>밥 주기</h2><p class="lead">사료와 간식은 상점 '간식' 탭에서 살 수 있어요. 사료는 10개 묶음이 더 싸요.</p><div class="list">${row('kibble','사료','배부름 +25',inv.kibble)}${row('biscuit','성장 비스킷','경험치 +50 · 하루 3개까지',inv.biscuit).replace('data-a="feed"','data-a="biscuit"')}${(live(activeCat())||{}).sick?row('pill','알약','아픈 걸 낫게 해요',inv.pill).replace('data-a="feed"','data-a="pill"'):''}${['churu','smelt','fish','cake',...(inv.goguma?['goguma']:[])].map(id=>row(id,ITEMS[id].n,ITEMS[id].d,inv[id])).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost block" data-a="go" data-v="shop">상점 가기</button></div>`);
 }
 function openDeco(){
   const c=activeCat();if(!c)return;const u=me(),inv=u.inv||{},room=u.room||{};const tab=S.tab.deco;
@@ -2438,7 +2448,7 @@ function viewHome(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const inst=!DK&&coarse&&!standalone&&!instHide?`<div class="panel row" style="padding:10px 12px;gap:10px;background:var(--gold-l);border-color:#f4dfa4"><span style="flex:1;min-width:0;font-size:.86rem">${ios?'공유 버튼 → <b>홈 화면에 추가</b>를 누르면 앱처럼 쓸 수 있어요.':'홈 화면에 추가하면 앱처럼 바로 열 수 있어요.'}</span>${S.installEvt?'<button class="btn small" data-a="install">추가</button>':''}<button class="btn small ghost" data-a="instdismiss">닫기</button></div>`:'';
   const qq=qNorm(clone(u.q)),qIds=dailyIds(qq.d),qDone=qIds.filter(k=>qq.dc[k]).length,qCan=qClaimable(u);
-  const wxb=`<div class="wxbar"><span class="chip">${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
+  const wxb=`<div class="wxbar">${isWeekend()?'<span class="chip gold">주말 경험치 2배!</span>':''}<span class="chip">${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
   return`${inst}${sw}<div class="scene">${roomScene(u)}${skyHTML(false)}${strayHTML()}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
   <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping':''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div></div></div>
   ${wxb}
@@ -2768,6 +2778,7 @@ document.addEventListener('click',async e=>{
     case'rank':openRank(v,el.dataset.k);break;
     case'diary':openDiary(v,el.dataset.k);break;
     case'roster':openRoster();break;
+    case'biscuit':await eatBiscuit();break;
     case'village':openVillage();break;
     case'vcreate':await vilCreate();break;
     case'vjoin':await vilJoin(false);break;
