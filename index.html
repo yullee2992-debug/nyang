@@ -356,6 +356,18 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 .bdg.off{opacity:.5;filter:grayscale(1)}
 .bdg.show{border-color:var(--pink-d);background:var(--pink-l)}
 .bdgrow{display:flex;gap:4px;margin-top:4px}.bdgrow svg{width:30px;height:30px}
+/* stray, fashion, collection */
+.stray{position:absolute;left:6%;bottom:3%;width:24%;z-index:3;cursor:pointer;animation:strayin 1s ease-out}
+.stray .sb{position:absolute;left:62%;top:-6%;transform:translateX(-50%);background:#fff;border-radius:10px;padding:1px 8px;font-size:.72rem;white-space:nowrap;box-shadow:0 1px 4px rgba(59,51,70,.2)}
+@keyframes strayin{from{transform:translateX(-60%);opacity:0}}
+.strayg{position:absolute;left:6%;bottom:5%;width:12%;z-index:3;cursor:pointer;background:none;border:0;padding:0;animation:xwig 2.2s ease-in-out infinite}
+.fsgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fscard{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:8px;display:flex;flex-direction:column;gap:4px}
+.fscard .pic{aspect-ratio:1;border-radius:14px;background:linear-gradient(180deg,#fff,#f6eefe)}
+.fscard.top1{border-color:#f2c94c;box-shadow:0 0 0 2px #fbe7a6}
+.colgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.colgrid .ci{border:1.5px solid var(--line);border-radius:12px;padding:4px;text-align:center;font-size:.66rem;background:var(--paper)}
+.colgrid .ci.no{opacity:.45;filter:grayscale(1)}
 /* autumn */
 .leaffx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:300}
 .leaffx svg{position:absolute;top:-20px;width:16px;animation:leaff linear infinite}
@@ -582,6 +594,9 @@ const ITEMS={
   goguma:{n:'군고구마',t:'food',p:0,ex:true,d:'배부름 +35 · 기분 +20 · 애정 +2'},
   maplepin:{n:'단풍잎 머리핀',t:'hat',p:0,ex:true,d:'11월 낙엽 줍기 한정'},
   autumn:{n:'낙엽 흩날림',t:'aura',p:0,ex:true,d:'11월 낙엽 줍기 한정'},
+  goldbell:{n:'보은의 황금 방울',t:'neck',p:0,ex:true,d:'단골 길고양이가 물어다 준 선물'},
+  fishhat:{n:'낚시꾼 모자',t:'hat',p:0,ex:true,d:'낚시 도감 완성 보상'},
+  fscrown:{n:'패션왕 왕관',t:'hat',p:0,ex:true,d:'주간 패션쇼 1위 보상'},
   rudolph:{n:'루돌프 미니펫',t:'mpet',p:0,ex:true,d:'12월 크리스마스 이벤트 한정 · 고양이 옆에서 깡총깡총'},
   tee:{n:'하트 티셔츠',t:'body',p:200,d:'편한 하루'},
   apron:{n:'앞치마',t:'body',p:240,d:'오늘의 요리사'},
@@ -772,6 +787,8 @@ function catSVG(c,o={}){
     return s;
   };
   const hats={
+    fishhat:`<path d="M60,60 Q62,28 100,26 Q138,28 140,60 Z" fill="#9aa86a" stroke="#6f7c45" stroke-width="2.5"/><path d="M42,60 Q100,76 158,60 Q150,53 140,56 Q100,64 60,56 Q50,53 42,60Z" fill="#8a9a5b" stroke="#6f7c45" stroke-width="2.5"/><path d="M130,34 q10,4 10,16" stroke="#3b3346" stroke-width="1.2" fill="none"/><path d="M135,50 q5,-5 10,0 q-5,5 -10,0z" fill="#ff8f6b" stroke="#d9603f" stroke-width="1"/>`,
+    fscrown:`<path d="M74,56 L78,28 L90,42 L100,22 L110,42 L122,28 L126,56 Z" fill="#ffb3d1" stroke="#e0609a" stroke-width="2.5" stroke-linejoin="round"/><polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?2.6:6.5,a=-Math.PI/2+i*Math.PI/5;return(100+Math.cos(a)*r).toFixed(1)+','+(42+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="#fff"/><circle cx="85" cy="50" r="3" fill="#c3a6ff"/><circle cx="115" cy="50" r="3" fill="#c3a6ff"/>`,
     veil:`<path d="M62,58 Q40,90 34,170 Q46,160 56,166 Q52,120 66,80 Z M138,58 Q160,90 166,170 Q154,160 144,166 Q148,120 134,80 Z" fill="rgba(255,255,255,.72)" stroke="#e6e0ee" stroke-width="1.5"/><path d="M64,60 Q100,40 136,60" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/>${[70,82,94,106,118,130].map((x,i)=>`<circle cx="${x}" cy="${57-Math.sin((x-64)/72*Math.PI)*9}" r="3.4" fill="#fbf8f2" stroke="#d9cfc0" stroke-width="1"/>`).join('')}<circle cx="100" cy="46" r="5" fill="#ffd6e3" stroke="#ff9fb3" stroke-width="1.5"/>`,
     moonhat:`<ellipse cx="96" cy="54" rx="42" ry="13" fill="#5b4b8a" stroke="#3f3266" stroke-width="2.5"/><path d="M58,54 Q70,26 104,28 Q134,32 138,52 Z" fill="#6a59a0" stroke="#3f3266" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="27" r="4" fill="#3f3266"/><path d="M120,34 a9,9 0 1 0 7,14 a7,7 0 1 1 -7,-14z" fill="#ffd43b" stroke="#d99a1e" stroke-width="1"/>`,
     maplepin:MAPLE(130,52,1.5,'#e8562a',20)+MAPLE(119,60,.9,'#f39c34',-25),
@@ -796,6 +813,7 @@ function catSVG(c,o={}){
     crown:`<path d="M78,54 L80,28 L90,40 L100,22 L110,40 L120,28 L122,54 Z" fill="#f6c94c" stroke="#c9962a" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="44" r="4" fill="#ff6f91"/><circle cx="87" cy="47" r="3" fill="#6fc0e8"/><circle cx="113" cy="47" r="3" fill="#6fc0e8"/>`
   };
   const necks={
+    goldbell:`<path d="M64,135 Q100,151 136,135" stroke="#c9a54a" stroke-width="5" fill="none"/><circle cx="100" cy="153" r="10" fill="#ffd43b" stroke="#c9962a" stroke-width="2.5"/><path d="M91,153 h18" stroke="#c9962a" stroke-width="2"/><circle cx="100" cy="158" r="2" fill="#a8740f"/><path d="M114,139 l2,-5 2,5 5,2 -5,2 -2,5 -2,-5 -5,-2z" fill="#fff6c8"/>`,
     jewel:`<path d="M64,133 Q100,153 136,133" stroke="#e0b030" stroke-width="2.6" fill="none"/>${[78,88,112,122].map(x=>`<circle cx="${x}" cy="${140+(1-Math.pow((x-100)/36,2))*7}" r="2.6" fill="#ff8fab" stroke="#d9607f" stroke-width=".8"/>`).join('')}<path d="M100,144 l11,9 -11,15 -11,-15z" fill="#5fd0e8" stroke="#2a8fb0" stroke-width="2" stroke-linejoin="round"/><path d="M95,152 l5,-4 3,3" stroke="#fff" stroke-width="1.6" fill="none" opacity=".85"/>`,
     bell:`<path d="M64,135 Q100,151 136,135" stroke="#e2556a" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="100" cy="150" r="7.5" fill="#f6c94c" stroke="#c9962a" stroke-width="2"/><path d="M100,151 v5" stroke="#c9962a" stroke-width="2"/>`,
     scarf:`<path d="M62,133 Q100,154 138,133" stroke="#4fae9c" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M112,142 l10,28 l13,-5 l-9,-25 Z" fill="#4fae9c" stroke="#368a7a" stroke-width="2" stroke-linejoin="round"/><path d="M116,152 l12,-4 M119,160 l12,-4" stroke="#bfe8de" stroke-width="2.5"/>`,
@@ -1716,6 +1734,8 @@ function diaryLines(c,day,m){
   for(const k of Object.keys(m).filter(k=>k.startsWith('visit:')))L.push(`${josa(O,'이랑','랑')} ${k.slice(6)}네 집에 놀러 갔다.`);
   if(m.wed)L.push('결혼식에 하객으로 갔다. 국수가 맛있었다.');
   for(const k of Object.keys(m).filter(k=>/^(talk|gift|fpet|flower):/.test(k))){const [t,who]=k.split(':');L.push({talk:`${who}님이 말을 걸어줬다.`,gift:`${who}님이 간식을 선물해 줬다. 고마워!`,fpet:`${who}님이 쓰다듬어 줬다.`,flower:`${who}님에게 꽃을 받았다. 인기냥이 된 기분!`}[t])}
+  for(const k of Object.keys(m).filter(k=>k.startsWith('stray:')))L.push(`길고양이 ${k.slice(6)}${iGa(k.slice(6)).slice(-1)} 놀러 왔다. ${josa(O,'이','가')} 밥을 나눠 줬다. 나도 착한 일 한 기분.`);
+  if(m.fs)L.push('패션쇼에 나갔다! 런웨이를 걸을 생각에 두근두근.');
   if(m.lotto)L.push(`${Oi} 로또를 샀다. 당첨되면 츄르 백 개!`);
   if(L.length<2)L.push(`오늘은 조용한 하루였다. ${O} 보고 싶었다.`);
   L.push(pk(['내일도 좋은 하루였으면.','오늘도 잘 먹고 잘 잤다. 끝.','이제 잘 거다. 냥.']));
@@ -1729,9 +1749,11 @@ function openDiary(id,idx=0){
 }
 
 /* ================= badges ================= */
-const BADGES=[['shark','상어 생존자','상어에게 3번 물리기',3,'#6f8599','상어'],['gold','황금 낚시꾼','황금 잉어 낚기',1,'#e0a72a','황금'],['fish','강태공','낚시로 50번 건지기',50,'#4dabf7','낚시'],['guest','단골 하객','결혼식 하객 5번',5,'#ff8fab','하객'],['wed','백년가약','결혼식 올리기',1,'#e2456f','부부'],['adult','육묘 졸업','고양이를 어른냥으로 키우기',1,'#3fb5a0','어른'],['quest','퀘스트 달인','일일 퀘스트 30개 완료',30,'#9775fa','퀘스트'],['rank1','주간 챔피언','주간 랭킹 1위 하기',1,'#f2b33d','1위'],['pet','쓰담 장인','내 고양이 1000번 쓰다듬기',1000,'#ff9f43','쓰담'],['book','수다쟁이','방명록 10개 쓰기',10,'#51b26b','방명록'],['goguma','고구마 장인','군고구마 10개 굽기',10,'#a0569f','고구마'],['rudolph','산타의 친구','루돌프 미니펫 받기',1,'#e2453c','루돌프']];
+const BADGES=[['shark','상어 생존자','상어에게 3번 물리기',3,'#6f8599','상어'],['gold','황금 낚시꾼','황금 잉어 낚기',1,'#e0a72a','황금'],['fish','강태공','낚시로 50번 건지기',50,'#4dabf7','낚시'],['guest','단골 하객','결혼식 하객 5번',5,'#ff8fab','하객'],['wed','백년가약','결혼식 올리기',1,'#e2456f','부부'],['adult','육묘 졸업','고양이를 어른냥으로 키우기',1,'#3fb5a0','어른'],['quest','퀘스트 달인','일일 퀘스트 30개 완료',30,'#9775fa','퀘스트'],['rank1','주간 챔피언','주간 랭킹 1위 하기',1,'#f2b33d','1위'],['pet','쓰담 장인','내 고양이 1000번 쓰다듬기',1000,'#ff9f43','쓰담'],['book','수다쟁이','방명록 10개 쓰기',10,'#51b26b','방명록'],['goguma','고구마 장인','군고구마 10개 굽기',10,'#a0569f','고구마'],['rudolph','산타의 친구','루돌프 미니펫 받기',1,'#e2453c','루돌프'],
+  ['stray','길냥이 친구','길고양이 밥 10번 주기',10,'#f2a950','길냥'],['fs1','패션왕','패션쇼 1위 하기',1,'#c3a6ff','패션'],
+  ['col_hat','모자 수집가','모자 도감 완성',1,'#ff8fab','모자'],['col_body','옷장 부자','옷 도감 완성',1,'#7fb3e8','옷장'],['col_wear','액세서리 왕','액세서리 도감 완성',1,'#e0a72a','장신구'],['col_aura','오라 마스터','배경 효과 도감 완성',1,'#9775fa','오라'],['col_room','인테리어 장인','방 꾸미기 도감 완성',1,'#51b26b','방'],['col_fish','낚시 박사','낚시 도감 완성',1,'#4dabf7','박사']];
 const achAdd=(k,n=1)=>S.me&&Store.tx(`users/${S.me}/ach/${k}`,v=>(v||0)+n);
-function badgeProg(u,k){const a=(u&&u.ach)||{};if(k==='wed')return myWeddings().some(w=>isHost(w)&&wedPhase(w)==='done')?1:0;if(k==='adult')return Object.values(S.cats).some(c=>c&&c.owner===S.me&&c.stage==='adult')?1:0;if(k==='rudolph')return((u.inv||{}).rudolph)?1:0;return a[k]||0}
+function badgeProg(u,k){const a=(u&&u.ach)||{};if(k==='wed')return myWeddings().some(w=>isHost(w)&&wedPhase(w)==='done')?1:0;if(k==='adult')return Object.values(S.cats).some(c=>c&&c.owner===S.me&&c.stage==='adult')?1:0;if(k==='rudolph')return((u.inv||{}).rudolph)?1:0;if(k.startsWith('col_'))return((u.colc||{})[k.slice(4)+'_full'])?1:0;return a[k]||0}
 function medal(b,sz){return`<svg viewBox="0 0 44 44"><path d="M14 2 L22 14 L30 2" stroke="${b[4]}" stroke-width="5" fill="none" opacity=".55"/><circle cx="22" cy="26" r="16" fill="${b[4]}" stroke="${shade(b[4],-.25)}" stroke-width="2"/><circle cx="22" cy="26" r="12" fill="none" stroke="#fff" stroke-width="1.2" opacity=".6"/><text x="22" y="30" font-size="${b[5].length>2?8.5:10.5}" text-anchor="middle" fill="#fff" font-family="Jua">${b[5]}</text></svg>`}
 let badgeBusy=false;
 async function badgeCheck(){
@@ -1745,6 +1767,139 @@ function badgeRow(owner){const u=S.users[owner];if(!u)return'';const sh=(u.badge
 function viewBadges(){const u=me(),have=u.badge||{},sh=u.badgeShow||[];
   return`<div class="sect">배지 <small class="grow">· 받은 배지를 누르면 고양이 카드에 3개까지 달 수 있어요</small></div><div class="badges">${BADGES.map(b=>{const got=have[b[0]],pr=Math.min(badgeProg(u,b[0]),b[3]);return`<button class="bdg ${got?'':'off'} ${sh.includes(b[0])?'show':''}" ${got?`data-a="bdgshow" data-v="${b[0]}"`:''} title="${b[2]}">${medal(b)}<b style="font-weight:400;font-family:var(--display)">${b[1]}</b><span class="grow" style="font-size:.68rem">${got?(sh.includes(b[0])?'카드에 달림':'받음'):`${b[2]} ${pr}/${b[3]}`}</span></button>`}).join('')}</div>`}
 async function toggleBadge(k){await Store.tx(`users/${S.me}/badgeShow`,a=>{a=Array.isArray(a)?a:[];if(a.includes(k))return a.filter(x=>x!==k);if(a.length>=3){toast('3개까지 달 수 있어요');return}return a.concat(k)})}
+
+/* ================= stray cats ================= */
+const STRAYS=[{id:'cheese',n:'치즈',look:{coat:'#f2a950',pattern:'tabby',pcolor:'#d9773a',eyeL:'#79c267',eyeR:'#79c267',ear:'pointed',tail:'long',build:'chubby',nose:'#f0b49a',blush:true}},
+  {id:'mackerel',n:'고등어',look:{coat:'#a3a9b2',pattern:'tabby',pcolor:'#6b7280',eyeL:'#e9c440',eyeR:'#e9c440',ear:'round',tail:'short',build:'normal',nose:'#8a5a44',blush:false}},
+  {id:'tux',n:'턱시',look:{coat:'#3b3739',pattern:'tuxedo',pcolor:'#f8f5f0',eyeL:'#e9c440',eyeR:'#e9c440',ear:'pointed',tail:'long',build:'slim',nose:'#f39bb1',blush:true}},
+  {id:'calico',n:'삼색이',look:{coat:'#f6f2ec',pattern:'calico',pcolor:'#f2a950',eyeL:'#d98a2b',eyeR:'#d98a2b',ear:'fold',tail:'fluffy',build:'normal',nose:'#f39bb1',blush:true}},
+  {id:'kkam',n:'깜냥',look:{coat:'#3b3739',pattern:'none',pcolor:'#3b3739',eyeL:'#97d6ef',eyeR:'#97d6ef',ear:'round',tail:'fluffy',build:'slim',nose:'#3a3036',blush:false}}];
+const STRAY_FOODS=['kibble','churu','smelt','fish','cake','goguma'];
+const strayCat=st=>({look:st.look,stage:'adult',eq:{}});
+const strayName=(u,id)=>{const st=STRAYS.find(x=>x.id===id);return((u&&u.stray&&u.stray.nm)||{})[id]||(st?st.n:'길고양이')};
+function strayVisit(){
+  const u=me();if(!u)return null;const D=kstDay(),t=now(),S0=u.stray||{},fed=S0.fed||{},f=S0.f||{};
+  const r=seeded(strHash(S.me+D+'stray'));const hrs=[];while(hrs.length<3){const h=8+Math.floor(r()*15);if(!hrs.includes(h))hrs.push(h)}
+  for(let i=0;i<3;i++){const st=Date.parse(D+'T'+String(hrs[i]).padStart(2,'0')+':'+String(Math.floor(r()*50)).padStart(2,'0')+':00+09:00');
+    if(t>=st&&t<st+90*MIN&&!fed[D+'_'+i]){const rr=seeded(strHash(S.me+D+'sv'+i))();const W=STRAYS.map(x=>1+((f[x.id]||0)>=3?2:0));const tot=W.reduce((a,b)=>a+b,0);let a=0,pick=STRAYS[0];for(let j=0;j<STRAYS.length;j++){a+=W[j]/tot;if(rr<a){pick=STRAYS[j];break}}return{slot:i,st:pick,left:st+90*MIN-t}}}
+  return null;
+}
+function strayGifts(){const g=((me()||{}).stray||{}).g||{};return Object.entries(g).filter(([k,x])=>x&&x.at<=now()).map(([k,x])=>Object.assign({k},x))}
+function strayHTML(){
+  const v=strayVisit(),G=strayGifts();let h='';
+  if(v)h+=`<div class="stray" data-a="stray" role="button" aria-label="길고양이"><span class="sb">냐옹?</span>${catSVG(strayCat(v.st),{expr:'normal'})}</div>`;
+  else if(G.length)h+=`<button class="strayg" data-a="straygift" data-v="${G[0].k}" aria-label="보은 선물">${GIFT_SVG('#d9a35a','#7a5641')}</button>`;
+  return h;
+}
+function openStray(){
+  const v=strayVisit();if(!v)return toast('길고양이가 떠났어요');const u=me(),inv=u.inv||{},n=((u.stray||{}).f||{})[v.st.id]||0,reg=n>=3,nm=strayName(u,v.st.id);
+  openSheet(`<h2>${reg?esc(nm)+' (단골)':'길고양이가 찾아왔어요'}</h2><div style="width:46%;margin:0 auto">${catSVG(strayCat(v.st),{expr:'happy'})}</div>
+  <p class="lead">${reg?`단골 ${esc(nm)}${iGa(nm).slice(-1)} 또 왔어요! 지금까지 밥을 ${n}번 줬어요.`:`배가 고파 보여요. 밥을 나눠 주면 며칠 뒤에 보은 선물을 물어다 놓을지도 몰라요. ${n?`(밥 준 횟수 ${n}번 · 3번 주면 단골이 돼요)`:''}`} ${dur(v.left)} 뒤에 떠나요.</p>
+  <div class="list">${STRAY_FOODS.filter(k=>inv[k]).map(k=>`<div class="item"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${itemPic(k)}</div><div class="tx"><b>${ITEMS[k].n}</b><span>${inv[k]}개 · ${k==='kibble'?'보통 선물':'좋은 선물 확률 UP'}</span></div><button class="btn small" data-a="strayfeed" data-v="${k}">주기</button></div>`).join('')||'<p class="grow">줄 수 있는 밥이나 간식이 없어요.</p>'}</div>
+  ${reg?`<div class="row" style="margin-top:10px"><input id="strnm" maxlength="8" value="${esc(nm)}" aria-label="길고양이 이름" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:9px"><button class="btn small ghost" data-a="strayname" data-v="${v.st.id}">이름 짓기</button></div>`:''}`);
+}
+async function feedStray(kind){
+  const v=strayVisit();if(!v)return toast('길고양이가 떠났어요');if(!(await useItem(kind)))return toast('밥이 없어요');
+  const D=kstDay(),prem=kind!=='kibble';let n=0;
+  await Store.tx('users/'+S.me,u=>{if(!u)return u;u.stray=u.stray||{};const X=u.stray;X.fed=Object.fromEntries(Object.entries(X.fed||{}).filter(([k])=>k.slice(0,10)>=kstDay(now()-2*DAY)));X.fed[D+'_'+v.slot]=1;X.f=X.f||{};X.f[v.st.id]=(X.f[v.st.id]||0)+1;n=X.f[v.st.id];X.g=X.g||{};X.g['g'+now()]={s:v.st.id,at:now()+(20+Math.random()*16)*HOUR,p:prem?1:0};return u});
+  achAdd('stray');{const c=activeCat();if(c)dyAdd(c.id,'stray:'+strayName(me(),v.st.id))}
+  closeSheet();toast(n===3?`${v.st.n}${iGa(v.st.n).slice(-1)} 단골이 됐어요! 다음에 오면 이름을 지어줄 수 있어요`:'맛있게 먹고 갔어요. 언젠가 보답하러 올지도?',3200);
+}
+async function strayGift(k){
+  const u=me(),x=(((u.stray||{}).g)||{})[k];if(!x||x.at>now())return;const reg=(((u.stray||{}).f||{})[x.s]||0)>=3;const nm=strayName(u,x.s);
+  const r=Math.random();let rew;const rare=reg?.15:x.p?.1:.05;
+  if(r<rare)rew=(u.inv||{}).goldbell?{c:300}:{it:'goldbell',n:1};else if(r<rare+.15)rew={it:'churu',n:2};else if(r<rare+.4)rew={it:Math.random()<.3?'rose':'wildflower',n:1};else rew={c:Math.round((reg?60:30)+Math.random()*(reg?90:50)*(x.p?1.5:1))};
+  let ok=false;await Store.tx('users/'+S.me,u=>{if(!u||!u.stray||!u.stray.g||!u.stray.g[k]){ok=false;return}delete u.stray.g[k];if(rew.c)u.coins=(u.coins||0)+rew.c;else{u.inv=u.inv||{};u.inv[rew.it]=(u.inv[rew.it]||0)+rew.n}ok=true;return u});
+  if(!ok)return;if(rew.it==='goldbell')log(`${ownerName(S.me)}님이 단골 길고양이 ${nm}에게 '보은의 황금 방울'을 받았어요!`);
+  openSheet(`<div class="celebc"><div style="width:80px;margin:0 auto">${rew.it?itemPic(rew.it):GIFT_SVG('#d9a35a','#7a5641')}</div><h2>보은 선물!</h2><p class="lead">${esc(nm)}${iGa(nm).slice(-1)} 문 앞에 선물을 두고 갔어요.<br><b>${rew.c?rew.c+'코인':ITEMS[rew.it].n+' '+rew.n+'개'}</b></p><button class="btn block" data-a="close">고마워!</button></div>`);
+}
+
+/* ================= fashion show ================= */
+const FS_START='2026-11-23';
+const fsOn=()=>{try{if(localStorage.getItem('nyang-fs')==='1')return true}catch(e){}return weekKey()>=FS_START};
+const FS_SLOTS=[['hat','모자'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
+const FS_REW=[{c:500,s:5,it:'fscrown'},{c:300,s:3},{c:150,s:1}],FS_JOIN={c:50,s:0};
+function fsEntries(wk){return Object.entries(S.users).map(([k,u])=>u&&u.fs&&u.fs[wk]&&S.cats[u.fs[wk].cat]?Object.assign({o:k},u.fs[wk]):null).filter(Boolean).sort((a,b)=>Object.keys(b.v||{}).length-Object.keys(a.v||{}).length||a.at-b.at)}
+const fsLook=e=>Object.assign({},live(S.cats[e.cat]),{eq:e.of||{}});
+function fsPick(){const c=S.fsPick&&S.cats[S.fsPick.cat]&&S.cats[S.fsPick.cat].owner===S.me?S.fsPick:{cat:(activeCat()||{}).id,of:{}};S.fsPick=c;return c}
+function viewFS(){
+  const fmt=d=>{const x=new Date(Date.parse(d+'T00:00:00+09:00')+9*HOUR);return`${x.getUTCMonth()+1}월 ${x.getUTCDate()}일`};
+  const rules=`월요일 0시에 새 대회가 열려요. 출전할 고양이와 <b>출전용 옷</b>을 골라 대회에 나가고, 다른 친구 출전작에 <b>내 고양이 한 마리당 한 표</b>씩 투표하고 댓글도 달 수 있어요. 일요일 밤 12시에 마감하고, 다음 월요일에 결과가 나와요.<br>1위 ${FS_REW[0].c}코인 ⭐${FS_REW[0].s} + 패션왕 왕관 · 2위 ${FS_REW[1].c}코인 ⭐${FS_REW[1].s} · 3위 ${FS_REW[2].c}코인 ⭐${FS_REW[2].s} · 참가상 ${FS_JOIN.c}코인`;
+  if(!fsOn())return`<div class="panel stack" style="background:linear-gradient(180deg,#f6eefe,#fff)"><h2 style="color:#8a5cd0">냥이 패션쇼</h2><p class="lead" style="margin:0"><b>${fmt(FS_START)}(월)</b>부터 매주 열려요! 미리 출전용 옷을 준비해 두세요.</p><p class="grow" style="margin:0">${rules}</p></div>`;
+  const wk=weekKey(),u=me(),E=fsEntries(wk),mine=(u.fs||{})[wk],fsv=((u.fsv||{})[wk])||{},left=Date.parse(wk+'T00:00:00+09:00')+7*DAY-now();
+  const pw=weekKey(now()-7*DAY),P=pw>=FS_START?fsEntries(pw).slice(0,3):[];
+  let h=`<div class="panel stack" style="background:linear-gradient(180deg,#f6eefe,#fff)"><h2 style="color:#8a5cd0">이번 주 냥이 패션쇼</h2><p class="grow" style="margin:0">${fmt(wk)} ~ · 마감까지 ${dur(left)} · 출전 ${E.length}마리</p><p class="lead" style="margin:0;font-size:.86rem">${rules}</p></div>`;
+  if(P.length)h+=`<div class="sect">지난주 결과</div><div class="row" style="gap:8px">${P.map((e,i)=>`<div class="fscard ${i?'':'top1'}" style="flex:1"><div class="pic">${catSVG(fsLook(e),{still:true})}</div><b style="font-size:.85rem">${i+1}위 ${esc(S.cats[e.cat].name)}</b><span class="grow" style="font-size:.75rem">${esc(ownerName(e.o))} · ${Object.keys(e.v||{}).length}표</span></div>`).join('')}</div>`;
+  if(!mine){const pk=fsPick(),c=S.cats[pk.cat];const inv=u.inv||{};
+    h+=`<div class="sect">출전하기</div><div class="panel stack"><b>출전할 고양이</b><div class="ch">${myCats().filter(x=>x.status!=='runaway').map(x=>`<button class="${pk.cat===x.id?'on':''}" data-a="fscat" data-v="${x.id}">${esc(x.name)}</button>`).join('')}</div>
+    ${c?`<div style="width:52%;margin:0 auto;background:linear-gradient(180deg,#fff,#f6eefe);border-radius:18px">${catSVG(Object.assign({},live(c),{eq:pk.of}))}</div><p class="grow" style="margin:0;text-align:center">지금 입은 옷과 상관없이, 아래에서 출전용 옷을 눌러 골라요</p>
+    ${FS_SLOTS.map(([sl,lab])=>{const own=Object.keys(ITEMS).filter(k=>ITEMS[k].t===sl&&inv[k]);return own.length?`<div class="opt"><h3>${lab}</h3><div class="ch"><button class="${!pk.of[sl]?'on':''}" data-a="fspick" data-s="${sl}" data-v="">없음</button>${own.map(k=>`<button class="${pk.of[sl]===k?'on':''}" data-a="fspick" data-s="${sl}" data-v="${k}">${ITEMS[k].n}</button>`).join('')}</div></div>`:''}).join('')}
+    <button class="btn block" style="background:#b78af0" data-a="fsenter">대회 나가기</button><p class="grow" style="margin:0">한 주에 한 마리만 나갈 수 있고, 나간 뒤에는 옷을 바꿀 수 없어요.</p>`:''}</div>`}
+  else h+=`<div class="sect">내 출전작</div><div class="item" style="background:#f6eefe;border-color:#e2d3fb"><div class="thumb" style="width:64px;height:64px;flex-basis:64px;background:#fff">${catSVG(fsLook(mine),{still:true})}</div><div class="tx"><b>${esc(S.cats[mine.cat].name)}</b><span>지금 ${Object.keys(mine.v||{}).length}표 · 댓글 ${Object.keys(mine.cm||{}).length}개 · ${E.findIndex(e=>e.o===S.me)+1}위</span></div><button class="btn small ghost" data-a="fscm" data-v="${S.me}">댓글 보기</button></div>`;
+  const voters=myCats().filter(c=>!fsv[c.id]);
+  h+=`<div class="sect">출전작 · 투표 <small class="grow">· 남은 표 ${voters.length}장 (고양이 한 마리당 한 표)</small></div>`;
+  h+=E.length?`<div class="fsgrid">${E.map((e,i)=>{const c=S.cats[e.cat],vn=Object.keys(e.v||{}).length,cmn=Object.keys(e.cm||{}).length,myv=Object.entries(fsv).filter(([k,o])=>o===e.o).map(([k])=>(S.cats[k]||{}).name).filter(Boolean);
+    return`<div class="fscard ${i===0&&vn?'top1':''}"><div class="pic">${catSVG(fsLook(e),{still:true})}</div><b>${i+1}위 · ${esc(c.name)}</b><span class="grow" style="font-size:.75rem">${esc(ownerName(e.o))} · <b style="color:#e0609a">♥ ${vn}표</b></span>
+    ${e.o===S.me?'<span class="chip gray">내 출전작</span>':myv.length?`<span class="chip pink">${esc(myv.join(', '))}의 표</span>`:voters.slice(0,2).map(v=>`<button class="btn small" style="background:#e0609a" data-a="fsvote" data-v="${esc(e.o)}" data-k="${v.id}">${esc(v.name)}의 한 표</button>`).join('')}
+    <button class="btn small ghost" data-a="fscm" data-v="${esc(e.o)}">댓글 ${cmn}</button></div>`}).join('')}</div>`:'<div class="empty">아직 출전한 고양이가 없어요. 첫 번째로 나가 보세요!</div>';
+  return h;
+}
+async function fsEnter(){
+  const wk=weekKey(),pk=fsPick(),c=S.cats[pk.cat];if(!c||c.owner!==S.me)return toast('출전할 고양이를 골라주세요');
+  const inv=me().inv||{},of={};for(const [sl] of FS_SLOTS)if(pk.of[sl]&&inv[pk.of[sl]])of[sl]=pk.of[sl];
+  if(!Object.keys(of).length)return toast('출전용 옷을 하나 이상 골라주세요');
+  let ok=false;await Store.tx(`users/${S.me}/fs/${wk}`,x=>{if(x){ok=false;return}ok=true;return{cat:c.id,of,at:now()}});
+  if(!ok)return toast('이번 주에는 이미 출전했어요');
+  dyAdd(c.id,'fs');log(`${ownerName(S.me)}님의 ${c.name}${iGa(c.name).slice(-1)} 이번 주 패션쇼에 출전했어요! 투표해 주세요`);toast('대회에 나갔어요! 친구들의 투표를 기다려요');
+}
+async function fsVote(o,catId){
+  const wk=weekKey(),c=S.cats[catId],e=((S.users[o]||{}).fs||{})[wk];if(!c||c.owner!==S.me||!e)return;if(o===S.me)return toast('내 출전작에는 투표할 수 없어요');
+  if((((me().fsv||{})[wk])||{})[catId])return toast(`${c.name}${eunNeun(c.name).slice(-1)} 이미 투표했어요`);
+  let ok=false;await Store.tx(`users/${S.me}/fsv/${wk}/${catId}`,v=>{if(v){ok=false;return}ok=true;return o});if(!ok)return;
+  await Store.set(`users/${o}/fs/${wk}/v/${catId}`,S.me);toast(`${c.name}의 한 표를 줬어요!`);
+}
+function openFsComments(o){
+  const wk=weekKey(),e=((S.users[o]||{}).fs||{})[wk];if(!e)return;const c=S.cats[e.cat];const L=Object.values(e.cm||{}).sort((a,b)=>a.at-b.at);
+  openSheet(`<h2>${esc(c?c.name:'')} 출전작 댓글</h2><div style="width:40%;margin:0 auto">${catSVG(fsLook(e),{still:true})}</div><div class="list">${L.map(m=>`<div class="item"><div class="tx"><b>${esc(ownerName(m.by))}</b><span style="color:var(--ink)">${esc(m.text)}</span><span>${ago(m.at)}</span></div></div>`).join('')||'<p class="grow">첫 댓글을 남겨 보세요!</p>'}</div>
+  <div class="row" style="margin-top:10px"><input id="fscmt" maxlength="40" placeholder="응원 한마디 (40자까지)" aria-label="댓글" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px"><button class="btn" data-a="fscmsend" data-v="${esc(o)}">남기기</button></div>`);
+}
+async function fsComment(o){
+  const t=String(($('#fscmt')||{}).value||'').replace(/\s+/g,' ').trim().slice(0,40);if(!t)return toast('댓글을 적어주세요');
+  const wk=weekKey(),e=((S.users[o]||{}).fs||{})[wk];if(!e)return;
+  await Store.push(`users/${o}/fs/${wk}/cm`,{by:S.me,text:t,at:now()});
+  if(o!==S.me)log(`${ownerName(S.me)}님이 ${ownerName(o)}님의 패션쇼 출전작에 댓글을 달았어요.`);
+  setTimeout(()=>openFsComments(o),300);
+}
+async function fsClaim(){
+  const u=me();if(!u||PET||S.screen!=='app'||$('#layer').innerHTML)return;const pw=weekKey(now()-7*DAY);if(pw<FS_START)return;
+  if(!(u.fs||{})[pw]||(u.fsc||{})[pw]!=null)return;
+  const E=fsEntries(pw),i=E.findIndex(e=>e.o===S.me);if(i<0)return;const R=i<3?FS_REW[i]:FS_JOIN;let ok=false;
+  await Store.tx('users/'+S.me,x=>{if(!x)return x;x.fsc=x.fsc||{};if(x.fsc[pw]!=null){ok=false;return}x.fsc[pw]=i+1;x.coins=(x.coins||0)+R.c;x.stars=(x.stars||0)+(R.s||0);if(R.it){x.inv=x.inv||{};x.inv[R.it]=1}ok=true;return x});
+  if(!ok)return;if(i===0)achAdd('fs1');const e=E[i],c=S.cats[e.cat];
+  if(i<3)log(`지난주 패션쇼 ${i+1}위는 ${ownerName(S.me)}님의 ${c?c.name:''}! (${Object.keys(e.v||{}).length}표) 축하해요`);
+  openSheet(`<div class="celebc">${i<3?`<div class="confetti">${confettiHTML()}</div>`:''}<h2>${i<3?`패션쇼 ${i+1}위!`:'패션쇼 참가 고마워요'}</h2><div style="width:46%;margin:0 auto">${catSVG(fsLook(e))}</div><p class="lead">지난주 ${E.length}마리 중 <b>${i+1}위</b> · ${Object.keys(e.v||{}).length}표</p><div class="panel" style="background:var(--gold-l);border-color:#f3dfa0;margin:10px 0"><b>${R.c}코인${R.s?' ⭐'+R.s:''}${R.it?' + '+ITEMS[R.it].n:''}</b></div><button class="btn block" data-a="close">좋아요!</button></div>`);
+}
+setInterval(fsClaim,6000);
+
+/* ================= collections ================= */
+const COLS=[['hat','모자 도감',k=>ITEMS[k].t==='hat'],['body','옷 도감',k=>ITEMS[k].t==='body'],['wear','액세서리 도감',k=>ITEMS[k].t==='neck'||ITEMS[k].t==='face'],['aura','배경 효과 도감',k=>ITEMS[k].t==='aura'],['room','방 꾸미기 도감',k=>ITEMS[k].t==='room']];
+const COL_HALF={c:200,s:2},COL_FULL={c:1000,s:10},COL_FISH={c:300,s:3,it:'fishhat'};
+function colItems(f){return Object.keys(ITEMS).filter(k=>!ITEMS[k].ex&&!ITEMS[k].wed&&!ITEMS[k].ev&&f(k))}
+function colStat(u,key){if(key==='fish'){const L=FISH.filter(x=>!x.shark);const b=((u.fish||{}).best)||{};return{all:L.map(x=>x.k),own:L.filter(x=>b[x.k]).length,tot:L.length}}const c=COLS.find(x=>x[0]===key);const L=colItems(c[2]);const inv=u.inv||{};return{all:L,own:L.filter(k=>inv[k]).length,tot:L.length}}
+function viewCols(){const u=me(),cc=u.colc||{};
+  const row=(key,name)=>{const st=colStat(u,key),half=key!=='fish'&&st.own>=Math.ceil(st.tot/2),full=st.own>=st.tot;
+    const btn=key!=='fish'&&half&&!cc[key+'_half']?`<button class="btn small" data-a="colclaim" data-v="${key}" data-k="half">절반 보상</button>`:full&&!cc[key+'_full']?`<button class="btn small" data-a="colclaim" data-v="${key}" data-k="full">완성 보상</button>`:cc[key+'_full']?'<span class="chip gold">완성!</span>':'';
+    return`<div class="item" data-a="colopen" data-v="${key}" role="button" style="cursor:pointer"><div class="tx"><b>${name}</b><span class="num">${st.own} / ${st.tot}</span><div class="bar" style="height:7px;margin-top:5px"><i style="width:${st.own/st.tot*100}%;background:${full?'#e0a72a':'var(--teal)'}"></i></div></div>${btn}</div>`};
+  return`<div class="sect">도감 <small class="grow">· 절반 모으면 ${COL_HALF.c}코인 ⭐${COL_HALF.s}, 완성하면 ${COL_FULL.c}코인 ⭐${COL_FULL.s} + 칭호 배지</small></div><div class="list">${COLS.map(c=>row(c[0],c[1])).join('')}${row('fish','낚시 도감 (완성하면 낚시꾼 모자)')}</div>`}
+function openCol(key){const u=me(),st=colStat(u,key),inv=u.inv||{},b=((u.fish||{}).best)||{};
+  const name=key==='fish'?'낚시 도감':COLS.find(x=>x[0]===key)[1];
+  openSheet(`<h2>${name} · ${st.own}/${st.tot}</h2><div class="colgrid">${st.all.map(k=>{const own=key==='fish'?b[k]:inv[k];const nm=key==='fish'?(FISH.find(x=>x.k===k)||{}).n:ITEMS[k].n;return`<div class="ci ${own?'':'no'}"><div style="aspect-ratio:1">${key==='fish'?fishPic(k):itemPic(k,activeCat())}</div>${own||key!=='fish'?esc(nm):'???'}</div>`}).join('')}</div>`)}
+async function colClaim(key,kind){
+  const u=me(),st=colStat(u,key);const need=kind==='half'?Math.ceil(st.tot/2):st.tot;if(st.own<need)return toast('아직 모자라요');
+  const R=kind==='half'?COL_HALF:key==='fish'?COL_FISH:COL_FULL;let ok=false;
+  await Store.tx('users/'+S.me,x=>{if(!x)return x;x.colc=x.colc||{};const kk=key+'_'+kind;if(x.colc[kk]){ok=false;return}x.colc[kk]=now();x.coins=(x.coins||0)+R.c;x.stars=(x.stars||0)+R.s;if(R.it){x.inv=x.inv||{};x.inv[R.it]=1}ok=true;return x});
+  if(ok){toast(`도감 보상! ${R.c}코인 ⭐${R.s}${R.it?' + '+ITEMS[R.it].n:''}`,3200);if(kind==='full')log(`${ownerName(S.me)}님이 ${key==='fish'?'낚시 도감':COLS.find(x=>x[0]===key)[1]}을 완성했어요!`)}
+}
 
 /* ================= wedding ================= */
 const WDECOR={w_light:{n:'반짝이 전구',p:300,d:'천장에 줄 전구'},w_carpet:{n:'꽃길 카펫',p:250,d:'하얀 꽃길'},w_balloon:{n:'하트 풍선',p:200,d:'둥실둥실 하트 풍선'},w_arch:{n:'꽃 아치',p:450,d:'신랑 신부 뒤 꽃 아치'},w_cake:{n:'웨딩 케이크 타워',p:600,s:2,d:'3단 케이크'},w_dove:{n:'흰 비둘기',p:500,s:3,d:'축복의 비둘기'},w_chand:{n:'샹들리에',p:900,s:4,d:'반짝반짝 샹들리에'}};
@@ -2193,7 +2348,7 @@ function viewHome(){
   const inst=!DK&&coarse&&!standalone&&!instHide?`<div class="panel row" style="padding:10px 12px;gap:10px;background:var(--gold-l);border-color:#f4dfa4"><span style="flex:1;min-width:0;font-size:.86rem">${ios?'공유 버튼 → <b>홈 화면에 추가</b>를 누르면 앱처럼 쓸 수 있어요.':'홈 화면에 추가하면 앱처럼 바로 열 수 있어요.'}</span>${S.installEvt?'<button class="btn small" data-a="install">추가</button>':''}<button class="btn small ghost" data-a="instdismiss">닫기</button></div>`:'';
   const qq=qNorm(clone(u.q)),qIds=dailyIds(qq.d),qDone=qIds.filter(k=>qq.dc[k]).length,qCan=qClaimable(u);
   const wxb=`<div class="wxbar"><span class="chip">${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
-  return`${inst}${sw}<div class="scene">${roomScene(u)}${skyHTML(false)}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
+  return`${inst}${sw}<div class="scene">${roomScene(u)}${skyHTML(false)}${strayHTML()}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
   <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping':''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div></div></div>
   ${wxb}
   ${c.sick?`<div class="panel row" style="background:#ffe3e3;border-color:#ffc4c4;gap:10px;padding:10px 12px"><span style="flex:1;min-width:0;font-size:.9rem"><b style="font-family:var(--display);font-weight:400;color:#c43d3d">${esc(c.name)}${iGa(c.name).slice(-1)} 아파요 (${SICK[c.sick.k]||'감기'})</b><br>기분이 빨리 떨어지고 놀 수 없어요.${c.sick.k==='skin'?' 목욕을 자주 시켜 주세요.':c.sick.k==='bite'?' 낚시하다 상어에게 물렸어요. 알약을 먹여야 나아요.':''}</span><button class="btn small" data-a="pill">알약 먹이기 · ${(u.inv||{}).pill||0}개</button></div>`:''}
@@ -2241,6 +2396,7 @@ function viewCats(){
     return`<div class="item" style="align-items:flex-start"><div class="thumb" style="width:72px;height:72px;flex-basis:72px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(c.name)}${c.id===u.main?' <span class="chip gold">광장 대표</span>':''}</b><span>${STAGE[c.stage]} · Lv.${c.lv} · ${c.look.gender==='m'?'수컷':'암컷'} · ${personality(c).join(' · ')}${c.status==='runaway'?' · 가출 중':''}</span>${sp?`<span style="display:block">${esc(title(sp))}${waGwa(sp.name).slice(-1)} 결혼했어요</span>`:''}${c.parents?`<span style="display:block">부모: ${esc((S.cats[c.parents.a]||{}).name||'?')} · ${esc((S.cats[c.parents.b]||{}).name||'?')}</span>`:''}
     <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button><button class="btn small ghost" data-a="diary" data-v="${c.id}">일기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?`<button class="btn small teal" data-a="baby" data-v="${c.id}">아기 갖기</button>`:''}${sp&&c.owner===S.me?(()=>{const w=wedOfCat(c);const ph=w&&wedPhase(w);return`<button class="btn small" style="background:#ff9fb3" data-a="wedopen" data-v="${c.id}">${!w?'결혼식 준비':ph==='done'?'결혼식 앨범':ph==='live'?'결혼식 진행 중':'결혼식 준비'}</button>`})():''}</div></div></div>`}).join('')}</div>
   ${viewBadges()}
+  ${viewCols()}
   <div class="row" style="margin-top:12px"><button class="btn teal block" data-a="visit" data-v="${S.me}">우리 집 방명록 보기 (${Object.keys(u.book||{}).length}개 · 누적 방문 ${u.visitTotal||0}명)</button></div>
   <div class="panel" style="margin-top:12px"><p class="lead" style="margin:0 0 10px">광장에는 대표 고양이 한 마리만 나가요. 결혼한 고양이는 조건을 채우면 아기를 가질 수 있어요(결혼 2일 뒤부터, 5일에 한 번, 800코인).</p>${(u.inv||{}).adopt?`<button class="btn block" data-a="adopt">분양권으로 새 고양이 데려오기</button>`:'<p class="grow" style="margin:0">분양권(1,000코인)이 있으면 새 고양이를 직접 만들어 데려올 수도 있어요.</p>'}</div>`;
 }
@@ -2331,7 +2487,7 @@ function attBoard(n,justNow){
 }
 function viewEvents(){
   const tab=S.tab.ev||(isAutumn()?'autumn':isXmas()?'xmas':'quest'),u=me();
-  const tabs=[...(isAutumn()?[['autumn','가을']]:[]),...(isXmas()?[['xmas','성탄']]:[]),['quest','퀘스트'],['att','출석부'],['lotto','로또'],['fish','낚시']];
+  const tabs=[...(isAutumn()?[['autumn','가을']]:[]),...(isXmas()?[['xmas','성탄']]:[]),['quest','퀘스트'],['att','출석부'],['lotto','로또'],['fish','낚시'],['fs','패션쇼']];
   let body='';
   if(tab==='quest'){
     const q=qNorm(clone(u.q)),ids=dailyIds(q.d);
@@ -2348,6 +2504,7 @@ function viewEvents(){
   }else if(tab==='xmas'&&isXmas())body=viewXmas();
   else if(tab==='autumn'&&isAutumn())body=viewAutumn();
   else if(tab==='fish')body=viewFishTab();
+  else if(tab==='fs')body=viewFS();
   else body=viewLotto();
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="evtab" data-v="${k}">${l}${k==='quest'&&qClaimable(u)?' •':''}</button>`).join('')}</div>${body}`;
 }
@@ -2516,6 +2673,18 @@ document.addEventListener('click',async e=>{
     case'card':openCatCard(v);break;
     case'rank':openRank(v,el.dataset.k);break;
     case'diary':openDiary(v,el.dataset.k);break;
+    case'stray':openStray();break;
+    case'strayfeed':await feedStray(v);break;
+    case'straygift':await strayGift(v);break;
+    case'strayname':{const n=String(($('#strnm')||{}).value||'').trim().slice(0,8);if(!n)break;await Store.set(`users/${S.me}/stray/nm/${v}`,n);toast(`이름을 '${n}'(으)로 지었어요`);closeSheet();break}
+    case'fscat':S.fsPick={cat:v,of:{}};render();break;
+    case'fspick':{const pk=fsPick();if(v)pk.of[el.dataset.s]=v;else delete pk.of[el.dataset.s];render();break}
+    case'fsenter':await fsEnter();break;
+    case'fsvote':await fsVote(v,el.dataset.k);break;
+    case'fscm':openFsComments(v);break;
+    case'fscmsend':await fsComment(v);break;
+    case'colopen':if(!e.target.closest('[data-a="colclaim"]'))openCol(v);break;
+    case'colclaim':await colClaim(v,el.dataset.k);break;
     case'bdgshow':await toggleBadge(v);break;
     case'goquest':S.tab.ev='quest';closeSheet();markHist();S.view='events';window.scrollTo(0,0);render();break;
     case'bookre':openBookReply(el.dataset.o,v);break;
