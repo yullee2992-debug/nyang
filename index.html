@@ -331,6 +331,31 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 .dcat .prop.bowl svg{display:block;width:100%;height:auto}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (min-width:640px){.actions{gap:10px}}
+/* sky & weather */
+.skyfx{position:absolute;inset:0;pointer-events:none;z-index:250}
+.skyfx.in{z-index:auto}
+.sky-dawn{background:linear-gradient(180deg,rgba(255,180,140,.3),rgba(255,220,200,.06))}
+.sky-dusk{background:linear-gradient(180deg,rgba(255,120,80,.34),rgba(170,80,160,.2))}
+.sky-night{background:linear-gradient(180deg,rgba(18,22,70,.58),rgba(30,30,85,.4))}
+.sky-night.in{background:rgba(25,25,70,.3)}
+.sky-dawn.in,.sky-dusk.in{opacity:.6}
+.skyfx.lamp{background:radial-gradient(circle at 50% 8%,rgba(255,214,140,.38),transparent 55%)}
+.sky-cloud{background:rgba(110,120,140,.2)}
+.twk{animation:twk 2.4s ease-in-out infinite}@keyframes twk{50%{opacity:.3}}
+.rainfx,.windfx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:260}
+.rainfx i{position:absolute;top:-24px;width:2px;height:18px;border-radius:2px;background:rgba(170,205,245,.85);transform:rotate(12deg);animation:rainf linear infinite}
+@keyframes rainf{to{transform:translate(-90px,560px) rotate(12deg)}}
+.windfx i{position:absolute;left:-80px;height:2.5px;width:60px;border-radius:3px;background:rgba(255,255,255,.75);animation:windf linear infinite}
+@keyframes windf{to{transform:translateX(560px)}}
+.wxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.wxbar .chip{font-size:.8rem}
+.diary{background:repeating-linear-gradient(180deg,#fffdf6 0 30px,#efe6d2 30px 31px);border:1.5px solid #eadfc8;border-radius:16px;padding:6px 16px 14px;font-family:var(--display);font-size:1.05rem;line-height:31px;color:#5a4a3a}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.bdg{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:14px;background:var(--paper);border:1.5px solid var(--line);font-size:.72rem;text-align:center;cursor:pointer}
+.bdg svg{width:44px;height:44px}
+.bdg.off{opacity:.5;filter:grayscale(1)}
+.bdg.show{border-color:var(--pink-d);background:var(--pink-l)}
+.bdgrow{display:flex;gap:4px;margin-top:4px}.bdgrow svg{width:30px;height:30px}
 /* autumn */
 .leaffx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:300}
 .leaffx svg{position:absolute;top:-20px;width:16px;animation:leaff linear infinite}
@@ -599,6 +624,7 @@ const ITEMS={
   lights:{n:'꼬마전구',t:'room',slot:'lights',p:250,d:'벽 위쪽을 반짝반짝'},
   throne:{n:'고양이 왕좌',t:'room',slot:'throne',p:1500,s:8,d:'마을의 왕'}
 };
+for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room'].includes(it.t))continue;const tier=it.p<150?1:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
 const STACK=new Set(['bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
 const STAGE={kitten:'아기냥',junior:'청소년냥',adult:'어른냥'};
@@ -629,6 +655,7 @@ function tick(c,t){
     s.hunger=clamp(s.hunger-(sl?2.5:5)*h);
     s.clean=clamp(s.clean-4*h);
     let md=sl?.5:3;if(s.hunger<20)md+=3;if(s.clean<20)md+=2;
+    {const wx=wxOf(kstDay(x)),E=c.eq||{};if(!sl){if(wx==='rain'&&E.body!=='raincoat')md+=1.5;else if(wx==='snow'&&!['beanie','santa'].includes(E.hat)&&E.neck!=='scarf')md+=1;else if(wx==='sun')md=Math.max(0,md-.5)}if(wx==='wind')s.clean=clamp(s.clean-1.5*h)}
     s.mood=clamp(s.mood-md*h);
     s.energy=clamp(s.energy+(sl?3000:-65)*h);
     {const Dx=kstDay(x);if(c.sickDay!==Dx){c.sickDay=Dx;const rr=seeded(strHash('sick-'+c.id+Dx));if(rr()<.08&&!c.sick)c.sickPlan=Date.parse(Dx+'T00:00:00+09:00')+(8+rr()*12)*HOUR}}
@@ -1089,7 +1116,7 @@ async function catTx(id,fn){
   const r=await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());res={};const out=fn(c,res);if(out===false){return}const nt=ptypeOf(c);if(nt!==c.ptype){if(c.ptype)res.pchange=nt;c.ptype=nt}const g=tryGrow(c);if(g){res.grew=g;c.celebs=c.celebs||{};c.celebs[c.stage]={k:c.stage,at:now()}}return roundCat(c)});
   if(!r.committed||!res)return res&&res.msg?(toast(res.msg),null):null;
   if(res.coins)await addCoins(res.coins);
-  if(res.grew){const c=S.cats[id]||r.value;toast(`${c.name}${iGa(c.name).slice(-1)} ${josa(res.grew,'으로','로')} 자랐어요!`,3200);log(`${title(r.value)}${iGa(r.value.name).slice(-1)} ${josa(res.grew,'으로','로')} 자랐어요!`)}
+  if(res.grew){dyAdd(id,'grew');const c=S.cats[id]||r.value;toast(`${c.name}${iGa(c.name).slice(-1)} ${josa(res.grew,'으로','로')} 자랐어요!`,3200);log(`${title(r.value)}${iGa(r.value.name).slice(-1)} ${josa(res.grew,'으로','로')} 자랐어요!`)}
   if(res.ups)toast(`레벨 업! Lv.${r.value.lv} · 보너스 ${res.lvCoins}코인`,2600);
   if(res.pchange){const nm=r.value.name,pn=PT[res.pchange].n;setTimeout(()=>toast(`${nm}의 성격이 '${pn}'${josa(pn,'으로','로').slice(pn.length)} 바뀌었어요!`,3600),res.ups||res.grew?2700:0);log(`${title(r.value)}의 성격이 '${pn}'${josa(pn,'으로','로').slice(pn.length)} 바뀌었어요.`)}
   return res;
@@ -1136,10 +1163,14 @@ async function feed(kind){
   const c=activeCat();if(!c)return;const v=live(c);const b=busy(v);if(b)return toast(b);
   if(v.st.hunger>=92&&kind!=='churu'&&kind!=='cake')return toast('배불러서 더 못 먹어요');
   if(!(await useItem(kind)))return toast(`${ITEMS[kind].n}${iGa(ITEMS[kind].n).slice(-1)} 없어요. 상점 '간식' 탭에서 살 수 있어요`);
-  const f=FOOD[kind];
-  qEvent('feed');
-  await catTx(c.id,(c,res)=>{bumpTr(c,{feed:kind==='kibble'?.4:1.2});c.st.hunger=clamp(c.st.hunger+f.h);c.st.mood=clamp(c.st.mood+f.m);c.aff=clamp(c.aff+f.a);c.neglect=0;xp(c,res,f.x)});
-  closeSheet();homeFx('eat',kind);S.happyUntil=now()+1200;say(kind==='smelt'?'오독오독 열빙어!':kind==='churu'?'츄르 최고냥!!':kind==='cake'?'생일도 아닌데?!':'냠냠냠');schedule();
+  const f=FOOD[kind];const T=tasteOf(c),fav=kind===T.fav,hate=kind===T.hate;let reveal='';
+  qEvent('feed');dyAdd(c.id,'feed:'+kind);
+  await catTx(c.id,(c,res)=>{bumpTr(c,{feed:kind==='kibble'?.4:1.2});c.st.hunger=clamp(c.st.hunger+(hate?f.h*.6:f.h));c.st.mood=clamp(c.st.mood+(fav?f.m+12:hate?-5:f.m));c.aff=clamp(c.aff+f.a+(fav?1:0));c.neglect=0;xp(c,res,f.x);
+    if(fav||hate){c.tk=c.tk||{};const kk=fav?'fav':'hate';c.tk[kk]=(c.tk[kk]||0)+1;if(c.tk[kk]===2)reveal=kk}});
+  closeSheet();homeFx('eat',kind);if(!hate)S.happyUntil=now()+1200;
+  say(fav?`${ITEMS[kind].n} 제일 좋아!! 최고야!`:hate?'...이건 별로냥':kind==='smelt'?'오독오독 열빙어!':kind==='churu'?'츄르 최고냥!!':kind==='cake'?'생일도 아닌데?!':'냠냠냠');
+  if(reveal)setTimeout(()=>toast(reveal==='fav'?`${c.name}${iGa(c.name).slice(-1)} 제일 좋아하는 건 ${ITEMS[kind].n}인가 봐요!`:`${c.name}${eunNeun(c.name).slice(-1)} ${ITEMS[kind].n}${eulReul(ITEMS[kind].n).slice(-1)} 싫어하나 봐요...`,3500),1300);
+  schedule();
 }
 async function play(){
   const c=activeCat();if(!c)return;const v=live(c);const b=busy(v);if(b)return toast(b);
@@ -1160,7 +1191,7 @@ async function bath(){
 async function nap(){
   const c=activeCat();if(!c)return;const v=live(c);const b=busy(v);if(b)return toast(b);
   if(v.st.energy>=90)return toast('아직 안 졸려요');
-  await catTx(c.id,c=>{c.sleepUntil=now()+3650*DAY;bumpTr(c,{nap:1})});toast('낮잠을 자요. 2분이면 기력이 가득 차고, 깨워줄 때까지 계속 자요');schedule();
+  await catTx(c.id,c=>{c.sleepUntil=now()+3650*DAY;bumpTr(c,{nap:1})});dyAdd(c.id,'nap');toast('낮잠을 자요. 2분이면 기력이 가득 차고, 깨워줄 때까지 계속 자요');schedule();
 }
 async function wake(){const c=activeCat();if(!c)return;let full=false;await catTx(c.id,c=>{full=c.st.energy>=99;c.sleepUntil=null;c.st.mood=clamp(c.st.mood+(full?2:-3))});say(full?'잘 잤다냥! 기운 펄펄':'하암... 덜 잤는데');schedule()}
 async function searchCat(){
@@ -1322,7 +1353,7 @@ async function giveFlower(id,fid){
   const b=bondInfo(myBond(t));if(b.pts<it.need)return toast(`${it.n}${eunNeun(it.n).slice(-1)} 친밀도 ${it.need} 이상부터 선물할 수 있어요 (지금 ${b.pts})`);
   if(!(await useItem(fid)))return toast(`${it.n}${iGa(it.n).slice(-1)} 없어요. 상점 '꽃' 탭에서 살 수 있어요`);
   await Store.tx('cats/'+id,c=>{if(!c)return c;c.pop=(c.pop||0)+it.pop;c.flowers=c.flowers||{};c.flowers[fid]=(c.flowers[fid]||0)+1;c.bond=c.bond||{};c.bond[S.me]=(c.bond[S.me]||0)+3;return c});
-  qEvent('gift');log(`${ownerName(S.me)}님이 ${title(v)}에게 ${it.n}${eulReul(it.n).slice(-1)} 선물했어요 (인기도 +${it.pop})`);
+  qEvent('gift');dyAdd(id,'flower:'+ownerName(S.me));log(`${ownerName(S.me)}님이 ${title(v)}에게 ${it.n}${eulReul(it.n).slice(-1)} 선물했어요 (인기도 +${it.pop})`);
   toast(`${it.n}${eulReul(it.n).slice(-1)} 선물했어요! ${v.name}의 인기도 +${it.pop}`);
 }
 function flowerButtons(id,attr){const inv=(me()&&me().inv)||{};const b=bondInfo(myBond(S.cats[id]));
@@ -1331,7 +1362,7 @@ async function friendPet(id){
   const t=S.cats[id];if(!t)return;const v=live(t);if(v.status==='runaway')return toast('지금은 가출 중이에요');
   await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.mood=clamp(c.st.mood+2);bumpTr(c,{pet:.5});return roundCat(c)});
   toast(`${v.name}${iGa(v.name).slice(-1)} 골골거려요 · 친밀도 +1`);
-  petBonus(10);qEvent('fpet');
+  petBonus(10);qEvent('fpet');dyAdd(id,'fpet:'+ownerName(S.me));
   addBond(id,1,true);
   if(!friendLogT[id]||now()-friendLogT[id]>10*MIN){friendLogT[id]=now();log(`${ownerName(S.me)}님이 ${title(v)}${eulReul(v.name).slice(-1)} 쓰다듬었어요.`)}
 }
@@ -1343,7 +1374,7 @@ async function gift(id,kind='churu'){
   if(!(await useItem(kind)))return toast(`${nm}${iGa(nm).slice(-1)} 없어요. 상점 '간식' 탭에서 살 수 있어요`);
   const f=FOOD[kind];
   await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.hunger=clamp(c.st.hunger+f.h);c.st.mood=clamp(c.st.mood+f.m);c.neglect=0;return roundCat(c)});
-  await addCoins(15);addBond(id,GIFT_BOND[kind]||5);qEvent('gift');log(`${ownerName(S.me)}님이 ${title(v)}에게 ${nm}${eulReul(nm).slice(-1)} 선물했어요.`);toast(`${nm}${eulReul(nm).slice(-1)} 선물했어요 · 친밀도 +${GIFT_BOND[kind]||5} · 우정 보너스 15코인`);closeSheet();
+  await addCoins(15);addBond(id,GIFT_BOND[kind]||5);qEvent('gift');dyAdd(id,'gift:'+ownerName(S.me));log(`${ownerName(S.me)}님이 ${title(v)}에게 ${nm}${eulReul(nm).slice(-1)} 선물했어요.`);toast(`${nm}${eulReul(nm).slice(-1)} 선물했어요 · 친밀도 +${GIFT_BOND[kind]||5} · 우정 보너스 15코인`);closeSheet();
 }
 function giftButtons(id){const inv=(me()&&me().inv)||{};return GIFT_FOODS.map(k=>`<button class="btn small ${inv[k]?'':'ghost'}" data-a="gift" data-v="${id}" data-k="${k}" ${inv[k]?'':'disabled'}>${ITEMS[k].n} ${inv[k]||0}개</button>`).join('')}
 function proposeCheck(myC,t){
@@ -1427,7 +1458,7 @@ async function givePill(){
   const c=activeCat();if(!c)return;const v=live(c);
   if(!v.sick)return toast('지금은 아프지 않아요');
   if(!(await useItem('pill')))return toast("알약이 없어요. 상점 '간식' 탭에서 살 수 있어요");
-  await catTx(c.id,c=>{c.sick=null;c.dirtH=0;c.sickPlan=null;c.st.mood=clamp(c.st.mood+5)});
+  await catTx(c.id,c=>{c.sick=null;c.dirtH=0;c.sickPlan=null;c.st.mood=clamp(c.st.mood+5)});dyAdd(c.id,'pill');
   homeFx('pill');say('으... 써! 그래도 나았다냥');toast(`${v.name}${iGa(v.name).slice(-1)} 다 나았어요!`);log(`${title(v)}${iGa(v.name).slice(-1)} 알약을 먹고 다 나았어요.`);
 }
 /* ================= home action effects ================= */
@@ -1473,7 +1504,7 @@ async function recordVisit(owner){
   const D=kstDay();const ex=await Store.get(`users/${owner}/visits/${D}/${S.me}`);if(ex)return;
   await Store.set(`users/${owner}/visits/${D}/${S.me}`,now());
   await Store.tx(`users/${owner}/visitTotal`,v=>(v||0)+1);
-  qEvent('visit');log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집에 놀러 갔어요.`);
+  qEvent('visit');{const c=activeCat();if(c)dyAdd(c.id,'visit:'+ownerName(owner))}log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집에 놀러 갔어요.`);
 }
 function openBookReply(o,k){
   const b=((S.users[o]||{}).book||{})[k];if(!b)return;
@@ -1494,7 +1525,7 @@ async function writeBook(owner){
   const mineToday=Object.values(book).filter(b=>b.by===S.me&&kstDay(b.at)===D).length;
   if(mineToday>=2)return toast('이 집 방명록은 하루에 2개까지 쓸 수 있어요');
   await Store.push(`users/${owner}/book`,{by:S.me,text,at:now()});
-  qEvent('book');log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집 방명록에 글을 남겼어요: "${text.length>30?text.slice(0,30)+'…':text}"`);
+  qEvent('book');achAdd('book');log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집 방명록에 글을 남겼어요: "${text.length>30?text.slice(0,30)+'…':text}"`);
   toast('방명록을 남겼어요');
 }
 function viewVisit(){
@@ -1532,7 +1563,7 @@ async function talk(id,text,secret){
   if(now()-talkT<3000){toast('조금 천천히 말해주세요');return null}
   const v=live(S.cats[id]);if(!v)return null;
   if(v.status==='runaway'){toast('지금은 가출 중이에요');return null}
-  talkT=now();addBond(id,2);qEvent('talk');
+  talkT=now();addBond(id,2);qEvent('talk');dyAdd(id,'talk:'+ownerName(S.me));
   Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());bumpTr(c,{talk:1});const nt=ptypeOf(c);if(nt!==c.ptype&&c.ptype){const pn=PT[nt].n;setTimeout(()=>log(`${title(c)}의 성격이 '${pn}'${josa(pn,'으로','로').slice(pn.length)} 바뀌었어요.`),0)}c.ptype=nt;return roundCat(c)});
   if(secret){await Store.push(`users/${v.owner}/secret`,{by:S.me,cat:v.id,text,at:now()});log(`${ownerName(S.me)}님이 ${title(v)}에게 비밀 메시지를 보냈어요.`)}
   else log(`${ownerName(S.me)}님이 ${title(v)}에게 말을 걸었어요: "${text}"`);
@@ -1574,7 +1605,7 @@ async function wrClaim(){
     const L=rankList(g,prev),i=L.findIndex(x=>x.k===S.me);if(i<0||i>2)continue;
     const R=WRREW[i];let ok=false;
     await Store.tx('users/'+S.me,x=>{if(!x)return x;x.wrc=x.wrc||{};if(x.wrc[key]){ok=false;return}x.wrc[key]=1;x.coins=(x.coins||0)+R.c;x.stars=(x.stars||0)+R.s;ok=true;return x});
-    if(ok){log(`지난주 ${RANKG[g].n} 랭킹 ${i+1}위는 ${ownerName(S.me)}님이에요! 축하해요`);
+    if(ok){if(i===0)achAdd('rank1');log(`지난주 ${RANKG[g].n} 랭킹 ${i+1}위는 ${ownerName(S.me)}님이에요! 축하해요`);
       openSheet(`<div class="celebc"><div class="confetti">${confettiHTML()}</div><h2>주간 랭킹 ${i+1}위!</h2><p class="lead">지난주 <b>${RANKG[g].n}</b>에서 ${L.length}명 중 <b>${i+1}위</b>를 했어요.<br>기록 ${RANKG[g].fmt(L[i].r)}</p><div class="panel" style="background:var(--gold-l);border-color:#f3dfa0;margin:10px 0"><b>보상 ${rewTxt(R)}</b></div><button class="btn block" data-a="close">고마워요!</button></div>`);
       return;}
   }
@@ -1624,6 +1655,96 @@ function celebNews(){
     return`<div class="item" style="background:#fff7e8;border-color:#f6e0b0"><div class="thumb" style="width:52px;height:52px;flex-basis:52px">${catSVG(live(x.cat),{still:true,expr:'happy'})}</div><div class="tx"><b>${esc(celebText(x))}</b><span>${ago(x.e.at)} · 축하 ${ch.length}개${mine&&ch.length?' · '+ch.slice(0,4).map(k=>esc(ownerName(k))).join(', '):''}</span></div>${mine?'<span class="chip gold">우리 냥이</span>':did?'<span class="chip gray">축하했어요</span>':`<button class="btn small" data-a="cheer" data-v="${x.cat.id}" data-k="${x.k}">축하하기</button>`}</div>`}).join('')}</div>`;
 }
 setInterval(()=>{celebPop();wrClaim();gogClaim()},5000);
+
+/* ================= sky & weather ================= */
+const WXN={sun:'맑음',cloud:'흐림',rain:'비',wind:'바람',snow:'눈'};
+const WXI={sun:'☀',cloud:'☁',rain:'☂',wind:'≋',snow:'❄'};
+function wxOf(day){const r=seeded(strHash('wx-'+day))();const m=+String(day).slice(5,7);const winter=m===12||m<=2;if(r<.42)return'sun';if(r<.6)return'cloud';if(r<.8)return winter?'snow':'rain';return'wind'}
+function dayPhase(t){const h=new Date((t||now())+9*HOUR).getUTCHours();return h>=5&&h<7?'dawn':h>=7&&h<17?'day':h>=17&&h<19?'dusk':'night'}
+const PHN={dawn:'새벽',day:'낮',dusk:'노을',night:'밤'};
+function skyHTML(out){
+  const ph=dayPhase(),wx=wxOf(kstDay());let h='';
+  if(ph!=='day')h+=`<div class="skyfx sky-${ph}${out?'':' in'}"></div>`;
+  if(out){
+    if(ph==='night')h+=`<div class="skyfx"><svg viewBox="0 0 400 400" preserveAspectRatio="none" style="width:100%;height:100%">${Array.from({length:26},(_,i)=>{const r=seeded(strHash('st'+i));return`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*150).toFixed(0)}" r="${(.8+r()*1.6).toFixed(1)}" fill="#fff" class="twk" style="animation-delay:${(-r()*2.4).toFixed(1)}s"/>`}).join('')}<path d="M346 40 a22 22 0 1 0 18 34 a18 18 0 1 1 -18 -34z" fill="#fff4c2"/></svg></div>`;
+    if(wx==='cloud'||wx==='rain'||wx==='snow')h+=`<div class="skyfx sky-cloud"${wx==='rain'?' style="background:rgba(90,100,125,.28)"':''}></div><div class="skyfx"><svg viewBox="0 0 400 400" preserveAspectRatio="none" style="width:100%;height:100%">${[[300,58,1.25],[120,40,.9],[214,26,.7]].map(([x,y,k])=>`<g transform="translate(${x},${y}) scale(${k})" opacity="${ph==='night'?.55:.95}"><ellipse cx="0" cy="8" rx="44" ry="16" fill="${wx==='rain'?'#c3cad6':'#eef1f5'}"/><circle cx="-16" cy="-2" r="18" fill="${wx==='rain'?'#c3cad6':'#eef1f5'}"/><circle cx="12" cy="-8" r="22" fill="${wx==='rain'?'#cbd2dd':'#f4f6f9'}"/></g>`).join('')}</svg></div>`;
+    if(wx==='rain')h+=`<div class="rainfx">${Array.from({length:40},(_,i)=>`<i style="left:${(i*29+7)%110}%;animation-duration:${.55+(i%5)*.08}s;animation-delay:${-((i*.13)%1)}s"></i>`).join('')}</div>`;
+    if(wx==='wind')h+=`<div class="windfx">${Array.from({length:9},(_,i)=>`<i style="top:${8+i*10}%;animation-duration:${1.6+(i%4)*.4}s;animation-delay:${-(i*.7)}s"></i>`).join('')}</div>`;
+    if(wx==='snow'&&!isXmas())h+=snowHTML(24);
+  }else if(ph==='night')h+=`<div class="skyfx in lamp"></div>`;
+  return h;
+}
+function wxTip(c){const wx=wxOf(kstDay()),E=c.eq||{};return wx==='rain'?(E.body==='raincoat'?'우비 덕분에 뽀송해요':'우비를 입히면 기분이 덜 떨어져요'):wx==='snow'?(['beanie','santa'].includes(E.hat)||E.neck==='scarf'?'따뜻하게 입어서 괜찮아요':'털모자나 목도리를 하면 덜 추워요'):wx==='wind'?'바람에 털이 날려 청결이 빨리 떨어져요':wx==='sun'?'햇볕 덕분에 기분이 천천히 떨어져요':'평범한 하루예요'}
+
+/* ================= food taste ================= */
+const TASTE=['kibble','churu','fish','smelt','cake'];
+function tasteOf(c){const r=seeded(strHash('taste-'+c.id));const fav=TASTE[Math.floor(r()*5)];const H=['churu','fish','smelt','cake'].filter(k=>k!==fav);return{fav,hate:H[Math.floor(r()*H.length)]}}
+function tasteChips(c,mine){const T=tasteOf(c),k=c.tk||{};const f=k.fav>=2,h=k.hate>=2;if(!mine&&!f&&!h)return'';return`<span class="chip pink">좋아함: ${f?ITEMS[T.fav].n:'???'}</span><span class="chip gray">싫어함: ${h?ITEMS[T.hate].n:'???'}</span>`}
+
+/* ================= diary ================= */
+S.dyq={};S.petAcc=0;
+function dyAdd(id,k,n=1){if(!id)return;k=String(k).replace(/[.#$\[\]\/]/g,'_');const q=S.dyq[id]=S.dyq[id]||{};q[k]=(q[k]||0)+n}
+async function dyFlush(){
+  const Q=S.dyq;S.dyq={};const D=kstDay();
+  for(const [id,m] of Object.entries(Q)){if(!S.cats[id])continue;
+    await Store.tx(`cats/${id}/dy/${D}`,o=>{o=o||{};for(const k in m)o[k]=(o[k]||0)+m[k];return o});
+    const ks=Object.keys(S.cats[id].dy||{}).sort();if(ks.length>10)for(const k of ks.slice(0,ks.length-10))Store.set(`cats/${id}/dy/${k}`,null)}
+  if(S.petAcc&&S.me){const n=S.petAcc;S.petAcc=0;achAdd('pet',n)}
+}
+setInterval(()=>{if(S.me)dyFlush()},6000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.me)dyFlush()});
+function diaryLines(c,day,m){
+  const O=ownerName(c.owner),Oi=iGa(O),T=tasteOf(c),L=[];const r=seeded(strHash('dy'+c.id+day));const pk=a=>a[Math.floor(r()*a.length)];
+  const wx=wxOf(day);
+  L.push({sun:pk(['날씨가 맑았다. 창가 햇볕이 따끈따끈했다.','하늘이 파랬다. 기분 좋은 날.']),cloud:pk(['하늘이 흐렸다. 괜히 졸렸다.','구름이 잔뜩 꼈다.']),rain:pk(['비가 주룩주룩 왔다.','창밖에 비가 왔다. 빗소리를 들으며 멍때렸다.']),wind:'바람이 쌩쌩 불었다. 털이 다 날렸다.',snow:'눈이 펑펑 왔다! 발이 시렸다.'}[wx]);
+  if(m.grew)L.push('오늘 쑥 자랐다! 거울을 보니 조금 의젓해졌다.');
+  for(const k of Object.keys(m).filter(k=>k.startsWith('feed:'))){const f=k.slice(5),n=(ITEMS[f]||{}).n||f,cnt=m[k];
+    if(f===T.fav)L.push(`${Oi} 내가 제일 좋아하는 ${eulReul(n)} 줬다! 너무 행복했다.`);
+    else if(f===T.hate)L.push(`${Oi} ${eulReul(n)} 줬다. 솔직히 별로였다...`);
+    else if(f==='kibble')L.push(cnt>1?`밥을 ${cnt}번 먹었다. 배가 빵빵하다.`:'밥을 먹었다. 오독오독.');
+    else L.push(`${eulReul(n)} 먹었다. 맛있었다.`)}
+  if(m.pet)L.push(m.pet>=50?`${Oi} 오늘 ${m.pet}번이나 쓰다듬어 줬다. 털이 반질반질해졌다.`:m.pet>=10?`${Oi} 쓰다듬어 줬다. 골골골.`:`${Oi} 살짝 쓰다듬어 줬다.`);
+  if(m.play)L.push(m.play>2?`털실로 ${m.play}번이나 놀았다. 우다다다!`:'털실로 놀았다. 재밌었다.');
+  if(m.bath)L.push('목욕을 했다. 물은 싫지만 뽀송해졌다.');
+  if(m.ex)L.push('운동을 했다. 다리가 튼튼해진 기분.');
+  if(m.train)L.push(m.train>2?`공부를 ${m.train}번이나 했다. 머리에서 김이 난다.`:'공부를 했다. 조금 똑똑해진 것 같다.');
+  if(m.nap)L.push(pk(['낮잠을 잤다. 꿈에서 츄르를 먹었다.','꾸벅꾸벅 낮잠을 잤다.']));
+  const fk=Object.keys(m).filter(k=>k.startsWith('fish:'));
+  if(fk.length){const FN=Object.fromEntries(FISH.map(x=>[x.k,x.n]));L.push(`${josa(O,'이랑','랑')} 낚시를 갔다. ${fk.map(k=>`${FN[k.slice(5)]||k.slice(5)} ${m[k]}개`).join(', ')}를 건졌다.`)}
+  if(m.shark)L.push('낚시하다가 상어한테 물렸다!!! 너무 무서웠다. 다시는 안 갈 거다... 아마도.');
+  if(m.pill)L.push('알약을 먹었다. 썼지만 꾹 참았다.');
+  for(const k of Object.keys(m).filter(k=>k.startsWith('visit:')))L.push(`${josa(O,'이랑','랑')} ${k.slice(6)}네 집에 놀러 갔다.`);
+  if(m.wed)L.push('결혼식에 하객으로 갔다. 국수가 맛있었다.');
+  for(const k of Object.keys(m).filter(k=>/^(talk|gift|fpet|flower):/.test(k))){const [t,who]=k.split(':');L.push({talk:`${who}님이 말을 걸어줬다.`,gift:`${who}님이 간식을 선물해 줬다. 고마워!`,fpet:`${who}님이 쓰다듬어 줬다.`,flower:`${who}님에게 꽃을 받았다. 인기냥이 된 기분!`}[t])}
+  if(m.lotto)L.push(`${Oi} 로또를 샀다. 당첨되면 츄르 백 개!`);
+  if(L.length<2)L.push(`오늘은 조용한 하루였다. ${O} 보고 싶었다.`);
+  L.push(pk(['내일도 좋은 하루였으면.','오늘도 잘 먹고 잘 잤다. 끝.','이제 잘 거다. 냥.']));
+  return L;
+}
+function openDiary(id,idx=0){
+  const c=S.cats[id];if(!c)return;idx=Math.max(0,Math.min(6,+idx||0));
+  const day=kstDay(now()-idx*DAY),m=(c.dy||{})[day]||{};const dd=new Date(Date.parse(day+'T00:00:00+09:00')+9*HOUR);
+  openSheet(`<h2>${esc(c.name)}의 일기</h2><div class="row" style="justify-content:space-between;margin-bottom:8px"><button class="btn small ghost" data-a="diary" data-v="${id}" data-k="${idx+1}" ${idx>=6?'disabled':''}>이전 날</button><b>${dd.getUTCMonth()+1}월 ${dd.getUTCDate()}일 (${'일월화수목금토'[dd.getUTCDay()]}) · ${WXN[wxOf(day)]}${idx===0?' · 쓰는 중':''}</b><button class="btn small ghost" data-a="diary" data-v="${id}" data-k="${idx-1}" ${idx<=0?'disabled':''}>다음 날</button></div>
+  <div class="diary">${diaryLines(c,day,m).map(l=>`<div>${esc(l)}</div>`).join('')}</div><p class="grow" style="margin-top:8px">하루 동안 있었던 일을 ${esc(c.name)}${iGa(c.name).slice(-1)} 직접 적어요. 최근 일주일까지 볼 수 있어요.</p>`);
+}
+
+/* ================= badges ================= */
+const BADGES=[['shark','상어 생존자','상어에게 3번 물리기',3,'#6f8599','상어'],['gold','황금 낚시꾼','황금 잉어 낚기',1,'#e0a72a','황금'],['fish','강태공','낚시로 50번 건지기',50,'#4dabf7','낚시'],['guest','단골 하객','결혼식 하객 5번',5,'#ff8fab','하객'],['wed','백년가약','결혼식 올리기',1,'#e2456f','부부'],['adult','육묘 졸업','고양이를 어른냥으로 키우기',1,'#3fb5a0','어른'],['quest','퀘스트 달인','일일 퀘스트 30개 완료',30,'#9775fa','퀘스트'],['rank1','주간 챔피언','주간 랭킹 1위 하기',1,'#f2b33d','1위'],['pet','쓰담 장인','내 고양이 1000번 쓰다듬기',1000,'#ff9f43','쓰담'],['book','수다쟁이','방명록 10개 쓰기',10,'#51b26b','방명록'],['goguma','고구마 장인','군고구마 10개 굽기',10,'#a0569f','고구마'],['rudolph','산타의 친구','루돌프 미니펫 받기',1,'#e2453c','루돌프']];
+const achAdd=(k,n=1)=>S.me&&Store.tx(`users/${S.me}/ach/${k}`,v=>(v||0)+n);
+function badgeProg(u,k){const a=(u&&u.ach)||{};if(k==='wed')return myWeddings().some(w=>isHost(w)&&wedPhase(w)==='done')?1:0;if(k==='adult')return Object.values(S.cats).some(c=>c&&c.owner===S.me&&c.stage==='adult')?1:0;if(k==='rudolph')return((u.inv||{}).rudolph)?1:0;return a[k]||0}
+function medal(b,sz){return`<svg viewBox="0 0 44 44"><path d="M14 2 L22 14 L30 2" stroke="${b[4]}" stroke-width="5" fill="none" opacity=".55"/><circle cx="22" cy="26" r="16" fill="${b[4]}" stroke="${shade(b[4],-.25)}" stroke-width="2"/><circle cx="22" cy="26" r="12" fill="none" stroke="#fff" stroke-width="1.2" opacity=".6"/><text x="22" y="30" font-size="${b[5].length>2?8.5:10.5}" text-anchor="middle" fill="#fff" font-family="Jua">${b[5]}</text></svg>`}
+let badgeBusy=false;
+async function badgeCheck(){
+  const u=me();if(!u||badgeBusy)return;const have=u.badge||{};
+  const nb=BADGES.find(b=>!have[b[0]]&&badgeProg(u,b[0])>=b[3]);if(!nb)return;badgeBusy=true;let ok=false;
+  await Store.tx('users/'+S.me,x=>{if(!x)return x;x.badge=x.badge||{};if(x.badge[nb[0]]){ok=false;return}x.badge[nb[0]]=now();x.coins=(x.coins||0)+50;ok=true;return x});
+  badgeBusy=false;if(ok&&!PET){toast(`배지 획득! '${nb[1]}' · 50코인`,3200);log(`${ownerName(S.me)}님이 '${nb[1]}' 배지를 받았어요!`)}
+}
+setInterval(badgeCheck,5000);
+function badgeRow(owner){const u=S.users[owner];if(!u)return'';const sh=(u.badgeShow||[]).filter(k=>(u.badge||{})[k]).slice(0,3);if(!sh.length)return'';return`<div class="bdgrow">${sh.map(k=>{const b=BADGES.find(x=>x[0]===k);return b?`<span title="${b[1]}">${medal(b)}</span>`:''}).join('')}</div>`}
+function viewBadges(){const u=me(),have=u.badge||{},sh=u.badgeShow||[];
+  return`<div class="sect">배지 <small class="grow">· 받은 배지를 누르면 고양이 카드에 3개까지 달 수 있어요</small></div><div class="badges">${BADGES.map(b=>{const got=have[b[0]],pr=Math.min(badgeProg(u,b[0]),b[3]);return`<button class="bdg ${got?'':'off'} ${sh.includes(b[0])?'show':''}" ${got?`data-a="bdgshow" data-v="${b[0]}"`:''} title="${b[2]}">${medal(b)}<b style="font-weight:400;font-family:var(--display)">${b[1]}</b><span class="grow" style="font-size:.68rem">${got?(sh.includes(b[0])?'카드에 달림':'받음'):`${b[2]} ${pr}/${b[3]}`}</span></button>`}).join('')}</div>`}
+async function toggleBadge(k){await Store.tx(`users/${S.me}/badgeShow`,a=>{a=Array.isArray(a)?a:[];if(a.includes(k))return a.filter(x=>x!==k);if(a.length>=3){toast('3개까지 달 수 있어요');return}return a.concat(k)})}
 
 /* ================= wedding ================= */
 const WDECOR={w_light:{n:'반짝이 전구',p:300,d:'천장에 줄 전구'},w_carpet:{n:'꽃길 카펫',p:250,d:'하얀 꽃길'},w_balloon:{n:'하트 풍선',p:200,d:'둥실둥실 하트 풍선'},w_arch:{n:'꽃 아치',p:450,d:'신랑 신부 뒤 꽃 아치'},w_cake:{n:'웨딩 케이크 타워',p:600,s:2,d:'3단 케이크'},w_dove:{n:'흰 비둘기',p:500,s:3,d:'축복의 비둘기'},w_chand:{n:'샹들리에',p:900,s:4,d:'반짝반짝 샹들리에'}};
@@ -1686,7 +1807,7 @@ async function wedAttend(wid){
   const w=wedById(wid);if(!w||wedPhase(w)!=='live')return toast('결혼식 시간이 아니에요');
   if(!(w.inv||{})[S.me]&&!isHost(w))return toast('청첩장을 받은 친구만 참석할 수 있어요');
   let ok=false;await Store.tx(`cats/${wid}/wedding/guests/${S.me}`,g=>{if(g){ok=false;return}ok=true;return{at:now()}});
-  if(ok){if(!isHost(w))await addCoins(30);log(`${ownerName(S.me)}님이 ${wedNames(w)} 결혼식에 참석했어요.`);toast(isHost(w)?'입장했어요':'참석했어요! 참석 선물 30코인')}
+  if(ok){if(!isHost(w)){await addCoins(30);achAdd('guest');const c=activeCat();if(c)dyAdd(c.id,'wed')}log(`${ownerName(S.me)}님이 ${wedNames(w)} 결혼식에 참석했어요.`);toast(isHost(w)?'입장했어요':'참석했어요! 참석 선물 30코인')}
 }
 async function wedGift(wid,amt){
   const w=wedById(wid);if(!w||wedPhase(w)!=='live')return;const hosts=wedHosts(w);if(hosts.includes(S.me))return;
@@ -1839,7 +1960,7 @@ function gogumaGame(){
   const finish=async()=>{clearInterval(tick);$('#gstat').textContent='끝!';
     const y=curYear(),v0=gogVillage();
     await Store.tx('users/'+S.me,u=>{if(!u)return u;u.inv=u.inv||{};u.inv.goguma=(u.inv.goguma||0)+good;u.inv.rawgoguma=(u.inv.rawgoguma||0)+under;u.gog=u.gog&&u.gog.y===y?u.gog:{y,n:0};u.gog.n+=good;return u});
-    if(good===3)log(`${ownerName(S.me)}님이 군고구마 3개를 완벽하게 구웠어요!`);
+    if(good)achAdd('goguma',good);if(good===3)log(`${ownerName(S.me)}님이 군고구마 3개를 완벽하게 구웠어요!`);
     $('#gres').innerHTML=`<div class="empty"><h2>${good===n?'완벽한 군고구마!':good?'맛있게 구웠어요':'다음엔 잘 구울 거야'}</h2><p>군고구마 ${good}개${under?` · 덜 익은 고구마 ${under}개는 돌려받았어요`:''}${n-good-under?` · 탄 고구마 ${n-good-under}개`:''}</p><p class="grow">마을 군고구마 ${Math.min(Math.max(gogVillage(),v0+good),GOG_GOAL)} / ${GOG_GOAL}개</p></div>`;
     const b=$('#gstart');b.disabled=false;b.textContent='닫기';b.onclick=closeSheet;b.style.background=''};
   btns.forEach((b,i)=>b.addEventListener('click',()=>take(i)));
@@ -1930,7 +2051,7 @@ function fishGame(){
   const pick=()=>{let r=Math.random(),a=0;for(const f of FISH){a+=f.p;if(r<a)return f}return FISH[0]};
   const btn=$('#fbtn');
   const end=async(ok,why)=>{clear();st='busy';const wasShark=fish&&fish.shark;$('#bobw').style.display='none';$('#fline').setAttribute('d','M130 60 L130 60');document.querySelectorAll('.fbite').forEach(e=>e.remove());
-    if(ok&&fish.shark){const c=activeCat();msg('상어에게 물렸어요!');
+    if(ok&&fish.shark){const c=activeCat();msg('상어에게 물렸어요!');achAdd('shark');if(c)dyAdd(c.id,'shark');
       if(c)await catTx(c.id,(c,res)=>{c.sick={k:'bite',at:now()};c.st.mood=clamp(c.st.mood-25);c.st.energy=clamp(c.st.energy-20)});
       log(`${ownerName(S.me)}님의 ${c?c.name:'고양이'}${c?iGa(c.name).slice(-1):'가'} 낚시하다 상어에게 물렸어요!`);
       $('#fcatch').insertAdjacentHTML('afterbegin',`<div class="item" style="background:#ffe3e3;border-color:#ffc4c4"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${fishPic('shark')}</div><div class="tx"><b>상어에게 물렸어요!</b><span>${c?esc(c.name):'고양이'}${c?iGa(c.name).slice(-1):'가'} 다쳤어요. 알약을 먹여 주세요.</span></div></div>`);
@@ -1939,7 +2060,7 @@ function fishGame(){
     else if(ok&&fish.esc&&Math.random()<fish.esc){msg(`앗! ${fish.n}${iGa(fish.n).slice(-1)} 줄을 끊고 도망갔어요`);ok=false;fish=null}
     if(ok){const sz=Math.round(fish.sz[0]+Math.random()*(fish.sz[1]-fish.sz[0]));let rec=false;
       await Store.tx('users/'+S.me,u=>{if(!u)return u;u.fish=u.fish||{};u.fish.cnt=(u.fish.cnt||0)+1;u.fish.best=u.fish.best||{};rec=false;if(!u.fish.best[fish.k]||sz>u.fish.best[fish.k]){u.fish.best[fish.k]=sz;rec=true}if(fish.it){u.inv=u.inv||{};u.inv[fish.it]=(u.inv[fish.it]||0)+1}else u.coins=(u.coins||0)+(fish.c||0);return u});
-      caught++;$('#fcnt').textContent='이번에 잡은 것 '+caught;msg(fish.junk?`${fish.n}... 쓰레기네요`:`${fish.n} ${sz}cm!${rec?' 새 기록!':''}`);
+      caught++;achAdd('fish');if(fish.k==='gold')achAdd('gold');{const c=activeCat();if(c)dyAdd(c.id,'fish:'+fish.k)}$('#fcnt').textContent='이번에 잡은 것 '+caught;msg(fish.junk?`${fish.n}... 쓰레기네요`:`${fish.n} ${sz}cm!${rec?' 새 기록!':''}`);
       if(fish.k==='gold')log(`${ownerName(S.me)}님이 황금 잉어 ${sz}cm를 낚았어요!`);
       $('#fcatch').insertAdjacentHTML('afterbegin',`<div class="item"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${fishPic(fish.k)}</div><div class="tx"><b>${fish.n} ${sz}cm${rec?' <span class="chip pink">새 기록</span>':''}</b><span>${fish.it?ITEMS[fish.it].n+' +1 (간식 가방)':fish.c?fish.c+'코인':'꽝 · 쓰레기는 버렸어요'}</span></div></div>`)}
     else if(why)msg(wasShark&&!ok?'휴, 상어가 미끼만 먹고 갔어요':why);
@@ -2030,7 +2151,7 @@ function openCatCard(id){
   const ou=S.users[t.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
   const sp=t.spouse&&S.cats[t.spouse];
   openSheet(`<div class="row" style="align-items:flex-start;gap:14px"><div class="thumb" style="width:110px;height:110px;flex-basis:110px;background:var(--teal-l)">${catSVG(t,{still:true,expr:t.status==='runaway'?'sulky':'normal'})}</div>
-  <div class="tx" style="flex:1;min-width:0"><h2>${esc(title(t))}</h2><p class="online">${on?'지금 접속 중':'마지막 접속 '+(ou.seen?ago(ou.seen):'-')}</p><div class="chips" style="margin-top:6px"><span class="chip">${STAGE[t.stage]} · Lv.${t.lv}</span>${personality(t).map(p=>`<span class="chip pink">${p}</span>`).join('')}${sp?`<span class="chip gold">${esc(sp.name)}${waGwa(sp.name).slice(-1)} 결혼</span>`:''}${t.status==='runaway'?'<span class="chip gray">가출 중</span>':''}</div></div></div>
+  <div class="tx" style="flex:1;min-width:0"><h2>${esc(title(t))}</h2>${badgeRow(t.owner)}<p class="online">${on?'지금 접속 중':'마지막 접속 '+(ou.seen?ago(ou.seen):'-')}</p><div class="chips" style="margin-top:6px"><span class="chip">${STAGE[t.stage]} · Lv.${t.lv}</span>${personality(t).map(p=>`<span class="chip pink">${p}</span>`).join('')}${sp?`<span class="chip gold">${esc(sp.name)}${waGwa(sp.name).slice(-1)} 결혼</span>`:''}${t.status==='runaway'?'<span class="chip gray">가출 중</span>':''}</div></div></div>
   ${(()=>{const fl=t.flowers||{};const got=FLOWER_IDS.filter(f=>fl[f]).map(f=>`${ITEMS[f].n} ${fl[f]}`).join(' · ');return`<div class="row" style="margin-top:10px"><span class="chip gold num">인기도 ${t.pop||0}</span>${got?`<span class="grow">받은 꽃: ${got}</span>`:''}</div>`})()}
   ${mine?'':(()=>{const b=bondInfo(myBond(t));return`<div class="panel" style="margin-top:10px;padding:10px 12px"><div class="row" style="justify-content:space-between"><b style="font-family:var(--display);font-weight:400">나와의 친밀도 · ${b.name}</b><span style="color:var(--pink-d);letter-spacing:2px">${b.hearts}</span></div><div class="bar" style="margin:6px 0"><i style="width:${b.next?Math.min(100,b.pts/b.next*100):100}%;background:var(--pink)"></i></div><p class="grow" style="margin:0">${b.pts}점${b.next?` · ${b.next}점이 되면 '${b.nextName}'`:''} · 쓰다듬기 +1(하루 40까지), 말 걸기 +2, 츄르 +5, 꽃 +3</p><div class="row" style="margin-top:8px">${flowerButtons(id,'flower')}</div></div>`})()}
   ${mine?`<p class="lead" style="margin-top:12px">내 대표 고양이예요. 친구들이 광장에서 이 아이를 만나요.</p>`:`<div class="row" style="margin-top:14px"><button class="btn teal" data-a="fpet" data-v="${id}">쓰다듬기</button><button class="btn teal" data-a="talk" data-v="${id}">말 걸기</button><button class="btn ghost" data-a="visit" data-v="${t.owner}">집 놀러가기</button><button class="btn ghost" data-a="propose" data-v="${id}" ${why?'aria-disabled="true"':''}>청혼하기</button></div><div class="panel" style="margin-top:10px;padding:10px 12px"><b style="font-family:var(--display);font-weight:400">간식 선물</b> <span class="grow">츄르·열빙어 +5, 생선구이 +6, 케이크 +8 친밀도 · 우정 보너스 15코인</span><div class="row" style="margin-top:8px">${giftButtons(id)}</div></div>${why?`<p class="grow" style="margin-top:8px">청혼 조건: ${esc(why)}</p>`:''}`}`);
@@ -2070,11 +2191,14 @@ function viewHome(){
   let instHide=false;try{instHide=localStorage.getItem('nyang-inst-hide')==='1'}catch(e){}
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const inst=!DK&&coarse&&!standalone&&!instHide?`<div class="panel row" style="padding:10px 12px;gap:10px;background:var(--gold-l);border-color:#f4dfa4"><span style="flex:1;min-width:0;font-size:.86rem">${ios?'공유 버튼 → <b>홈 화면에 추가</b>를 누르면 앱처럼 쓸 수 있어요.':'홈 화면에 추가하면 앱처럼 바로 열 수 있어요.'}</span>${S.installEvt?'<button class="btn small" data-a="install">추가</button>':''}<button class="btn small ghost" data-a="instdismiss">닫기</button></div>`:'';
-  return`${inst}${sw}<div class="scene">${roomScene(u)}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
+  const qq=qNorm(clone(u.q)),qIds=dailyIds(qq.d),qDone=qIds.filter(k=>qq.dc[k]).length,qCan=qClaimable(u);
+  const wxb=`<div class="wxbar"><span class="chip">${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
+  return`${inst}${sw}<div class="scene">${roomScene(u)}${skyHTML(false)}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
   <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping':''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div></div></div>
+  ${wxb}
   ${c.sick?`<div class="panel row" style="background:#ffe3e3;border-color:#ffc4c4;gap:10px;padding:10px 12px"><span style="flex:1;min-width:0;font-size:.9rem"><b style="font-family:var(--display);font-weight:400;color:#c43d3d">${esc(c.name)}${iGa(c.name).slice(-1)} 아파요 (${SICK[c.sick.k]||'감기'})</b><br>기분이 빨리 떨어지고 놀 수 없어요.${c.sick.k==='skin'?' 목욕을 자주 시켜 주세요.':c.sick.k==='bite'?' 낚시하다 상어에게 물렸어요. 알약을 먹여야 나아요.':''}</span><button class="btn small" data-a="pill">알약 먹이기 · ${(u.inv||{}).pill||0}개</button></div>`:''}
   <div class="panel stack"><div class="stats">${statBar('배부름',c.st.hunger,'var(--hunger)')}${statBar('기분',c.st.mood,'var(--mood)')}${statBar('청결',c.st.clean,'var(--clean)')}${statBar('기력',c.st.energy,'var(--energy)')}</div>
-  <div class="meta"><div class="chips">${pers.map((p,i)=>`<span class="chip ${i?'':'pink'}">${p}</span>`).join('')}<span class="chip gold num">애정 ${Math.floor(c.aff)}</span><span class="chip gold num">인기도 ${c.pop||0}</span><span class="chip num">똑똑 ${Math.floor(c.smart)}</span><span class="chip num">튼튼 ${Math.floor(c.strong)}</span>${c.spouse&&S.cats[c.spouse]?`<span class="chip gold">${esc(title(S.cats[c.spouse]))}${waGwa(S.cats[c.spouse].name).slice(-1)} 결혼</span>`:''}</div>
+  <div class="meta"><div class="chips">${pers.map((p,i)=>`<span class="chip ${i?'':'pink'}">${p}</span>`).join('')}<span class="chip gold num">애정 ${Math.floor(c.aff)}</span><span class="chip gold num">인기도 ${c.pop||0}</span><span class="chip num">똑똑 ${Math.floor(c.smart)}</span><span class="chip num">튼튼 ${Math.floor(c.strong)}</span>${tasteChips(c,true)}${c.spouse&&S.cats[c.spouse]?`<span class="chip gold">${esc(title(S.cats[c.spouse]))}${waGwa(S.cats[c.spouse].name).slice(-1)} 결혼</span>`:''}</div>
   <div class="xp num">Lv.${c.lv}<div class="bar"><i style="width:${c.xp/need(c.lv)*100}%;background:var(--gold)"></i></div>${Math.floor(c.xp)}/${need(c.lv)}</div>
   <div class="grow"><b style="font-family:var(--display);font-weight:400;color:var(--pink-d)">성격: ${PT[ptypeOf(c)].n}</b> · ${PT[ptypeOf(c)].d}. 대하는 방식에 따라 성격이 바뀌어요.</div>
   ${g?`<div class="grow">다음 성장(${STAGE[g.to]}): Lv.${g.lv} 이상 · 태어난 지 ${g.day}일째부터 — 지금 Lv.${c.lv}, ${ageDays(c)}일째</div>`:'<div class="grow">다 자란 어른냥이에요. 광장에서 짝을 찾아볼 수 있어요.</div>'}</div></div>
@@ -2102,7 +2226,7 @@ function viewPlaza(){
   const online=Object.values(S.users).filter(u=>u.seen&&now()-u.seen<3*MIN).length;
   const XB=isXmas()?xboxes().filter(b=>b.open&&!b.got):[];const LV=isAutumn()?leaves().filter(l=>l.open&&!l.got):[];
   const LW=myWeddings().filter(w=>wedPhase(w)==='live'&&((w.inv||{})[S.me]||isHost(w)));
-  return`${LW.map(w=>`<div class="abanner" style="background:linear-gradient(90deg,#fff0f5,#fff8e8);border-color:#ffd6e3"><svg viewBox="0 0 24 24" style="width:28px;flex:none"><path d="M12 21 s-9,-6 -9,-12 a4.5,4.5 0 0 1 9,-2 a4.5,4.5 0 0 1 9,2 c0,6 -9,12 -9,12z" fill="#ff6f91"/></svg><div style="flex:1"><b style="color:var(--pink-d)">지금 결혼식 중!</b><br>${esc(wedNames(w))} · ${dur(w.end-now())} 남음</div><button class="btn small" data-a="wgo" data-v="${w.id}">가기</button></div>`).join('')}${isAutumn()?`<div class="abanner"><svg viewBox="-12 -12 24 24" style="width:30px;flex:none">${MAPLE(0,0,1.1,'#e8562a',-15)}</svg><div><b>가을 낙엽 줍기</b><br>${LV.length?`광장에 낙엽 ${LV.length}장이 떨어져 있어요. 눌러서 주워요!`:'지금 떨어진 낙엽은 다 주웠어요.'} (모은 낙엽 ${leafState().n}장)</div></div>`:''}${isXmas()?`<div class="xbanner"><div style="width:34px;flex:none">${GIFT_SVG()}</div><div><b>메리 크리스마스!</b><br>${XB.length?`광장에 선물상자 ${XB.length}개가 숨어 있어요. 찾아보세요!`:'오늘 나온 선물상자는 다 찾았어요.'} (${Math.min(xmasState().n,XMAS_GOAL)}/${XMAS_GOAL})</div></div>`:''}<div class="plaza" id="plaza">${plazaBG}${isAutumn()?leafFallHTML()+LV.map(l=>`<button class="leafp" data-a="leaf" data-v="${l.i}" style="left:${l.x}%;top:${l.y}%;z-index:${Math.round(l.y)+1}" aria-label="${l.gold?'황금 은행잎':'낙엽'} 줍기"><svg viewBox="-12 -12 24 24">${l.gold?GINKGO(0,0,1.15):MAPLE(0,0,1,'#e8562a',l.rot)}</svg></button>`).join(''):''}${isXmas()?snowHTML()+XB.map(b=>`<button class="xbox" data-a="xbox" data-v="${b.i}" style="left:${b.x}%;top:${b.y}%;z-index:${Math.round(b.y)+1}" aria-label="선물상자 열기">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</button>`).join(''):''}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
+  return`${LW.map(w=>`<div class="abanner" style="background:linear-gradient(90deg,#fff0f5,#fff8e8);border-color:#ffd6e3"><svg viewBox="0 0 24 24" style="width:28px;flex:none"><path d="M12 21 s-9,-6 -9,-12 a4.5,4.5 0 0 1 9,-2 a4.5,4.5 0 0 1 9,2 c0,6 -9,12 -9,12z" fill="#ff6f91"/></svg><div style="flex:1"><b style="color:var(--pink-d)">지금 결혼식 중!</b><br>${esc(wedNames(w))} · ${dur(w.end-now())} 남음</div><button class="btn small" data-a="wgo" data-v="${w.id}">가기</button></div>`).join('')}${isAutumn()?`<div class="abanner"><svg viewBox="-12 -12 24 24" style="width:30px;flex:none">${MAPLE(0,0,1.1,'#e8562a',-15)}</svg><div><b>가을 낙엽 줍기</b><br>${LV.length?`광장에 낙엽 ${LV.length}장이 떨어져 있어요. 눌러서 주워요!`:'지금 떨어진 낙엽은 다 주웠어요.'} (모은 낙엽 ${leafState().n}장)</div></div>`:''}${isXmas()?`<div class="xbanner"><div style="width:34px;flex:none">${GIFT_SVG()}</div><div><b>메리 크리스마스!</b><br>${XB.length?`광장에 선물상자 ${XB.length}개가 숨어 있어요. 찾아보세요!`:'오늘 나온 선물상자는 다 찾았어요.'} (${Math.min(xmasState().n,XMAS_GOAL)}/${XMAS_GOAL})</div></div>`:''}<div class="plaza" id="plaza">${plazaBG}${skyHTML(true)}${isAutumn()?leafFallHTML()+LV.map(l=>`<button class="leafp" data-a="leaf" data-v="${l.i}" style="left:${l.x}%;top:${l.y}%;z-index:${Math.round(l.y)+1}" aria-label="${l.gold?'황금 은행잎':'낙엽'} 줍기"><svg viewBox="-12 -12 24 24">${l.gold?GINKGO(0,0,1.15):MAPLE(0,0,1,'#e8562a',l.rot)}</svg></button>`).join(''):''}${isXmas()?snowHTML()+XB.map(b=>`<button class="xbox" data-a="xbox" data-v="${b.i}" style="left:${b.x}%;top:${b.y}%;z-index:${Math.round(b.y)+1}" aria-label="선물상자 열기">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</button>`).join(''):''}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
     return`<div class="pcat" data-a="card" data-v="${c.id}" data-id="${c.id}" style="left:${p.x}%;top:${p.y}%;z-index:${Math.round(p.y)}" role="button" tabindex="0" aria-label="${esc(title(v))}"><div class="flip" style="transform:scaleX(${p.f})">${v.status==='runaway'?`<svg viewBox="0 0 200 210"><text x="100" y="150" font-size="34" text-anchor="middle" fill="#857c8f" font-family="Jua">가출 중</text></svg>`:catSVG(v,{expr:v.st.mood<25?'sulky':'normal'})}</div><span class="tag"><i class="${on?'on':''}"></i>${esc(title(v))}${v.pop?` · 인기 ${v.pop}`:''}</span></div>`}).join('')}</div>
   ${(()=>{const top=Object.values(S.cats).filter(c=>c&&c.pop>0).sort((a,b)=>b.pop-a.pop).slice(0,5);return top.length?`<div class="sect">인기 랭킹</div><div class="list">${top.map((c,i)=>`<div class="item" data-a="card" data-v="${c.id}" role="button" tabindex="0" style="cursor:pointer"><b style="font-family:var(--display);font-weight:400;width:22px;color:${i===0?'#d99a1e':'var(--muted)'}" class="num">${i+1}</b><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(title(c))}</b><span>${FLOWER_IDS.filter(f=>(c.flowers||{})[f]).map(f=>ITEMS[f].n+' '+c.flowers[f]).join(' · ')}</span></div><span class="chip gold num">인기 ${c.pop}</span></div>`).join('')}</div>`:''})()}
   <p class="online" style="margin:10px 2px">지금 ${online}명 접속 중 · 고양이를 누르면 쓰다듬기, 말 걸기, 꽃 선물, 청혼을 할 수 있어요. 쓰다듬을수록 친밀도가 올라요.${DEMO?' 예시 친구 3명이 함께 있어요.':''}</p>`;
@@ -2115,7 +2239,8 @@ function viewCats(){
   const u=me(),cats=myCats();
   return`<div class="list">${cats.map(c0=>{const c=live(c0);const sp=c.spouse&&S.cats[c.spouse];
     return`<div class="item" style="align-items:flex-start"><div class="thumb" style="width:72px;height:72px;flex-basis:72px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(c.name)}${c.id===u.main?' <span class="chip gold">광장 대표</span>':''}</b><span>${STAGE[c.stage]} · Lv.${c.lv} · ${c.look.gender==='m'?'수컷':'암컷'} · ${personality(c).join(' · ')}${c.status==='runaway'?' · 가출 중':''}</span>${sp?`<span style="display:block">${esc(title(sp))}${waGwa(sp.name).slice(-1)} 결혼했어요</span>`:''}${c.parents?`<span style="display:block">부모: ${esc((S.cats[c.parents.a]||{}).name||'?')} · ${esc((S.cats[c.parents.b]||{}).name||'?')}</span>`:''}
-    <div class="row" style="margin-top:8px"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?`<button class="btn small teal" data-a="baby" data-v="${c.id}">아기 갖기</button>`:''}${sp&&c.owner===S.me?(()=>{const w=wedOfCat(c);const ph=w&&wedPhase(w);return`<button class="btn small" style="background:#ff9fb3" data-a="wedopen" data-v="${c.id}">${!w?'결혼식 준비':ph==='done'?'결혼식 앨범':ph==='live'?'결혼식 진행 중':'결혼식 준비'}</button>`})():''}</div></div></div>`}).join('')}</div>
+    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button><button class="btn small ghost" data-a="diary" data-v="${c.id}">일기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?`<button class="btn small teal" data-a="baby" data-v="${c.id}">아기 갖기</button>`:''}${sp&&c.owner===S.me?(()=>{const w=wedOfCat(c);const ph=w&&wedPhase(w);return`<button class="btn small" style="background:#ff9fb3" data-a="wedopen" data-v="${c.id}">${!w?'결혼식 준비':ph==='done'?'결혼식 앨범':ph==='live'?'결혼식 진행 중':'결혼식 준비'}</button>`})():''}</div></div></div>`}).join('')}</div>
+  ${viewBadges()}
   <div class="row" style="margin-top:12px"><button class="btn teal block" data-a="visit" data-v="${S.me}">우리 집 방명록 보기 (${Object.keys(u.book||{}).length}개 · 누적 방문 ${u.visitTotal||0}명)</button></div>
   <div class="panel" style="margin-top:12px"><p class="lead" style="margin:0 0 10px">광장에는 대표 고양이 한 마리만 나가요. 결혼한 고양이는 조건을 채우면 아기를 가질 수 있어요(결혼 2일 뒤부터, 5일에 한 번, 800코인).</p>${(u.inv||{}).adopt?`<button class="btn block" data-a="adopt">분양권으로 새 고양이 데려오기</button>`:'<p class="grow" style="margin:0">분양권(1,000코인)이 있으면 새 고양이를 직접 만들어 데려올 수도 있어요.</p>'}</div>`;
 }
@@ -2162,6 +2287,7 @@ function weekKey(t){const d=new Date((t||now())+9*HOUR);d.setUTCDate(d.getUTCDat
 function dailyIds(D){const r=seeded(strHash('nyang-q-'+D+'-'+S.me));const out=[];while(out.length<3){const k=DQ[Math.floor(r()*DQ.length)][0];if(!out.includes(k))out.push(k)}return out}
 function qNorm(q){const D=kstDay(),W=weekKey();q=q||{};if(q.d!==D){q.d=D;q.dp={};q.dc={};q.da=false}if(q.w!==W){q.w=W;q.wp={};q.wc={}}q.dp=q.dp||{};q.dc=q.dc||{};q.wp=q.wp||{};q.wc=q.wc||{};return q}
 async function qEvent(type,n=1){
+  {const c=activeCat();if(c&&['pet','play','bath','ex','train','lotto'].includes(type))dyAdd(c.id,type,n);if(type==='pet')S.petAcc+=n}
   if(!S.me)return;const D=kstDay();const dIds=dailyIds(D);const inD=dIds.includes(type),inW=WQ.some(w=>w[0]===type);if(!inD&&!inW)return;
   let done=[];
   await Store.tx('users/'+S.me+'/q',q=>{q=qNorm(q);done=[];
@@ -2178,7 +2304,7 @@ async function qClaim(kind,id){
     else{const def=WQ.find(x=>x[0]===id);if(!def||(q.wp[id]||0)<def[2]||q.wc[id]){why='아직 받을 수 없어요';return}q.wc[id]=true;rew=QREW.w}
     u.coins=(u.coins||0)+(rew.c||0);u.stars=(u.stars||0)+(rew.s||0);return u});
   if(!r.committed)return toast(why||'받지 못했어요');
-  coinFx(`+${rew.c} · ⭐${rew.s}`);toast(`보상 받기 완료! ${rew.c}코인 · ⭐${rew.s}`);
+  if(kind==='d')achAdd('quest');coinFx(`+${rew.c} · ⭐${rew.s}`);toast(`보상 받기 완료! ${rew.c}코인 · ⭐${rew.s}`);
 }
 function qClaimable(u){if(!u)return 0;const q=qNorm(clone(u.q));const ids=dailyIds(q.d);let n=0;ids.forEach(k=>{const def=DQ.find(x=>x[0]===k);if((q.dp[k]||0)>=def[2]&&!q.dc[k])n++});if(!q.da&&ids.every(k=>q.dc[k]))n++;WQ.forEach(w=>{if((q.wp[w[0]]||0)>=w[2]&&!q.wc[w[0]])n++});return n}
 async function attendance(){
@@ -2389,6 +2515,9 @@ document.addEventListener('click',async e=>{
     case'buy':buy(v);break;
     case'card':openCatCard(v);break;
     case'rank':openRank(v,el.dataset.k);break;
+    case'diary':openDiary(v,el.dataset.k);break;
+    case'bdgshow':await toggleBadge(v);break;
+    case'goquest':S.tab.ev='quest';closeSheet();markHist();S.view='events';window.scrollTo(0,0);render();break;
     case'bookre':openBookReply(el.dataset.o,v);break;
     case'resend':await sendBookReply(el.dataset.o,v);break;
     case'redel':await Store.set(`users/${el.dataset.o}/book/${el.dataset.k}/re/${v}`,null);toast('지웠어요');break;
