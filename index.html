@@ -1049,7 +1049,14 @@ const me=()=>S.users[S.me];
 const myCats=()=>Object.values(S.cats).filter(c=>c&&c.owner===S.me).sort((a,b)=>a.born-b.born);
 function activeCat(){const u=me();if(!u)return null;return S.cats[u.active]||S.cats[u.main]||myCats()[0]||null}
 function toast(t,ms=2200){if(PET){deskSay(deskClicked||(activeCat()||{}).id||'guest',t,Math.max(ms,3000));return}const el=document.createElement('div');el.className='toast';el.textContent=t;el.setAttribute('role','status');document.body.appendChild(el);setTimeout(()=>el.remove(),ms)}
-const log=text=>Store.push('feed',{at:now(),text,by:S.me||''});
+const DEFAULT_V='731852',DEFAULT_VN='율의 마을',VIL_CUT=Date.parse('2026-11-18T15:15:00+09:00');
+const userV=u=>u?(u.village||((u.created||0)<VIL_CUT?DEFAULT_V:null)):null;
+const myV=()=>userV(me())||DEFAULT_V;
+const sameVU=k=>userV(S.users[k])===myV();
+const vEntries=()=>Object.entries(S.users).filter(([k,u])=>u&&userV(u)===myV());
+const vName=()=>{const u=me();return(u&&u.vname)||(myV()===DEFAULT_V?DEFAULT_VN:'우리 마을')};
+const vFeed=()=>S.feed.filter(f=>(f.v||DEFAULT_V)===myV());
+const log=(text,v)=>Store.push('feed',{at:now(),text,by:S.me||'',v:v||myV()});
 const ownerName=k=>(S.users[k]&&S.users[k].name)||'누군가';
 const title=c=>`${ownerName(c.owner)}의 ${c.name}`;
 
@@ -1074,7 +1081,7 @@ function subscribe(){
   S.subs.push(Store.on('users',v=>{S.users=v||{};first.users=1;onData()}));
   S.subs.push(Store.on('cats',v=>{S.cats={};for(const k in(v||{}))S.cats[k]=norm(v[k]);first.cats=1;onData()}));
   S.subs.push(Store.on('proposals',v=>{S.props=v||{};onData()}));
-  S.subs.push(Store.on('feed',v=>{S.feedLoaded=true;S.feed=Object.entries(v||{}).map(([k,x])=>Object.assign({k},x)).sort((a,b)=>a.at-b.at).slice(-60);onData()},60));
+  S.subs.push(Store.on('feed',v=>{S.feedLoaded=true;S.feed=Object.entries(v||{}).map(([k,x])=>Object.assign({k},x)).sort((a,b)=>a.at-b.at).slice(-300);onData()},300));
   let booted=false;
   function onData(){
     if(!booted&&first.users&&first.cats){booted=true;afterLogin()}
@@ -1082,8 +1089,9 @@ function subscribe(){
   }
 }
 let rq=0;function schedule(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;render()})}
-async function afterLogin(){
+async function afterLogin(vOK){
   const u=me();if(!u){logout();toast('주인 정보를 찾지 못했어요. 다시 들어와 주세요.');return}
+  if(!u.village&&!vOK){if((u.created||0)<VIL_CUT)await Store.update({[`users/${S.me}/village`]:DEFAULT_V,[`users/${S.me}/vname`]:DEFAULT_VN});else if(!PET){S.screen='village';render();return}}
   S.screen='app';render();
   // daily bonus
   const d=kstDay();
@@ -1097,7 +1105,7 @@ async function afterLogin(){
   if(!PET){let tries=0;while(!S.feedLoaded&&tries++<30)await new Promise(r=>setTimeout(r,100));
     const K='nyang-lastvisit-'+S.me;let last=0;try{last=+localStorage.getItem(K)||0}catch(e){}
     const mine=myCats().map(c=>c.name),nm=ownerName(S.me);
-    const items=last?S.feed.filter(f=>f.at>last&&f.by!==S.me&&(f.text.includes(nm+'의')||mine.some(n=>f.text.includes(n)))):[];
+    const items=last?vFeed().filter(f=>f.at>last&&f.by!==S.me&&(f.text.includes(nm+'의')||mine.some(n=>f.text.includes(n)))):[];
     try{localStorage.setItem(K,now())}catch(e){}
     setInterval(()=>{try{if(document.visibilityState==='visible')localStorage.setItem(K,now())}catch(e){}},60e3);
     if(items.length)setTimeout(()=>openSheet(`<h2>자리 비운 동안 있었던 일</h2><p class="lead">${dur(now()-last)} 동안 ${items.length}개의 소식이 있었어요.</p><div class="feed">${items.slice(-15).reverse().map(f=>`<div><time>${ago(f.at)}</time><span>${esc(f.text)}</span></div>`).join('')}</div><button class="btn block" style="margin-top:12px" data-a="awayok">확인</button>`),900);
@@ -1116,7 +1124,6 @@ async function register(owner,pin,catName,look){
   const pinH=await sha('nyang:'+key+':'+pin);
   const c=newCat(key,catName,look);
   await Store.update({['users/'+key]:{name:owner.trim(),pin:pinH,coins:500,inv:{kibble:10,churu:3,smelt:2,pill:1},kibbleInit:1,main:c.id,active:c.id,room:{bg:'basic'},created:now(),seen:now()},['cats/'+c.id]:c});
-  await Store.push('feed',{at:now(),text:`${owner.trim()}님이 새 가족 ${c.name}${josa(c.name,'을','를').slice(-1)} 데려왔어요.`,by:key});
   setSession(key,pinH);
 }
 async function login(owner,pin){
@@ -1523,7 +1530,7 @@ async function recordVisit(owner){
   const D=kstDay();const ex=await Store.get(`users/${owner}/visits/${D}/${S.me}`);if(ex)return;
   await Store.set(`users/${owner}/visits/${D}/${S.me}`,now());
   await Store.tx(`users/${owner}/visitTotal`,v=>(v||0)+1);
-  qEvent('visit');{const c=activeCat();if(c)dyAdd(c.id,'visit:'+ownerName(owner))}log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집에 놀러 갔어요.`);
+  qEvent('visit');{const c=activeCat();if(c)dyAdd(c.id,'visit:'+ownerName(owner))}log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집에 놀러 갔어요.`,userV(S.users[owner])||undefined);
 }
 function openBookReply(o,k){
   const b=((S.users[o]||{}).book||{})[k];if(!b)return;
@@ -1544,7 +1551,7 @@ async function writeBook(owner){
   const mineToday=Object.values(book).filter(b=>b.by===S.me&&kstDay(b.at)===D).length;
   if(mineToday>=2)return toast('이 집 방명록은 하루에 2개까지 쓸 수 있어요');
   await Store.push(`users/${owner}/book`,{by:S.me,text,at:now()});
-  qEvent('book');achAdd('book');log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집 방명록에 글을 남겼어요: "${text.length>30?text.slice(0,30)+'…':text}"`);
+  qEvent('book');achAdd('book');log(`${ownerName(S.me)}님이 ${ownerName(owner)}의 집 방명록에 글을 남겼어요: "${text.length>30?text.slice(0,30)+'…':text}"`,userV(S.users[owner])||undefined);
   toast('방명록을 남겼어요');
 }
 function viewVisit(){
@@ -1554,7 +1561,8 @@ function viewVisit(){
   const posx=[50,22,78,36];
   const book=Object.entries(u.book||{}).map(([k,b])=>Object.assign({k},b)).sort((a,b)=>b.at-a.at).slice(0,40);
   const myToday=book.filter(b=>b.by===S.me&&kstDay(b.at)===D).length;
-  return`<div class="row" style="justify-content:space-between"><h2>${esc(u.name)}의 집</h2><button class="btn small ghost" data-a="go" data-v="${mine?'home':'plaza'}">${mine?'우리집으로':'광장으로'}</button></div>
+  const ov=!mine&&userV(u)!==myV();
+  return`<div class="row" style="justify-content:space-between"><h2>${esc(u.name)}의 집${ov?` <span class="chip">${esc(vilNameOf(userV(u)))} 주민</span>`:''}</h2><button class="btn small ghost" data-a="go" data-v="${mine?'home':'plaza'}">${mine?'우리집으로':'광장으로'}</button></div>
   <p class="grow" style="margin:0">오늘 방문 ${today}명 · 누적 방문 ${total}명</p>
   <div class="scene">${roomScene(u)}${cats.map((c,i)=>`<div class="catwrap" style="left:${posx[i]}%;width:${i?28:42}%;bottom:${i?6:4}%;z-index:${i?1:2};cursor:default">${c.status==='runaway'?'':catSVG(c,{expr:c.sleepUntil>now()?'sleep':'normal'})}</div>`).join('')}</div>
   <div class="sect">방명록 · ${book.length}개</div>
@@ -1614,7 +1622,7 @@ async function saveBest(g,rec){
   await Store.tx('users/'+S.me+'/wb',W=>{W=W||{};for(const k of Object.keys(W))if(k!==wk&&k!==prev)delete W[k];W[wk]=W[wk]||{};if(RANKG[g].better(rec,W[wk][g]))W[wk][g]=Object.assign({},rec);return W});
   return improved;
 }
-function rankList(g,wk){return Object.entries(S.users).map(([k,u])=>({k,name:u&&u.name,r:u&&(wk?(u.wb&&u.wb[wk]&&u.wb[wk][g]):(u.best&&u.best[g]))})).filter(x=>x.r).sort((a,b)=>RANKG[g].cmp(a.r,b.r))}
+function rankList(g,wk){return vEntries().map(([k,u])=>({k,name:u&&u.name,r:u&&(wk?(u.wb&&u.wb[wk]&&u.wb[wk][g]):(u.best&&u.best[g]))})).filter(x=>x.r).sort((a,b)=>RANKG[g].cmp(a.r,b.r))}
 const WRREW=[{c:300,s:2},{c:200,s:1},{c:100,s:0}];
 const rewTxt=R=>`${R.c}코인${R.s?' ⭐'+R.s:''}`;
 async function wrClaim(){
@@ -1648,7 +1656,7 @@ function openRank(g,mode){
 /* ================= celebrations ================= */
 function confettiHTML(n=34){const C=['#ff8fab','#ffd166','#7fd1c0','#8cc4f0','#c3a6ff','#ff6b6b'];return Array.from({length:n},(_,i)=>`<i style="left:${(i*29+7)%100}%;background:${C[i%C.length]};animation-duration:${2.6+(i%5)*.5}s;animation-delay:${-((i*.37)%3)}s"></i>`).join('')}
 const CELEB={junior:{t:'청소년냥이 되었어요!',d:'아기 티를 벗고 조금 의젓해졌어요.',rew:{c:150,it:'churu',n:2}},adult:{t:'어른냥이 되었어요!',d:'다 자란 어른냥이에요. 그동안 잘 키워줘서 고마워요.',rew:{c:300,it:'cake',n:1}},wed:{t:'결혼했어요!',d:'두 고양이가 부부가 되었어요. 오래오래 행복하자!',rew:{c:200,it:'cake',n:1}}};
-function celebList(){const out=[];for(const c of Object.values(S.cats)){if(!c||!c.celebs)continue;for(const [k,e] of Object.entries(c.celebs))if(e&&e.at>now()-3*DAY)out.push({cat:c,k,e})}return out.sort((a,b)=>b.e.at-a.e.at)}
+function celebList(){const out=[];for(const c of Object.values(S.cats)){if(!c||!c.celebs||!sameVU(c.owner))continue;for(const [k,e] of Object.entries(c.celebs))if(e&&e.at>now()-3*DAY)out.push({cat:c,k,e})}return out.sort((a,b)=>b.e.at-a.e.at)}
 function celebText(x){const c=x.cat;if(x.k==='wed'){const b=S.cats[x.e.with];return`${title(c)}${waGwa(c.name).slice(-1)} ${b?title(b):''}${b?iGa(b.name).slice(-1):''} 결혼했어요!`}return`${title(c)}${iGa(c.name).slice(-1)} ${CELEB[x.k].t}`}
 const celebMine=x=>x.cat.owner===S.me||(x.k==='wed'&&S.cats[x.e.with]&&S.cats[x.e.with].owner===S.me);
 function celebCats(x){const b=x.k==='wed'&&S.cats[x.e.with];return b?`<div>${catSVG(live(x.cat),{still:true,expr:'happy'})}</div><div>${catSVG(live(b),{still:true,expr:'happy'})}</div>`:`<div style="width:62%">${catSVG(live(x.cat),{expr:'happy'})}</div>`}
@@ -1769,14 +1777,54 @@ function viewBadges(){const u=me(),have=u.badge||{},sh=u.badgeShow||[];
   return`<div class="sect">배지 <small class="grow">· 받은 배지를 누르면 고양이 카드에 3개까지 달 수 있어요</small></div><div class="badges">${BADGES.map(b=>{const got=have[b[0]],pr=Math.min(badgeProg(u,b[0]),b[3]);return`<button class="bdg ${got?'':'off'} ${sh.includes(b[0])?'show':''}" ${got?`data-a="bdgshow" data-v="${b[0]}"`:''} title="${b[2]}">${medal(b)}<b style="font-weight:400;font-family:var(--display)">${b[1]}</b><span class="grow" style="font-size:.68rem">${got?(sh.includes(b[0])?'카드에 달림':'받음'):`${b[2]} ${pr}/${b[3]}`}</span></button>`}).join('')}</div>`}
 async function toggleBadge(k){await Store.tx(`users/${S.me}/badgeShow`,a=>{a=Array.isArray(a)?a:[];if(a.includes(k))return a.filter(x=>x!==k);if(a.length>=3){toast('3개까지 달 수 있어요');return}return a.concat(k)})}
 
+/* ================= villages ================= */
+function vilExists(code){return code===DEFAULT_V||Object.values(S.users).some(u=>u&&u.village===code)}
+function vilNameOf(code){if(code===DEFAULT_V)return DEFAULT_VN;const u=Object.values(S.users).find(u=>u&&u.village===code&&u.vname);return u?u.vname:'이름 없는 마을'}
+function vilMembers(code){return Object.entries(S.users).filter(([k,u])=>u&&userV(u)===code)}
+function viewVillage(){
+  const m=/#v=(\d{6})/.exec(location.hash||'');const pre=m?m[1]:'';
+  return`<div class="gate stack" style="max-width:460px;margin:0 auto;padding:24px 16px"><h1 style="font-family:var(--display);font-weight:400;margin:0">마을을 정해요</h1><p class="lead">냥이마을은 마을마다 광장, 소식, 랭킹, 패션쇼가 따로 있어요. 친구에게 받은 초대 코드가 있으면 그 마을로 들어가고, 없으면 새 마을을 만들어요.</p>
+  <div class="panel stack"><h2 style="margin:0">초대받은 마을 들어가기</h2><input id="vcode" inputmode="numeric" maxlength="6" value="${pre}" placeholder="초대 코드 6자리" aria-label="초대 코드" style="font-size:1.4rem;letter-spacing:.3em;text-align:center;border:1.5px solid var(--line);border-radius:14px;padding:12px"><button class="btn block" data-a="vjoin">들어가기</button></div>
+  <div class="panel stack"><h2 style="margin:0">새 마을 만들기</h2><input id="vname" maxlength="12" placeholder="${esc(ownerName(S.me))}의 마을" aria-label="마을 이름" style="border:1.5px solid var(--line);border-radius:14px;padding:12px"><button class="btn teal block" data-a="vcreate">마을 만들기</button><p class="grow" style="margin:0">만들면 6자리 초대 코드가 생겨요. 광장의 '마을 코드' 버튼에서 언제든 볼 수 있어요.</p></div>
+  <button class="btn ghost block" data-a="logout">다른 이름으로 들어가기</button></div>`;
+}
+async function vilCreate(){
+  const name=(String(($('#vname')||{}).value||'').trim()||`${ownerName(S.me)}의 마을`).slice(0,12);
+  let code;for(let i=0;i<50;i++){code=String(100000+Math.floor(Math.random()*900000));if(!vilExists(code))break}
+  await Store.update({[`users/${S.me}/village`]:code,[`users/${S.me}/vname`]:name,[`users/${S.me}/vowner`]:true,[`users/${S.me}/vjoin`]:now()});
+  log(`${ownerName(S.me)}님이 '${name}' 마을을 만들었어요!`,code);{const c=S.cats[me().main];if(c)log(`${ownerName(S.me)}님이 새 가족 ${c.name}${eulReul(c.name).slice(-1)} 데려왔어요.`,code)}toast(`'${name}' 마을을 만들었어요! 초대 코드 ${code}`,4000);
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  afterLogin(true);
+}
+async function vilJoin(move){
+  const code=String(($(move?'#vmove':'#vcode')||{}).value||'').replace(/\D/g,'');if(code.length!==6)return toast('초대 코드 6자리를 입력해 주세요');
+  const u=me();if(move&&code===myV())return toast('이미 이 마을에 살고 있어요');
+  if(!vilExists(code))return toast('그런 코드의 마을이 없어요. 코드를 다시 확인해 주세요');
+  if(move&&u.vjoin&&now()-u.vjoin<7*DAY)return toast(`이사는 일주일에 한 번만 할 수 있어요 (${dur(u.vjoin+7*DAY-now())} 뒤에 가능)`);
+  const name=vilNameOf(code);
+  await Store.update({[`users/${S.me}/village`]:code,[`users/${S.me}/vname`]:name,[`users/${S.me}/vowner`]:false,[`users/${S.me}/vjoin`]:now()});
+  log(move?`${ownerName(S.me)}님이 '${name}'에 이사 왔어요! 반겨 주세요`:`${ownerName(S.me)}님이 새 가족 ${(n=>n+waGwa(n).slice(-1))((S.cats[(me()||{}).main]||{}).name||'고양이')} 함께 '${name}'에 새로 왔어요! 반겨 주세요`,code);
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  if(move){closeSheet();S.view='plaza';toast(`'${name}'(으)로 이사했어요!`,3000);render()}else afterLogin(true);
+}
+function vilLink(){return location.origin+location.pathname.replace(/index\.html$/,'')+'#v='+myV()}
+function openVillage(){
+  const code=myV(),M=vilMembers(code),u=me();const canMove=!u.vjoin||now()-u.vjoin>=7*DAY;
+  openSheet(`<h2>${esc(vName())}</h2><p class="lead">친구에게 아래 초대 코드를 알려주면 우리 마을로 들어올 수 있어요. 주민 ${M.length}명.</p>
+  <div style="text-align:center;font-family:var(--display);font-size:2.4rem;letter-spacing:.25em;background:var(--gold-l);border-radius:18px;padding:14px 0;margin:6px 0 10px" class="num">${code}</div>
+  <button class="btn block" data-a="vcopy">초대 코드와 링크 복사</button>
+  <div class="sect">다른 마을로 이사하기</div><div class="panel stack"><p class="grow" style="margin:0">고양이들도 모두 함께 이사해요. 이사는 일주일에 한 번만 할 수 있어요.${canMove?'':` (${dur(u.vjoin+7*DAY-now())} 뒤에 가능)`}</p><div class="row"><input id="vmove" inputmode="numeric" maxlength="6" placeholder="이사 갈 마을 코드" aria-label="이사 갈 마을 코드" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px;letter-spacing:.2em"><button class="btn small ghost" data-a="vmovego" ${canMove?'':'disabled'}>이사하기</button></div></div>`);
+}
+
 /* ================= roster ================= */
 function rosterHTML(){
-  const rows=Object.entries(S.users).map(([k,u])=>{const c=u&&S.cats[u.main];if(!c)return null;const on=k===S.me||(u.seen&&now()-u.seen<3*MIN);return{k,u,c,on,seen:k===S.me?now():u.seen||0}}).filter(Boolean);
+  const rows=vEntries().map(([k,u])=>{const c=u&&S.cats[u.main];if(!c)return null;const on=k===S.me||(u.seen&&now()-u.seen<3*MIN);return{k,u,c,on,seen:k===S.me?now():u.seen||0}}).filter(Boolean);
   const ON=rows.filter(r=>r.on).sort((a,b)=>(a.k===S.me?-1:b.k===S.me?1:a.u.name.localeCompare(b.u.name))),OFF=rows.filter(r=>!r.on).sort((a,b)=>b.seen-a.seen);
   const item=r=>`<div class="item" data-a="card" data-v="${r.c.id}" role="button" tabindex="0" style="cursor:pointer;${r.on?'':'opacity:.75'}"><div class="thumb" style="width:46px;height:46px;flex-basis:46px">${catSVG(live(r.c),{still:true})}</div><div class="tx"><b><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${r.on?'#3fbf6f':'#c3c3cc'};margin-right:5px"></i>${esc(title(r.c))}${r.k===S.me?' (나)':''}</b><span>${r.on?'지금 접속 중':r.seen?'마지막 접속 '+ago(r.seen):'접속 기록 없음'}</span></div></div>`;
   return`<div class="sect">온라인 ${ON.length}명</div><div class="list">${ON.map(item).join('')||'<p class="grow">지금 접속한 친구가 없어요.</p>'}</div><div class="sect">오프라인 ${OFF.length}명</div><div class="list">${OFF.map(item).join('')||'<p class="grow">모두 접속 중이에요!</p>'}</div>`;
 }
-function openRoster(){openSheet(`<h2>냥이 목록</h2><p class="lead">광장에는 지금 접속한 친구 고양이만 나와요. 오프라인 친구도 여기서 눌러 쓰다듬기, 선물, 집 놀러가기를 할 수 있어요.</p><div id="roster" data-live="1">${rosterHTML()}</div>`)}
+function openRoster(){openSheet(`<h2>${esc(vName())} 냥이 목록</h2><p class="lead">광장에는 지금 접속한 친구 고양이만 나와요. 오프라인 친구도 여기서 눌러 쓰다듬기, 선물, 집 놀러가기를 할 수 있어요.</p><div id="roster" data-live="1">${rosterHTML()}</div>
+  <div class="sect">다른 마을 친구 집 놀러가기</div><div class="row"><input id="vvisit" maxlength="20" placeholder="친구 이름 (주인 이름)" aria-label="다른 마을 친구 이름" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px"><button class="btn small" data-a="visitname">놀러 가기</button></div><p class="grow">다른 마을 친구 집에도 놀러 가서 방명록을 남길 수 있어요.</p>`)}
 setInterval(()=>{const r=$('#roster');if(r)r.innerHTML=rosterHTML()},5000);
 
 /* ================= stray cats ================= */
@@ -1830,7 +1878,7 @@ const FS_START='2026-11-23';
 const fsOn=()=>{try{if(localStorage.getItem('nyang-fs')==='1')return true}catch(e){}return weekKey()>=FS_START};
 const FS_SLOTS=[['hat','모자'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
 const FS_REW=[{c:500,s:5,it:'fscrown'},{c:300,s:3},{c:150,s:1}],FS_JOIN={c:50,s:0};
-function fsEntries(wk){return Object.entries(S.users).map(([k,u])=>u&&u.fs&&u.fs[wk]&&S.cats[u.fs[wk].cat]?Object.assign({o:k},u.fs[wk]):null).filter(Boolean).sort((a,b)=>Object.keys(b.v||{}).length-Object.keys(a.v||{}).length||a.at-b.at)}
+function fsEntries(wk){return vEntries().map(([k,u])=>u&&u.fs&&u.fs[wk]&&S.cats[u.fs[wk].cat]?Object.assign({o:k},u.fs[wk]):null).filter(Boolean).sort((a,b)=>Object.keys(b.v||{}).length-Object.keys(a.v||{}).length||a.at-b.at)}
 const fsLook=e=>Object.assign({},live(S.cats[e.cat]),{eq:e.of||{}});
 function fsPick(){const c=S.fsPick&&S.cats[S.fsPick.cat]&&S.cats[S.fsPick.cat].owner===S.me?S.fsPick:{cat:(activeCat()||{}).id,of:{}};S.fsPick=c;return c}
 function viewFS(){
@@ -2030,7 +2078,7 @@ function viewWedding(){
     <div class="sect">결혼식장 꾸미기</div><div class="list">${Object.entries(WDECOR).map(([k,it])=>{const by=(w.decor||{})[k];return`<div class="item"><div class="tx"><b>${it.n}</b><span>${it.d}${by?` · ${esc(ownerName(by))}님이 설치`:''}</span></div>${by?'<span class="chip gray">설치됨</span>':`<button class="btn small" data-a="wdecor" data-v="${w.id}" data-k="${k}">${it.p}코인${it.s?' ⭐'+it.s:''}</button>`}</div>`}).join('')}</div>
     <div class="sect">하객 음식</div><div class="list">${Object.entries(WFOOD).map(([k,f])=>`<div class="item"><div class="tx"><b>${f.n}</b><span>하객 1명당 배부름 +${f.h} · 기분 +${f.m} · 준비 ${(w.food||{})[k]||0}인분</span></div><button class="btn small" data-a="wfood" data-v="${w.id}" data-k="${k}">5인분 ${f.p}코인</button></div>`).join('')}</div>
     <div class="sect">청첩장</div><div class="panel stack">${ready?`<p class="lead" style="margin:0">초대할 친구를 골라 청첩장을 보내요. 받은 친구는 '소식'에서 청첩장을 눌러 결혼식장으로 올 수 있어요.</p>
-      <div class="list">${Object.entries(S.users).filter(([k,u])=>u&&u.name&&!wedHosts(w).includes(k)).map(([k,u])=>`<label class="item" style="cursor:pointer"><input type="checkbox" class="winv" value="${esc(k)}" ${(w.inv||{})[k]?'checked disabled':''} style="width:20px;height:20px"><div class="tx"><b>${esc(u.name)}</b><span>${(w.inv||{})[k]?'청첩장 보냄':''}</span></div></label>`).join('')||'<p class="grow">초대할 친구가 아직 없어요.</p>'}</div>
+      <div class="list">${vEntries().filter(([k,u])=>u&&u.name&&!wedHosts(w).includes(k)).map(([k,u])=>`<label class="item" style="cursor:pointer"><input type="checkbox" class="winv" value="${esc(k)}" ${(w.inv||{})[k]?'checked disabled':''} style="width:20px;height:20px"><div class="tx"><b>${esc(u.name)}</b><span>${(w.inv||{})[k]?'청첩장 보냄':''}</span></div></label>`).join('')||'<p class="grow">초대할 친구가 아직 없어요.</p>'}</div>
       <div class="row"><button class="btn" style="flex:1" data-a="winvite" data-v="${w.id}">청첩장 보내기</button><button class="btn ghost" style="flex:1" data-a="wlink" data-v="${w.id}">청첩장 링크 복사</button></div>`:`<p class="grow" style="margin:0">위 준비를 모두 마치면 청첩장을 보낼 수 있어요.</p>`}</div>`;
   }
   if(!host&&ph!=='done'&&ph!=='live'){
@@ -2083,7 +2131,7 @@ async function leafTrade(k){
   await Store.tx('users/'+S.me,u=>{if(!u)return u;u.leaf=u.leaf||{};u.inv=u.inv||{};why='';if((u.leaf.n||0)<e[1]){why='낙엽이 부족해요';return}if(!STACK.has(k)&&k!=='coins'&&u.inv[k]){why='이미 갖고 있어요';return}u.leaf.n-=e[1];if(k==='coins')u.coins=(u.coins||0)+40;else u.inv[k]=(u.inv[k]||0)+1;return u});
   toast(why||`${e[2]}${k==='coins'?'을':'를'} 받았어요!`);
 }
-function gogVillage(){const y=curYear();let n=0;for(const u of Object.values(S.users))if(u&&u.gog&&u.gog.y===y)n+=u.gog.n||0;return n}
+function gogVillage(){const y=curYear();let n=0;for(const [k,u] of vEntries())if(u&&u.gog&&u.gog.y===y)n+=u.gog.n||0;return n}
 async function gogClaim(){
   const u=me();if(!u||PET||S.screen!=='app'||$('#layer').innerHTML)return;const y=curYear();
   if(u.gogGoal===y||gogVillage()<GOG_GOAL)return;let ok=false;
@@ -2389,13 +2437,14 @@ function viewShop(){
 }
 function viewPlaza(){
   const isOn=(k,u)=>k===S.me||(u&&u.seen&&now()-u.seen<3*MIN);
-  const list=Object.entries(S.users).filter(([k,u])=>isOn(k,u)).map(([k,u])=>S.cats[u.main]).filter(Boolean);
-  const online=Object.entries(S.users).filter(([k,u])=>isOn(k,u)).length,total=Object.values(S.users).filter(u=>u&&u.main&&S.cats[u.main]).length;
+  const VE=vEntries();
+  const list=VE.filter(([k,u])=>isOn(k,u)).map(([k,u])=>S.cats[u.main]).filter(Boolean);
+  const online=VE.filter(([k,u])=>isOn(k,u)).length,total=VE.filter(([k,u])=>u&&u.main&&S.cats[u.main]).length;
   const XB=isXmas()?xboxes().filter(b=>b.open&&!b.got):[];const LV=isAutumn()?leaves().filter(l=>l.open&&!l.got):[];
   const LW=myWeddings().filter(w=>wedPhase(w)==='live'&&((w.inv||{})[S.me]||isHost(w)));
-  return`${LW.map(w=>`<div class="abanner" style="background:linear-gradient(90deg,#fff0f5,#fff8e8);border-color:#ffd6e3"><svg viewBox="0 0 24 24" style="width:28px;flex:none"><path d="M12 21 s-9,-6 -9,-12 a4.5,4.5 0 0 1 9,-2 a4.5,4.5 0 0 1 9,2 c0,6 -9,12 -9,12z" fill="#ff6f91"/></svg><div style="flex:1"><b style="color:var(--pink-d)">지금 결혼식 중!</b><br>${esc(wedNames(w))} · ${dur(w.end-now())} 남음</div><button class="btn small" data-a="wgo" data-v="${w.id}">가기</button></div>`).join('')}${isAutumn()?`<div class="abanner"><svg viewBox="-12 -12 24 24" style="width:30px;flex:none">${MAPLE(0,0,1.1,'#e8562a',-15)}</svg><div><b>가을 낙엽 줍기</b><br>${LV.length?`광장에 낙엽 ${LV.length}장이 떨어져 있어요. 눌러서 주워요!`:'지금 떨어진 낙엽은 다 주웠어요.'} (모은 낙엽 ${leafState().n}장)</div></div>`:''}${isXmas()?`<div class="xbanner"><div style="width:34px;flex:none">${GIFT_SVG()}</div><div><b>메리 크리스마스!</b><br>${XB.length?`광장에 선물상자 ${XB.length}개가 숨어 있어요. 찾아보세요!`:'오늘 나온 선물상자는 다 찾았어요.'} (${Math.min(xmasState().n,XMAS_GOAL)}/${XMAS_GOAL})</div></div>`:''}<div class="row" style="justify-content:space-between;margin:0 0 8px"><span class="grow"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3fbf6f;margin-right:5px"></i>지금 광장에 ${online}명</span><button class="btn small" data-a="roster">냥이 목록 · 접속 ${online} / ${total}</button></div><div class="plaza" id="plaza">${plazaBG}${skyHTML(true)}${isAutumn()?leafFallHTML()+LV.map(l=>`<button class="leafp" data-a="leaf" data-v="${l.i}" style="left:${l.x}%;top:${l.y}%;z-index:${Math.round(l.y)+1}" aria-label="${l.gold?'황금 은행잎':'낙엽'} 줍기"><svg viewBox="-12 -12 24 24">${l.gold?GINKGO(0,0,1.15):MAPLE(0,0,1,'#e8562a',l.rot)}</svg></button>`).join(''):''}${isXmas()?snowHTML()+XB.map(b=>`<button class="xbox" data-a="xbox" data-v="${b.i}" style="left:${b.x}%;top:${b.y}%;z-index:${Math.round(b.y)+1}" aria-label="선물상자 열기">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</button>`).join(''):''}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
+  return`${LW.map(w=>`<div class="abanner" style="background:linear-gradient(90deg,#fff0f5,#fff8e8);border-color:#ffd6e3"><svg viewBox="0 0 24 24" style="width:28px;flex:none"><path d="M12 21 s-9,-6 -9,-12 a4.5,4.5 0 0 1 9,-2 a4.5,4.5 0 0 1 9,2 c0,6 -9,12 -9,12z" fill="#ff6f91"/></svg><div style="flex:1"><b style="color:var(--pink-d)">지금 결혼식 중!</b><br>${esc(wedNames(w))} · ${dur(w.end-now())} 남음</div><button class="btn small" data-a="wgo" data-v="${w.id}">가기</button></div>`).join('')}${isAutumn()?`<div class="abanner"><svg viewBox="-12 -12 24 24" style="width:30px;flex:none">${MAPLE(0,0,1.1,'#e8562a',-15)}</svg><div><b>가을 낙엽 줍기</b><br>${LV.length?`광장에 낙엽 ${LV.length}장이 떨어져 있어요. 눌러서 주워요!`:'지금 떨어진 낙엽은 다 주웠어요.'} (모은 낙엽 ${leafState().n}장)</div></div>`:''}${isXmas()?`<div class="xbanner"><div style="width:34px;flex:none">${GIFT_SVG()}</div><div><b>메리 크리스마스!</b><br>${XB.length?`광장에 선물상자 ${XB.length}개가 숨어 있어요. 찾아보세요!`:'오늘 나온 선물상자는 다 찾았어요.'} (${Math.min(xmasState().n,XMAS_GOAL)}/${XMAS_GOAL})</div></div>`:''}<div class="row" style="justify-content:space-between;margin:0 0 8px;gap:6px;flex-wrap:wrap"><div><b style="font-family:var(--display);font-weight:400;font-size:1.15rem">${esc(vName())} 광장</b><br><span class="grow"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3fbf6f;margin-right:5px"></i>지금 광장에 ${online}명</span></div><div class="row" style="gap:6px"><button class="btn small ghost" data-a="village">마을 코드</button><button class="btn small" data-a="roster">냥이 목록 ${online}/${total}</button></div></div><div class="plaza" id="plaza">${plazaBG}${skyHTML(true)}${isAutumn()?leafFallHTML()+LV.map(l=>`<button class="leafp" data-a="leaf" data-v="${l.i}" style="left:${l.x}%;top:${l.y}%;z-index:${Math.round(l.y)+1}" aria-label="${l.gold?'황금 은행잎':'낙엽'} 줍기"><svg viewBox="-12 -12 24 24">${l.gold?GINKGO(0,0,1.15):MAPLE(0,0,1,'#e8562a',l.rot)}</svg></button>`).join(''):''}${isXmas()?snowHTML()+XB.map(b=>`<button class="xbox" data-a="xbox" data-v="${b.i}" style="left:${b.x}%;top:${b.y}%;z-index:${Math.round(b.y)+1}" aria-label="선물상자 열기">${GIFT_SVG(b.i===1?'#2f7fd0':b.i===2?'#9a5cd0':'#e2453c')}</button>`).join(''):''}${list.map((c,i)=>{const v=live(c);const p=plazaPos(c.id,i,list.length);const ou=S.users[c.owner]||{};const on=ou.seen&&now()-ou.seen<3*MIN;
     return`<div class="pcat" data-a="card" data-v="${c.id}" data-id="${c.id}" style="left:${p.x}%;top:${p.y}%;z-index:${Math.round(p.y)}" role="button" tabindex="0" aria-label="${esc(title(v))}"><div class="flip" style="transform:scaleX(${p.f})">${v.status==='runaway'?`<svg viewBox="0 0 200 210"><text x="100" y="150" font-size="34" text-anchor="middle" fill="#857c8f" font-family="Jua">가출 중</text></svg>`:catSVG(v,{expr:v.st.mood<25?'sulky':'normal'})}</div><span class="tag"><i class="${on?'on':''}"></i>${esc(title(v))}${v.pop?` · 인기 ${v.pop}`:''}</span></div>`}).join('')}</div>
-  ${(()=>{const top=Object.values(S.cats).filter(c=>c&&c.pop>0).sort((a,b)=>b.pop-a.pop).slice(0,5);return top.length?`<div class="sect">인기 랭킹</div><div class="list">${top.map((c,i)=>`<div class="item" data-a="card" data-v="${c.id}" role="button" tabindex="0" style="cursor:pointer"><b style="font-family:var(--display);font-weight:400;width:22px;color:${i===0?'#d99a1e':'var(--muted)'}" class="num">${i+1}</b><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(title(c))}</b><span>${FLOWER_IDS.filter(f=>(c.flowers||{})[f]).map(f=>ITEMS[f].n+' '+c.flowers[f]).join(' · ')}</span></div><span class="chip gold num">인기 ${c.pop}</span></div>`).join('')}</div>`:''})()}
+  ${(()=>{const top=Object.values(S.cats).filter(c=>c&&c.pop>0&&sameVU(c.owner)).sort((a,b)=>b.pop-a.pop).slice(0,5);return top.length?`<div class="sect">인기 랭킹</div><div class="list">${top.map((c,i)=>`<div class="item" data-a="card" data-v="${c.id}" role="button" tabindex="0" style="cursor:pointer"><b style="font-family:var(--display);font-weight:400;width:22px;color:${i===0?'#d99a1e':'var(--muted)'}" class="num">${i+1}</b><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(title(c))}</b><span>${FLOWER_IDS.filter(f=>(c.flowers||{})[f]).map(f=>ITEMS[f].n+' '+c.flowers[f]).join(' · ')}</span></div><span class="chip gold num">인기 ${c.pop}</span></div>`).join('')}</div>`:''})()}
   <p class="online" style="margin:10px 2px">지금 ${online}명 접속 중 · 고양이를 누르면 쓰다듬기, 말 걸기, 꽃 선물, 청혼을 할 수 있어요. 쓰다듬을수록 친밀도가 올라요.${DEMO?' 예시 친구 3명이 함께 있어요.':''}</p>`;
 }
 const PZ={};
@@ -2426,7 +2475,7 @@ function viewNews(){
   const secHtml=SM.length?`<div class="sect">비밀 메시지 <small class="grow">· 나만 볼 수 있어요</small></div><div class="list">${SM.slice(0,20).map(m=>`<div class="item" style="align-items:flex-start;${m.read?'':'background:#f1ecff;border-color:#d9ccff'}"><div class="tx"><b>${esc(ownerName(m.by))}${m.read?'':' <span class="chip pink">새 메시지</span>'}</b><span style="display:block;color:var(--ink);font-size:.92rem;margin:2px 0">${esc(m.text)}</span><span>${ago(m.at)}${m.cat&&S.cats[m.cat]?' · '+esc(S.cats[m.cat].name)+'에게':''}</span></div><div class="row" style="flex-direction:column;gap:6px"><button class="btn small" data-a="srep" data-v="${m.by}">답장</button><button class="btn small ghost" data-a="sdel" data-v="${m.k}">지우기</button></div></div>`).join('')}</div>`:'';
   const P=Object.entries(S.props).map(([k,p])=>Object.assign({k},p)).filter(p=>p.status==='pending');
   const inbox=P.filter(p=>p.toOwner===S.me),sent=P.filter(p=>p.fromOwner===S.me);
-  const feed=[...S.feed].reverse();
+  const feed=[...vFeed()].reverse().slice(0,60);
   S.seenFeed=feed[0]?feed[0].at:S.seenFeed;try{localStorage.setItem('nyang-seen-feed',S.seenFeed)}catch(e){}
   return secHtml+weddingNews()+celebNews()+`${inbox.length?`<div class="sect">받은 청혼</div><div class="list">${inbox.map(p=>{const a=S.cats[p.from],b=S.cats[p.to];if(!a||!b)return'';return`<div class="item"><div class="thumb">${catSVG(a,{still:true})}</div><div class="tx"><b>${esc(title(a))}</b><span>${esc(b.name)}에게 청혼했어요 · ${ago(p.at)}</span></div><div class="row"><button class="btn small" data-a="accept" data-v="${p.k}">수락</button><button class="btn small ghost" data-a="decline" data-v="${p.k}">거절</button></div></div>`}).join('')}</div>`:''}
   ${sent.length?`<div class="sect">보낸 청혼</div><div class="list">${sent.map(p=>{const b=S.cats[p.to];return b?`<div class="item"><div class="thumb">${catSVG(b,{still:true})}</div><div class="tx"><b>${esc(title(b))}</b><span>대답을 기다리는 중 · ${ago(p.at)}</span></div></div>`:''}).join('')}</div>`:''}
@@ -2434,7 +2483,7 @@ function viewNews(){
 }
 function nav(){
   const items=[['home','우리집',I.home],['plaza','광장',I.tree],['shop','상점',I.bag],['cats','내 고양이',I.paw],['events','이벤트',I.ticket],['news','소식',I.bell]];
-  const newFeed=S.feed.length&&S.feed[S.feed.length-1].at>S.seenFeed&&S.feed[S.feed.length-1].by!==S.me;
+  const VF=vFeed(),newFeed=VF.length&&VF[VF.length-1].at>S.seenFeed&&VF[VF.length-1].by!==S.me;
   const inbox=Object.values(S.props).some(p=>p.status==='pending'&&p.toOwner===S.me)||secretList().some(m=>!m.read)||wedInvites().some(w=>!(w.seen||{})[S.me]);
   return`<nav class="nav"><div class="in">${items.map(([k,l,i])=>`<button class="${S.view===k?'on':''}" data-a="go" data-v="${k}" aria-label="${l}">${i}${l}${(k==='news'&&(newFeed||inbox))||(k==='events'&&(qClaimable(me())||lottoPending(me()).length||!((me().lotto||{})[kstDay()])))?'<span class="dot"></span>':''}</button>`).join('')}</div></nav>`;
 }
@@ -2550,10 +2599,10 @@ function viewLotto(){
     return`<div class="item" style="flex-wrap:wrap"><div class="tx"><b>${R} 회차 · ${r.m}개 맞힘</b><span>당첨 번호 ${r.w.join(', ')}</span></div><div class="row">${nums.map(n=>ball(n,r.w.includes(n)?'hit':'')).join('')}</div>
     <div style="width:100%" class="row">${r.prize?(e.claimed?`<span class="chip gold num">${r.prize.toLocaleString('ko-KR')}코인 받음</span>`:`<button class="btn small" data-a="lclaim" data-v="${R}">${r.prize.toLocaleString('ko-KR')}코인 받기</button>`):'<span class="chip gray">꽝 · 다음엔 꼭!</span>'}</div></div>`}).join('');
   // village results for latest revealed round
-  const all=[];Object.entries(S.users).forEach(([k,x])=>{Object.keys((x&&x.lotto)||{}).forEach(R=>{if(t>=lottoRevealAt(R))all.push(R)})});
+  const all=[];vEntries().forEach(([k,x])=>{Object.keys((x&&x.lotto)||{}).forEach(R=>{if(t>=lottoRevealAt(R))all.push(R)})});
   const latest=all.sort().pop();
   let village='';
-  if(latest){const rows=Object.entries(S.users).filter(([k,x])=>x&&x.lotto&&x.lotto[latest]).map(([k,x])=>({k,name:x.name,r:lottoResult(latest,parseNums(x.lotto[latest].n))})).sort((a,b)=>b.r.prize-a.r.prize);
+  if(latest){const rows=vEntries().filter(([k,x])=>x&&x.lotto&&x.lotto[latest]).map(([k,x])=>({k,name:x.name,r:lottoResult(latest,parseNums(x.lotto[latest].n))})).sort((a,b)=>b.r.prize-a.r.prize);
     village=`<div class="sect">${latest} 회차 마을 결과 · 당첨 번호 ${lottoDraw(latest).map(n=>ball(n,'hit')).join('')}</div><div class="list">${rows.map(x=>`<div class="item"><div class="tx"><b>${esc(x.name)}</b><span>${x.r.m}개 맞힘</span></div>${x.r.prize?`<span class="chip gold num">${x.r.prize.toLocaleString('ko-KR')}</span>`:'<span class="chip gray">꽝</span>'}</div>`).join('')}</div>`}
   const table=`<div class="panel"><b style="font-family:var(--display);font-weight:400">상금표</b><div class="row" style="margin-top:6px">${[4,3,2,1,0].map(m=>`<span class="chip ${m?'gold':'gray'} num">${m}개 ${LOTTO_PRIZE[m]?LOTTO_PRIZE[m].toLocaleString('ko-KR'):'꽝'}</span>`).join('')}</div></div>`;
   return top+(past?`<div class="sect">내 로또</div><div class="list">${past}</div>`:'')+village+table;
@@ -2613,6 +2662,7 @@ function render(){
   if(S.screen==='gate')R.innerHTML=viewGate();
   else if(S.screen==='login')R.innerHTML=viewLogin();
   else if(S.screen==='create')R.innerHTML=viewCreate();
+  else if(S.screen==='village')R.innerHTML=viewVillage();
   else if(S.screen==='app'){
     if(!me())return;
     {const ae=document.activeElement;if(ae&&ae.matches&&ae.matches('main input:not([type=checkbox]),main textarea')&&ae.value){clearTimeout(S.rdef);S.rdef=setTimeout(schedule,1500);return}}
@@ -2629,7 +2679,7 @@ document.addEventListener('click',async e=>{
     case'close':closeSheet();break;
     case'dmenu':deskAction(v,el.dataset.id,e);break;
     case'dcall':deskCall(v,!deskCalled.includes(v));openDeskPanel();break;
-    case'dcallall':Object.keys(S.users).forEach(k=>{if(k!==S.me)deskCall(k,true)});openDeskPanel();break;
+    case'dcallall':vEntries().forEach(([k])=>{if(k!==S.me)deskCall(k,true)});openDeskPanel();break;
     case'dsendall':[...deskCalled].forEach(k=>deskCall(k,false));openDeskPanel();break;
     case'dpclose':closeDeskPanel();break;
     case'dstopall':document.querySelectorAll('.dcat').forEach(e=>setWalk(e.dataset.v,false));toast('바탕화면 고양이들이 모두 멈췄어요');break;
@@ -2686,6 +2736,12 @@ document.addEventListener('click',async e=>{
     case'rank':openRank(v,el.dataset.k);break;
     case'diary':openDiary(v,el.dataset.k);break;
     case'roster':openRoster();break;
+    case'village':openVillage();break;
+    case'vcreate':await vilCreate();break;
+    case'vjoin':await vilJoin(false);break;
+    case'vmovego':await vilJoin(true);break;
+    case'vcopy':{const t=`냥이마을 '${vName()}' 초대 코드: ${myV()}\n${vilLink()}`;try{await navigator.clipboard.writeText(t);toast('초대 코드와 링크를 복사했어요. 카톡에 붙여넣어 보내세요')}catch(e){toast('복사가 안 돼요. 코드를 직접 알려주세요')}break}
+    case'visitname':{const n=String(($('#vvisit')||{}).value||'').trim();if(!n)break;if(!S.users[n])return toast('그런 이름의 친구를 찾지 못했어요');closeSheet();S.visit=n;markHist();S.view='visit';window.scrollTo(0,0);render();if(n!==S.me)recordVisit(n);break}
     case'stray':openStray();break;
     case'strayfeed':await feedStray(v);break;
     case'straygift':await strayGift(v);break;
@@ -2933,7 +2989,7 @@ function deskSecret(){
 }
 function deskFeed(){
   if(!PET||!S.me)return;deskSecret();const m=activeCat();const myName=ownerName(S.me);
-  for(const f of S.feed){if(f.at<=deskFeedSeen)continue;deskFeedSeen=f.at;if(f.by===S.me)continue;
+  for(const f of vFeed()){if(f.at<=deskFeedSeen)continue;deskFeedSeen=f.at;if(f.by===S.me)continue;
     const aboutMe=m&&(f.text.includes(m.name)||f.text.includes(myName+'의')||f.text.includes(myName+'님의')||f.text.includes(myName+'님에게'));
     const friendCat=Object.values(S.cats).find(c=>c.owner===f.by&&S.users[f.by]&&S.users[f.by].main===c.id);
     const target=(!aboutMe&&friendCat&&document.querySelector(`.dcat[data-v="${friendCat.id}"]`))?friendCat.id:(m&&m.id);
@@ -2961,7 +3017,7 @@ function openDeskMenu(id){
 }
 function openDeskPanel(){
   closeDeskMenu();deskPanel=true;
-  const friends=Object.entries(S.users).filter(([k,u])=>k!==S.me&&u&&S.cats[u.main]);
+  const friends=vEntries().filter(([k,u])=>k!==S.me&&u&&S.cats[u.main]);
   let p=$('#dpanel');if(!p){p=document.createElement('div');p.id='dpanel';document.body.appendChild(p)}
   p.innerHTML=`<h3>어떤 친구를 부를까요?</h3><p class="grow" style="margin:2px 0 10px">여러 명 불러도 돼요. 부른 친구 고양이는 내 바탕화면에 놀러 와요.</p>
   ${friends.length?`<div class="list">${friends.map(([k,u])=>{const c=live(S.cats[u.main]);const on=u.seen&&now()-u.seen<3*MIN;const called=deskCalled.includes(k);const away=c.status==='runaway';
