@@ -1896,7 +1896,7 @@ function weddingNews(){
 /* ================= autumn (November) ================= */
 const isAutumn=()=>{try{if(localStorage.getItem('nyang-autumn')==='1')return true}catch(e){}return new Date(now()+9*HOUR).getUTCMonth()===10};
 const evOn=e=>e==='autumn'?isAutumn():e==='xmas'?isXmas():true;
-const LEAF_HRS=[0,9,12,15,19,22];
+const LEAF_HRS=[0,8,11,13,15,16,18,20,22];
 const LEAF_EX=[['maplepin',20,'단풍잎 머리핀'],['autumn',40,'낙엽 흩날림 배경 효과'],['rawgoguma',3,'생고구마 1개'],['coins',5,'40코인']];
 const GOG_GOAL=100,GOG_REW={c:300,it:'goguma',n:3};
 const curYear=()=>new Date(now()+9*HOUR).getUTCFullYear();
@@ -1927,9 +1927,9 @@ async function gogClaim(){
 function viewAutumn(){
   const u=me(),st=leafState(),L=leaves(),inv=u.inv||{},c=activeCat();
   const g=u.gog&&u.gog.y===curYear()?u.gog.n||0:0,vil=gogVillage();
-  return`<div class="panel stack" style="position:relative;overflow:hidden;background:linear-gradient(180deg,#fff3e2,#fff)">${leafFallHTML(10)}<h2 style="color:#c4561f">가을 낙엽 줍기</h2><p class="lead" style="margin:0">11월 동안 광장에 낙엽이 떨어져요. 하루 6장 (0시 · 9시 · 12시 · 15시 · 19시 · 22시), 가끔 <b>황금 은행잎</b>은 3장으로 쳐요.</p>
+  return`<div class="panel stack" style="position:relative;overflow:hidden;background:linear-gradient(180deg,#fff3e2,#fff)">${leafFallHTML(10)}<h2 style="color:#c4561f">가을 낙엽 줍기</h2><p class="lead" style="margin:0">11월 동안 광장에 낙엽이 떨어져요. 하루 9장 (자정 · 오전 8시 · 11시 · 오후 1시 · 3시 · 4시 · 6시 · 8시 · 10시), 가끔 <b>황금 은행잎</b>은 3장으로 쳐요.</p>
   <p style="margin:0;font-family:var(--display);font-size:1.15rem">모은 낙엽 <span class="num">${st.n}</span>장 <small class="grow">(지금까지 ${st.tot}장)</small></p>
-  <div class="row" style="flex-wrap:wrap;gap:6px">${L.map(l=>`<span class="chip ${l.got?'gray':l.open?'pink':''}">${l.hr}시 ${l.got?'주움':l.open?'광장에 있음':'대기'}</span>`).join('')}</div>
+  <div class="row" style="flex-wrap:wrap;gap:6px">${L.map(l=>`<span class="chip ${l.got?'gray':l.open?'pink':''}">${l.hr===0?'자정':l.hr<12?'오전 '+l.hr+'시':l.hr===12?'낮 12시':'오후 '+(l.hr-12)+'시'} ${l.got?'주움':l.open?'광장에 있음':'대기'}</span>`).join('')}</div>
   ${L.some(l=>l.open&&!l.got)?'<button class="btn small" data-a="go" data-v="plaza">광장에서 줍기</button>':''}</div>
   <div class="sect">낙엽 교환</div><div class="list">${LEAF_EX.map(([k,cost,name])=>{const own=k!=='coins'&&!STACK.has(k)&&inv[k];return`<div class="item"><div class="thumb" style="width:48px;height:48px;flex-basis:48px">${k==='coins'?`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="#ffd43b" stroke="#d99a1e" stroke-width="4"/><text x="50" y="60" font-size="28" text-anchor="middle" fill="#a8740f" font-family="Jua">40</text></svg>`:itemPic(k,k==='maplepin'||k==='autumn'?c:undefined)}</div><div class="tx"><b>${name}</b><span>낙엽 ${cost}장${k==='rawgoguma'?' · 모닥불 땔감과 바꿔요':''}</span></div>${own?'<span class="chip gray">보유</span>':`<button class="btn small" data-a="leaftrade" data-v="${k}" ${st.n<cost?'disabled':''}>교환</button>`}</div>`}).join('')}</div>
   <div class="sect">김장철 고구마 굽기</div>
