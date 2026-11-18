@@ -640,6 +640,7 @@ const ITEMS={
   throne:{n:'고양이 왕좌',t:'room',slot:'throne',p:1500,s:8,d:'마을의 왕'}
 };
 for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room'].includes(it.t))continue;const tier=it.p<150?1:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
+for(const it of Object.values(ITEMS)){if(it.ex||!['hat','neck','face','body','aura','room'].includes(it.t))continue;it.p=Math.round(it.p*1.2/10)*10}
 const STACK=new Set(['bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
 const STAGE={kitten:'아기냥',junior:'청소년냥',adult:'어른냥'};
