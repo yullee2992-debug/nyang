@@ -1720,34 +1720,66 @@ async function dyFlush(){
 }
 setInterval(()=>{if(S.me)dyFlush()},6000);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.me)dyFlush()});
+const DY={
+ wx:{sun:{default:['햇볕이 좋았다. 창가 명당을 하루 종일 지켰다. 명당은 먼저 눕는 고양이 거다.','날씨가 맑았다. 햇빛 웅덩이를 따라 세 번 자리를 옮겼다. 해가 자꾸 도망간다.'],lazy:['날씨가 좋았다. 그래서 누워 있었다. 날씨가 나빴어도 누워 있었을 거다.'],playful:['해가 쨍쨍했다! 바닥의 햇빛 조각을 잡으려다 벽에 머리를 박았다. 햇빛은 반칙이다.'],sleepy:['햇볕이 따뜻했다. 따뜻하면 잔다. 그게 규칙이다.']},
+  cloud:{default:['하늘이 회색이었다. 나도 회색 기분이었다. 회색 고양이는 아니지만.','흐렸다. 이런 날은 이불 속이 정답이다.'],smart:['흐렸다. 구름의 98%는 물이라고 한다. 그래서 싫다.']},
+  rain:{default:['비가 왔다. 창가에서 빗방울을 세다가 마흔일곱 번째에서 잠들었다. 고양이의 시간은 소중하다.','비가 주룩주룩 왔다. 밖에 안 나가도 되는 고양이로 태어나서 다행이다.'],scaredy:['비가 왔다. 천둥이 칠까 봐 하루 종일 귀를 세우고 있었다. 안 쳤다. 그래도 무서웠다.'],grumpy:['비가 왔다. 습하다. 털이 눅눅하다. 다 마음에 안 든다.']},
+  wind:{default:['바람이 엄청 불었다. 창밖 나뭇잎이 날아다녀서 사냥 본능이 폭발했다. 유리창 때문에 실패했다.'],scaredy:['바람이 창문을 덜컹덜컹 흔들었다. 누가 들어오려는 줄 알고 소파 밑에 숨었다.']},
+  snow:{default:['눈이 왔다! 하얀 게 하늘에서 떨어졌다. 먹어 봤는데 맛이 없다. 차갑기만 하다.'],playful:['눈이 왔다! 창문에 붙은 눈송이를 잡으려고 백 번 뛰었다. 한 개도 못 잡았다.']}},
+ fav:{default:['{O} 집사가 {F을} 줬다. 내가 제일 좋아하는 거다. 오늘 집사 점수 +100점.','{F}! {F}! {F}! 오늘은 좋은 날이다.'],aloof:['{O} 집사가 {F을} 줬다. …제일 좋아하는 거 맞다. 하지만 티는 안 냈다. 꼬리만 조금 떨렸을 뿐이다.'],glutton:['{F을} 먹었다. 그릇까지 핥았다. 그릇 무늬가 지워질 뻔했다.'],cuddly:['{O} 집사가 내가 제일 좋아하는 {F을} 줬다! 고마워서 다리에 머리를 백 번 비볐다.'],grumpy:['{F을} 받았다. 오늘은 할퀴지 않기로 했다. 집사는 운이 좋다.'],lazy:['{F을} 줬다. 좋아하는 거라 일어나서 먹었다. 오늘 유일하게 일어난 순간이었다.'],smart:['{F}: 맛 10점, 식감 10점, 집사의 센스 7점.']},
+ hate:{default:['{O} 집사가 {F을} 줬다. 내가 싫어하는 거 아직도 모르나? 다 먹긴 했다. 배가 고팠기 때문이다.'],glutton:['싫어하는 {F이} 나왔다. 하지만 먹보에게 싫은 음식이란 없다. \'두 번째로 좋아하는 음식\'이 있을 뿐.'],grumpy:['{F}. 또. 그릇을 앞발로 밀어서 바닥에 떨어뜨려 줬다. 메시지는 전달됐을 것이다.'],cuddly:['{F은} 별로였지만 {O} 집사가 줬으니까 맛있는 척했다. 사랑은 연기력이다.'],lazy:['{F이} 나왔다. 싫은데 고개 돌리기도 귀찮아서 그냥 먹었다. 씹는 것도 귀찮았다.'],scaredy:['{F이랑} 눈이 마주쳤다. 날 보고 있었다. 무서워서 반만 먹었다.'],aloof:['{F을} 줬길래 냄새만 맡고 돌아섰다. 나중에 아무도 안 볼 때 먹었다.'],smart:['{F}: 맛 3점, 식감 2점, 집사의 무지함 10점.']},
+ treat:{default:['{F을} 먹었다. 맛있었다. 집사가 오늘은 쓸모가 있었다.','{O} 집사가 {F을} 줬다. 다 먹고 빈 그릇 앞에 앉아서 더 달라고 했다. 무시당했다.'],glutton:['{F을} 먹었다. 먹는 동안 다음 간식 생각을 했다.'],cuddly:['{F을} 받았다. 고맙다고 냐앙 해 줬다. 집사가 녹았다.']},
+ kibble:{default:['사료를 {N}번 먹었다. 사료는 사료 맛이다.','사료를 먹었다. 오독오독. 츄르였으면 좋았겠다.'],glutton:['사료를 {N}번 먹었다. 적어도 {N}번은 더 먹을 수 있었는데.']},
+ pet50:{default:['{N}번 쓰다듬어졌다. 세어 봤다. 서른 번부터는 귀찮았는데 골골송이 멋대로 나왔다. 내 목은 가끔 내 편이 아니다.'],cuddly:['{O} 집사가 {N}번 쓰다듬어 줬다. {N}번째에서 멈추길래 머리로 손을 툭 쳤다. 연장 근무다.'],grumpy:['{N}번이나 만졌다. {N}번 다 참았다. 오늘의 나는 성인군자다.'],lazy:['{N}번 쓰다듬어졌다. 피하기 귀찮아서 다 맞았다.'],aloof:['{N}번 쓰다듬어졌다. 허락한 적 없다. …싫진 않았다.']},
+ pet10:{default:['{O} 집사가 쓰다듬어 줬다. 골골. 이건 기분 좋아서가 아니라 목 운동이다.'],cuddly:['쓰다듬어 줬다! 배도 보여 줬다. 만지면 물 거지만.'],sleepy:['쓰다듬는 손이 따뜻해서 그대로 잠들었다. 몇 번이었는지는 모른다.'],grumpy:['쓰다듬길래 한 번 노려봐 줬다. 손이 멈췄다. 이겼다.']},
+ bath:{default:['목욕을 \'당했다\'. 했다가 아니라 당했다. 집사는 이 차이를 알아야 한다.'],scaredy:['목욕을 했다. 물이 날 삼키려 했다. 살아남았다.'],grumpy:['목욕을 당했다. 집사 팔에 기념 사인을 남겼다. 발톱으로.'],cuddly:['목욕은 싫지만 끝나고 수건으로 안아 줘서 참았다. 거래 성립.'],lazy:['목욕을 했다. 저항하기도 귀찮았다. 그래서 졌다.']},
+ shark:{default:['낚시를 따라갔다가 상어한테 물렸다. 나는 가만히 있었는데. 알약은 썼다. 인생도 썼다.'],scaredy:['상어를 봤다. 상어도 날 봤다. 그리고 물었다. 다시는 물가에 안 간다.'],grumpy:['상어가 날 물었다. 다음에 만나면 내가 문다. 기다려라.'],smart:['상어는 원래 바다에 산다. 근데 왜 연못에 있었을까. 연구가 필요하다. 아프다.']},
+ fish:{default:['{O} 집사랑 낚시를 갔다. {K}. 집사 실력이 이 정도다.','낚시를 갔다. {K}. 물고기는 전부 내 거라고 주장했다.'],glutton:['낚시를 갔다. {K}. 날로 먹으면 안 된다고 해서 슬펐다.']},
+ junk:{default:['낚시를 갔다. {K}… 물고기는 없었다. 집사는 쓰레기 줍기 봉사를 한 셈이다.']},
+ stray:{default:['길고양이 {S이} 와서 내 사료를 얻어먹고 갔다. 고맙단 말도 없이. …좀 귀엽긴 했다.'],aloof:['창밖에 {S이} 왔다. 눈인사만 했다. 고양이끼리는 그걸로 충분하다.'],grumpy:['{S이} 내 영역에 왔다. 하악질을 했는데 집사가 밥을 줬다. 배신이다.'],chatty:['{S이랑} 창문 사이로 수다를 떨었다. 동네 소문을 잔뜩 들었다.']},
+ talk:{default:['{W}님이 말을 걸었다. 대답 안 했다. 첫인사엔 대답하지 않는다. 내일 해 줄 거다. 아마.'],chatty:['{W}님이 말을 걸어 줬다! 열 마디로 대답했다. 아직 할 말이 남았다.'],cuddly:['{W}님이 말을 걸어 줬다. 인기냥은 피곤하다. 좋다.']},
+ gift:{default:['{W}님이 간식을 보냈다. 우리 집사보다 낫다.'],glutton:['{W}님이 간식을 줬다. 오늘부터 {W}님도 내 집사다.']},
+ fpet:{default:['{W}님이 쓰다듬고 갔다. 남의 손은 낯설지만 나쁘진 않았다.'],grumpy:['{W}님이 만지고 갔다. 허락 안 했다. 기억해 두겠다.']},
+ flower:{default:['{W}님이 꽃을 줬다. 먹어도 되냐고 물었더니 안 된단다. 그럼 왜 줬지.']},
+ play:{default:['털실이랑 {N}판 싸웠다. 전적: 내가 다 이김.'],playful:['우다다를 {N}번 했다. 집이 좁다. 우주가 필요하다.'],lazy:['놀아 주길래 앞발만 한 번 내밀었다. 그게 오늘의 운동이다.']},
+ train:{default:['공부를 했다. \'앉아\'를 배웠다. 원래 앉아 있었는데.'],smart:['공부를 했다. 집사보다 똑똑해진 것 같다. 원래 그랬지만.'],lazy:['공부를 했다. 눈 뜨고 자는 법을 터득했다.']},
+ ex:{default:['운동을 했다. 근육이 생겼다. 아직 털에 가려서 안 보인다.'],lazy:['운동을 했다. 그래서 낮잠이 두 배로 필요해졌다.']},
+ nap:{default:['낮잠을 잤다. 꿈에서 츄르 강을 헤엄쳤다.'],sleepy:['낮잠을 잤다. 낮잠을 자고 나서 낮잠을 잤다. 완벽한 하루.']},
+ pill:{default:['알약을 먹었다. 츄르에 숨겨도 다 안다. 그래도 먹어 줬다.']},
+ visit:{default:['{O} 집사랑 {V}네 집에 놀러 갔다. 남의 집 냄새는 신기하다. 그래도 우리 집이 제일 낫다.']},
+ wed:{default:['결혼식에 하객으로 갔다. 국수를 먹었다. 신부 고양이가 예뻤다. 내 다음으로.']},
+ fs:{default:['패션쇼에 나갔다. 런웨이는 결국 고양이 걸음이다. 원조는 나다.']},
+ grew:{default:['오늘 쑥 자랐다! 거울 속 고양이가 조금 의젓해 보였다. 누군지 모르겠다.']},
+ lotto:{default:['{O} 집사가 로또를 샀다. 당첨되면 츄르 백 개 사 준댔다. 기억해 두겠다.']},
+ empty:{default:['오늘은 아무 일도 없었다. {O} 집사가 안 와서 창밖만 봤다. 보고 싶었던 건 아니다.'],cuddly:['{O} 집사가 오늘 안 왔다. 현관 앞에서 기다렸다. 많이.']},
+ end:{default:['결론: 집사는 아직 멀었다. 그래도 내일도 같이 있어 줄 거다.','내일도 집사를 잘 관리해야겠다. 끝.'],aloof:['결론: 집사는 아직 멀었다. 그래도 내일도 봐준다.','이 일기는 비밀이다. 집사가 읽으면 안 된다. …읽었으면 츄르 내놔.'],glutton:['내일 먹을 것: 츄르, 열빙어, 그리고 츄르.','배부르게 자러 간다. 꿈에서 야식 먹을 예정.'],cuddly:['오늘도 집사가 제일 좋았다. 내일도 그럴 거다.','집사 무릎에서 잘 거다. 거부는 거부한다.'],grumpy:['오늘은 아무도 안 할퀴었다. 내일은 장담 못 한다.','결론: 세상은 시끄럽다. 그래도 집은 괜찮다.'],lazy:['일기 쓰는 것도 귀찮다. 여기까지.','내일은 오늘보다 덜 움직일 거다. 목표가 있는 삶.'],scaredy:['오늘도 살아남았다. 이불 속은 안전하다.','내일은 무서운 게 없었으면 좋겠다. 상어 같은 거.'],playful:['내일은 더 빨리 뛸 거다. 이유는 없다.','체력이 남았다. 새벽 세 시에 쓸 예정.'],smart:['오늘의 배움: 집사는 예측 가능하다.','관찰 일지 끝. 집사는 오늘도 귀여웠다. 학술적으로.'],chatty:['할 말이 더 있는데 일기장이 모자라다. 내일 이어서.','오늘 들은 소문은 내일 친구들한테 다 말해 줄 거다.'],sleepy:['졸리다. 일기를 쓰다가 잠','오늘도 열여섯 시간 잤다. 내일은 열일곱 시간 도전.']}
+};
+function dyFill(t,V){return t.replace(/\{([A-Z])(을|이랑|이|은)?\}/g,(m,k,p)=>{const w=V[k]==null?'':String(V[k]);if(!p)return w;return p==='을'?eulReul(w):p==='이'?iGa(w):p==='은'?eunNeun(w):josa(w,'이랑','랑')})}
 function diaryLines(c,day,m){
-  const O=ownerName(c.owner),Oi=iGa(O),T=tasteOf(c),L=[];const r=seeded(strHash('dy'+c.id+day));const pk=a=>a[Math.floor(r()*a.length)];
-  const wx=wxOf(day);
-  L.push({sun:pk(['날씨가 맑았다. 창가 햇볕이 따끈따끈했다.','하늘이 파랬다. 기분 좋은 날.']),cloud:pk(['하늘이 흐렸다. 괜히 졸렸다.','구름이 잔뜩 꼈다.']),rain:pk(['비가 주룩주룩 왔다.','창밖에 비가 왔다. 빗소리를 들으며 멍때렸다.']),wind:'바람이 쌩쌩 불었다. 털이 다 날렸다.',snow:'눈이 펑펑 왔다! 발이 시렸다.'}[wx]);
-  if(m.grew)L.push('오늘 쑥 자랐다! 거울을 보니 조금 의젓해졌다.');
-  for(const k of Object.keys(m).filter(k=>k.startsWith('feed:'))){const f=k.slice(5),n=(ITEMS[f]||{}).n||f,cnt=m[k];
-    if(f===T.fav)L.push(`${Oi} 내가 제일 좋아하는 ${eulReul(n)} 줬다! 너무 행복했다.`);
-    else if(f===T.hate)L.push(`${Oi} ${eulReul(n)} 줬다. 솔직히 별로였다...`);
-    else if(f==='kibble')L.push(cnt>1?`밥을 ${cnt}번 먹었다. 배가 빵빵하다.`:'밥을 먹었다. 오독오독.');
-    else L.push(`${eulReul(n)} 먹었다. 맛있었다.`)}
-  if(m.pet)L.push(m.pet>=50?`${Oi} 오늘 ${m.pet}번이나 쓰다듬어 줬다. 털이 반질반질해졌다.`:m.pet>=10?`${Oi} 쓰다듬어 줬다. 골골골.`:`${Oi} 살짝 쓰다듬어 줬다.`);
-  if(m.play)L.push(m.play>2?`털실로 ${m.play}번이나 놀았다. 우다다다!`:'털실로 놀았다. 재밌었다.');
-  if(m.bath)L.push('목욕을 했다. 물은 싫지만 뽀송해졌다.');
-  if(m.ex)L.push('운동을 했다. 다리가 튼튼해진 기분.');
-  if(m.train)L.push(m.train>2?`공부를 ${m.train}번이나 했다. 머리에서 김이 난다.`:'공부를 했다. 조금 똑똑해진 것 같다.');
-  if(m.nap)L.push(pk(['낮잠을 잤다. 꿈에서 츄르를 먹었다.','꾸벅꾸벅 낮잠을 잤다.']));
+  const pt=c.ptype||'aloof',T=tasteOf(c),r=seeded(strHash('dy'+c.id+day));
+  const PB=(b,V)=>{const own=b[pt];const L=own&&(!b.default||r()<.75)?own:b.default;return dyFill(L[Math.floor(r()*L.length)],Object.assign({O:ownerName(c.owner)},V||{}))};
+  const P=(key,V)=>PB(DY[key]||{},V);
+  const ev=[];const add=(p,key,V)=>ev.push({p,s:P(key,V)});
+  if(m.grew)add(100,'grew');if(m.shark)add(95,'shark');if(m.wed)add(90,'wed');if(m.fs)add(88,'fs');
+  const feeds=Object.keys(m).filter(k=>k.startsWith('feed:')).map(k=>k.slice(5));
+  const fn=f=>(ITEMS[f]||{}).n||f;
+  const fav=feeds.find(f=>f===T.fav),hate=feeds.find(f=>f===T.hate);
+  if(fav)add(85,'fav',{F:fn(fav)});if(hate)add(84,'hate',{F:fn(hate)});
+  const tr=feeds.filter(f=>f!=='kibble'&&f!==fav&&f!==hate);if(tr.length)add(60,'treat',{F:fn(tr[Math.floor(r()*tr.length)])});
+  if(feeds.includes('kibble')&&!fav&&!hate&&!tr.length)add(30,'kibble',{N:m['feed:kibble']});
+  if(m.pet>=50)add(80,'pet50',{N:m.pet});else if(m.pet>=10)add(55,'pet10',{N:m.pet});
+  if(m.bath)add(75,'bath');
   const fk=Object.keys(m).filter(k=>k.startsWith('fish:'));
-  if(fk.length){const FN=Object.fromEntries(FISH.map(x=>[x.k,x.n]));L.push(`${josa(O,'이랑','랑')} 낚시를 갔다. ${fk.map(k=>`${FN[k.slice(5)]||k.slice(5)} ${m[k]}개`).join(', ')}를 건졌다.`)}
-  if(m.shark)L.push('낚시하다가 상어한테 물렸다!!! 너무 무서웠다. 다시는 안 갈 거다... 아마도.');
-  if(m.pill)L.push('알약을 먹었다. 썼지만 꾹 참았다.');
-  for(const k of Object.keys(m).filter(k=>k.startsWith('visit:')))L.push(`${josa(O,'이랑','랑')} ${k.slice(6)}네 집에 놀러 갔다.`);
-  if(m.wed)L.push('결혼식에 하객으로 갔다. 국수가 맛있었다.');
-  for(const k of Object.keys(m).filter(k=>/^(talk|gift|fpet|flower):/.test(k))){const [t,who]=k.split(':');L.push({talk:`${who}님이 말을 걸어줬다.`,gift:`${who}님이 간식을 선물해 줬다. 고마워!`,fpet:`${who}님이 쓰다듬어 줬다.`,flower:`${who}님에게 꽃을 받았다. 인기냥이 된 기분!`}[t])}
-  for(const k of Object.keys(m).filter(k=>k.startsWith('stray:')))L.push(`길고양이 ${k.slice(6)}${iGa(k.slice(6)).slice(-1)} 놀러 왔다. ${josa(O,'이','가')} 밥을 나눠 줬다. 나도 착한 일 한 기분.`);
-  if(m.fs)L.push('패션쇼에 나갔다! 런웨이를 걸을 생각에 두근두근.');
-  if(m.lotto)L.push(`${Oi} 로또를 샀다. 당첨되면 츄르 백 개!`);
-  if(L.length<2)L.push(`오늘은 조용한 하루였다. ${O} 보고 싶었다.`);
-  L.push(pk(['내일도 좋은 하루였으면.','오늘도 잘 먹고 잘 잤다. 끝.','이제 잘 거다. 냥.']));
+  if(fk.length){const F=Object.fromEntries(FISH.map(x=>[x.k,x]));const parts=fk.map(k=>{const x=F[k.slice(5)]||{n:k.slice(5)};return`${x.n} ${m[k]}${x.junk?'개':'마리'}`});const onlyJ=fk.every(k=>(F[k.slice(5)]||{}).junk);add(70,onlyJ?'junk':'fish',{K:parts.join(', ')})}
+  const st=Object.keys(m).find(k=>k.startsWith('stray:'));if(st)add(72,'stray',{S:st.slice(6)});
+  for(const t of ['talk','gift','flower','fpet']){const k=Object.keys(m).find(k=>k.startsWith(t+':'));if(k){add(t==='talk'?65:t==='gift'?66:t==='flower'?64:50,t,{W:k.slice(t.length+1)});break}}
+  if(m.play)add(58,'play',{N:m.play});if(m.train)add(52,'train');if(m.ex)add(45,'ex');if(m.nap)add(48,'nap');if(m.pill&&!m.shark)add(50,'pill');
+  const vk=Object.keys(m).find(k=>k.startsWith('visit:'));if(vk)add(57,'visit',{V:vk.slice(6)});
+  if(m.lotto)add(35,'lotto');
+  const L=[PB(DY.wx[wxOf(day)]||DY.wx.sun,{})];
+  ev.sort((a,b)=>b.p-a.p).slice(0,5).forEach(e=>L.push(e.s));
+  if(L.length<2)L.push(P('empty'));
+  L.push(P('end'));
   return L;
 }
 function openDiary(id,idx=0){
