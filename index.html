@@ -573,9 +573,9 @@ const ITEMS={
   knight:{n:'기사 갑옷',t:'body',p:700,s:3,d:'마을을 지키는 기사'},
   galaxy:{n:'은하수 망토',t:'body',p:1200,s:8,d:'별빛이 흐르는 망토'},
   hanbok:{n:'한복',t:'body',p:600,s:2,d:'명절엔 고운 한복'},
-  wdress:{n:'웨딩드레스',t:'body',p:1200,s:3,d:'결혼식 주인공 · 레이스 드레스'},
-  tux:{n:'턱시도',t:'body',p:1200,s:3,d:'결혼식 주인공 · 검은 턱시도'},
-  veil:{n:'면사포',t:'hat',p:450,s:1,d:'진주 장식 면사포'},
+  wdress:{n:'웨딩드레스',t:'body',p:1200,s:3,wed:1,d:'결혼식 준비 중인 예비 부부만 · 레이스 드레스'},
+  tux:{n:'턱시도',t:'body',p:1200,s:3,wed:1,d:'결혼식 준비 중인 예비 부부만 · 검은 턱시도'},
+  veil:{n:'면사포',t:'hat',p:450,s:1,wed:1,d:'결혼식 준비 중인 예비 부부만 · 진주 장식'},
   astronaut:{n:'우주복',t:'body',p:1500,s:6,d:'달나라 여행 가는 냥'},
   moonhat:{n:'달빛 베레모',t:'hat',p:600,s:3,d:'초승달이 달린 보라 베레모'},
   starglass:{n:'별 안경',t:'face',p:500,s:2,d:'반짝 별 모양 안경'},
@@ -1284,8 +1284,9 @@ function timingGame(){
 
 /* ================= shop / deco ================= */
 async function buy(id){
+  const wedOk=canWedBuy();
   const it=ITEMS[id];let why='';
-  const r=await Store.tx('users/'+S.me,u=>{if(!u)return u;u.inv=u.inv||{};if(it.ex){why='이벤트나 출석으로만 받을 수 있어요';return}if(it.ev&&!evOn(it.ev)){why='지금은 살 수 없어요';return}if(!STACK.has(id)&&u.inv[id]){why='이미 갖고 있어요';return}if((u.coins||0)<it.p){why='코인이 부족해요';return}if((u.stars||0)<(it.s||0)){why='⭐ 스타가 부족해요. 퀘스트와 출석으로 모아요';return}u.coins-=it.p;if(it.s)u.stars=(u.stars||0)-it.s;if(it.pack){u.inv[it.pack[0]]=(u.inv[it.pack[0]]||0)+it.pack[1];return u}u.inv[id]=(u.inv[id]||0)+1;return u});
+  const r=await Store.tx('users/'+S.me,u=>{if(!u)return u;u.inv=u.inv||{};if(it.ex){why='이벤트나 출석으로만 받을 수 있어요';return}if(it.ev&&!evOn(it.ev)){why='지금은 살 수 없어요';return}if(it.wed&&!wedOk){why='결혼식을 준비 중인 예비 부부 고양이의 주인만 살 수 있어요';return}if(!STACK.has(id)&&u.inv[id]){why='이미 갖고 있어요';return}if((u.coins||0)<it.p){why='코인이 부족해요';return}if((u.stars||0)<(it.s||0)){why='⭐ 스타가 부족해요. 퀘스트와 출석으로 모아요';return}u.coins-=it.p;if(it.s)u.stars=(u.stars||0)-it.s;if(it.pack){u.inv[it.pack[0]]=(u.inv[it.pack[0]]||0)+it.pack[1];return u}u.inv[id]=(u.inv[id]||0)+1;return u});
   if(!r.committed)return toast(why||'구매하지 못했어요');
   toast(`${it.n} 구매 완료!`);
 }
@@ -1629,6 +1630,7 @@ const WDECOR={w_light:{n:'반짝이 전구',p:300,d:'천장에 줄 전구'},w_ca
 const WFOOD={noodle:{n:'잔치국수',p:60,h:30,m:10},ricecake:{n:'떡',p:40,h:15,m:10},cookie:{n:'웨딩 쿠키',p:80,h:10,m:25},juice:{n:'과일 주스',p:50,h:5,m:15}};
 const WEAR=['wdress','tux'];
 const wedId=(a,b)=>[a,b].sort()[0];
+function canWedBuy(){return myCats().some(c=>{const w=wedOfCat(c);return w&&wedPhase(w)!=='done'})}
 function wedById(id){const c=S.cats[id];return c&&c.wedding?Object.assign({id},c.wedding):null}
 function wedOfCat(c){if(!c||!c.spouse)return null;return wedById(wedId(c.id,c.spouse))}
 function wedHosts(w){return[...new Set([(S.cats[w.a]||{}).owner,(S.cats[w.b]||{}).owner].filter(Boolean))]}
@@ -2092,7 +2094,7 @@ function viewShop(){
   const tabs=[['food','간식'],['hat','모자'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
   const ids=Object.keys(ITEMS).filter(k=>!ITEMS[k].ex&&(!ITEMS[k].ev||evOn(ITEMS[k].ev))).filter(k=>{const t=ITEMS[k].t;return tab==='wear'?(t==='neck'||t==='face'):tab==='special'?(t==='special'||t==='dye'):tab==='food'?(t==='food'||t==='med'):t===tab});
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
-  <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}${it.s?` <em class="star">⭐${it.s}</em>`:''}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(u.coins||0)<it.p||(u.stars||0)<(it.s||0)?'disabled':''}>${done?'보유 중':'사기'}</button></div></div>`}).join('')}</div>
+  <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}${it.s?` <em class="star">⭐${it.s}</em>`:''}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(it.wed&&!canWedBuy())||(u.coins||0)<it.p||(u.stars||0)<(it.s||0)?'disabled':''}>${done?'보유 중':it.wed&&!canWedBuy()?'예비 부부만':'사기'}</button></div></div>`}).join('')}</div>
   <p class="grow" style="margin-top:12px">코인: 출석 · 퀘스트 · 운동 최대 60 · 교육 최대 70 · 놀아주기 10 · 레벨 업 · 친구 선물 15 · 쓰다듬기 1번에 1(하루 300까지) · 로또. ⭐ 스타: 출석과 퀘스트로만 얻어요.</p>`;
 }
 function viewPlaza(){
