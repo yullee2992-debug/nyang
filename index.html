@@ -1261,14 +1261,14 @@ async function pet(ev){
     if(c.petRestUntil&&c.petRestUntil>now()){res.rest=true;return}
     c.petN++;c.st.mood=clamp(c.st.mood+3);c.neglect=0;
     if(c.petN<=40)c.aff=clamp(c.aff+.4);
-    c.petBurst=(c.petBurst||0)+1;bumpTr(c,{pet:1});{const dd=kstDay();if(c.petCoinDay!==dd){c.petCoinDay=dd;c.petCoinN=0}if(c.petCoinN<300){c.petCoinN++;res.coins=1;res.coinLeft=300-c.petCoinN}else res.capped=true}
+    c.petBurst=(c.petBurst||0)+1;bumpTr(c,{pet:1});{const dd=kstDay();if(c.petCoinDay!==dd){c.petCoinDay=dd;c.petCoinN=0}if(c.petCoinN<3000){c.petCoinN++;res.coins=1;res.coinLeft=3000-c.petCoinN}else res.capped=true}
     if(c.petBurst>=100){c.petBurst=0;c.petRestUntil=now()+2*MIN;res.restNow=true;bumpTr(c,{pester:1})}
     if(c.petN%10===0)xp(c,res,3);
   });
   if(res&&res.refuse){say('하악!');return}
   if(res&&res.restNow){toast('100번 쓰다듬었어요! 잠시 쉬어야 해요 · 2분 뒤에 다시 가능해요',3200);say('너무 많이 만졌다냥... 좀 쉬자');schedule();return}
   if(res&&res.rest){toast('잠시 쉬어야 해요');return}
-  if(res&&res.capped&&S.capWarn!==kstDay()+c.id){S.capWarn=kstDay()+c.id;toast(`${c.name}${eunNeun(c.name).slice(-1)} 오늘 쓰다듬기 코인 300개를 다 받았어요. 내일 0시부터 다시 받아요`,4000)}
+  if(res&&res.capped&&S.capWarn!==kstDay()+c.id){S.capWarn=kstDay()+c.id;toast(`${c.name}${eunNeun(c.name).slice(-1)} 오늘 쓰다듬기 코인 3,000개를 다 받았어요. 내일 0시부터 다시 받아요`,4000)}
   if(res&&res.coinLeft===50)toast('오늘 쓰다듬기 코인이 50개 남았어요');
   petBonus();qEvent('pet');
   S.happyUntil=now()+900;say(Math.random()<.6?ptLine(S.cats[c.id]||c,'pet'):pick(['골골골...','냐아~','그르릉']));schedule();
@@ -2720,7 +2720,7 @@ function viewShop(){
   if(tab==='set')return tabsH+viewSets();
   return`${tabsH}
   <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}${pairOf(k).length?`<span style="display:block;color:var(--pink-d);margin-top:2px">짝꿍: ${pairOf(k).map(x=>ITEMS[x].n+((inv[x])?' ✓':'')).join(', ')}</span>`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}${it.s?` <em class="star">⭐${it.s}</em>`:''}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(it.wed&&!canWedBuy())||(u.coins||0)<it.p||(u.stars||0)<(it.s||0)?'disabled':''}>${done?'보유 중':it.wed&&!canWedBuy()?'예비 부부만':'사기'}</button></div></div>`}).join('')}</div>
-  <p class="grow" style="margin-top:12px">코인: 출석 · 퀘스트 · 운동 최대 60 · 교육 최대 70 · 놀아주기 10 · 레벨 업 · 친구 선물 15 · 쓰다듬기 1번에 1(하루 300까지) · 로또. ⭐ 스타: 출석과 퀘스트로만 얻어요.</p>`;
+  <p class="grow" style="margin-top:12px">코인: 출석 · 퀘스트 · 운동 최대 60 · 교육 최대 70 · 놀아주기 10 · 레벨 업 · 친구 선물 15 · 쓰다듬기 1번에 1(냥이당 하루 3,000까지) · 로또. ⭐ 스타: 출석과 퀘스트로만 얻어요.</p>`;
 }
 function viewPlaza(){
   const isOn=(k,u)=>k===S.me||(u&&u.seen&&now()-u.seen<3*MIN);
