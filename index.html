@@ -340,7 +340,17 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 @keyframes nod{50%{transform:rotate(5deg) translateY(2%)}}
 .catwrap.fx-pill svg,.dcat.fx-pill .body{animation:nope 2.2s ease-in-out;transform-origin:50% 95%}
 @keyframes nope{0%,100%{transform:none}10%,30%,50%{transform:rotate(-9deg)}20%,40%{transform:rotate(9deg)}70%{transform:scale(1.06,.94)}}
-.catwrap.sleeping .flip>svg,.dcat.sleeping .body{animation:curlbr 3.6s ease-in-out infinite;transform-origin:50% 100%}
+.catwrap.sleeping .flip>svg{animation:sleeptilt 4s ease-in-out infinite;transform-origin:50% 60%}
+@keyframes sleeptilt{0%,100%{transform:translateY(var(--sy,3%)) rotate(-9deg)}50%{transform:translateY(var(--sy,3%)) rotate(-11deg) scale(1.01)}}
+.catwrap.sleeping.sg-kitten{--sy:-12%}.catwrap.sleeping.sg-teen{--sy:-2%}
+.pillow,.blanket{display:none;position:absolute;pointer-events:none}
+.catwrap.sleeping>.pillow,.catwrap.sleeping>.blanket{display:block}
+.pillow{left:-4%;bottom:46%;width:108%;z-index:0}
+.catwrap.sleeping>.flip{position:relative;z-index:1}
+.blanket{left:-12%;bottom:-8%;width:124%;z-index:2;transform-origin:50% 100%;animation:blbreath 3.6s ease-in-out infinite}
+.pillow svg,.blanket svg{display:block;width:100%;height:auto;animation:none!important;transform:none!important;filter:none!important}
+@keyframes blbreath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.06)}}
+.dcat.sleeping .body{animation:curlbr 3.6s ease-in-out infinite;transform-origin:50% 100%}
 @keyframes curlbr{0%,100%{transform:scale(1,1)}50%{transform:scale(1.02,1.045)}}
 .dcat.sleeping .zz{top:52%!important;right:16%!important}
 .dcat.sleeping .zz{top:38%;right:6%}
@@ -2713,7 +2723,7 @@ function viewHome(){
   const qq=qNorm(clone(u.q)),qIds=dailyIds(qq.d),qDone=qIds.filter(k=>qq.dc[k]).length,qCan=qClaimable(u);
   const wxb=`<div class="wxbar">${isWeekend()?'<span class="chip gold">주말 경험치 2배!</span>':''}<span class="chip">${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
   return`${inst}${sw}<div class="scene">${roomScene(u)}${skyHTML(false)}${strayHTML()}${mailboxHTML()}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
-  <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping':''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${sleeping?sleepCatSVG(c):catSVG(c,{expr})}</div></div></div>
+  <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping sg-'+c.stage:''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}${sleeping?`<div class="pillow">${PILLOW}</div>`:''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div>${sleeping?`<div class="blanket">${BLANKET}</div>`:''}</div></div>
   ${wxb}
   ${c.sick?`<div class="panel row" style="background:#ffe3e3;border-color:#ffc4c4;gap:10px;padding:10px 12px"><span style="flex:1;min-width:0;font-size:.9rem"><b style="font-family:var(--display);font-weight:400;color:#c43d3d">${esc(c.name)}${iGa(c.name).slice(-1)} 아파요 (${SICK[c.sick.k]||'감기'})</b><br>기분이 빨리 떨어지고 놀 수 없어요.${c.sick.k==='skin'?' 목욕을 자주 시켜 주세요.':c.sick.k==='bite'?' 낚시하다 상어에게 물렸어요. 알약을 먹여야 나아요.':''}</span><button class="btn small" data-a="pill">알약 먹이기 · ${(u.inv||{}).pill||0}개</button></div>`:''}
   <div class="panel stack"><div class="stats">${statBar('배부름',c.st.hunger,'var(--hunger)')}${statBar('기분',c.st.mood,'var(--mood)')}${statBar('청결',c.st.clean,'var(--clean)')}${statBar('기력',c.st.energy,'var(--energy)')}</div>
@@ -3176,6 +3186,8 @@ function deskList(){
   for(const k of deskCalled){const u=S.users[k];if(!u||k===S.me)continue;const c=S.cats[u.main];if(!c)continue;const v=live(c);if(v.status!=='runaway')out.push({id:c.id,cat:v,mine:false,owner:k})}
   return out.slice(0,10);
 }
+const PILLOW=`<svg viewBox="0 0 120 44"><path d="M10 14 Q6 4 20 5 Q60 0 100 5 Q114 4 110 14 Q114 28 110 36 Q60 44 10 36 Q6 28 10 14Z" fill="#fff" stroke="#c9cfe0" stroke-width="2.4" stroke-linejoin="round"/><path d="M24 12 Q60 8 96 12" stroke="#e4e8f3" stroke-width="2" fill="none"/><path d="M10 14 l-6 -4 M110 14 l6 -4 M10 36 l-6 4 M110 36 l6 4" stroke="#c9cfe0" stroke-width="2" stroke-linecap="round"/></svg>`;
+const BLANKET=`<svg viewBox="0 0 140 60"><path d="M6 14 Q70 6 134 14 Q138 40 132 58 L8 58 Q2 40 6 14Z" fill="#ffb7c9" stroke="#e07f9a" stroke-width="2.6" stroke-linejoin="round"/>${[[24,34],[50,44],[76,32],[102,44],[122,30],[36,52],[90,54]].map(([x,y])=>`<path d="M${x} ${y-4} l1.4 3 3.2 .4 -2.4 2.2 .6 3.2 -2.8 -1.6 -2.8 1.6 .6 -3.2 -2.4 -2.2 3.2 -.4z" fill="#fff6c9" opacity=".95"/>`).join('')}<path d="M6 14 Q70 6 134 14 Q135 20 134 25 Q70 17 6 25 Q5 20 6 14Z" fill="#fff" stroke="#e07f9a" stroke-width="2.4" stroke-linejoin="round"/><path d="M14 19 Q70 12 126 19" stroke="#f3c6d3" stroke-width="1.6" fill="none"/></svg>`;
 function sleepCatSVG(c){
   const L=c.look||{},coat=L.coat||'#c9c9d1',pc=L.pcolor||coat,line=shade(coat,-.45),P=L.pattern;
   const k=c.stage==='kitten'?.72:c.stage==='teen'?.86:1;
