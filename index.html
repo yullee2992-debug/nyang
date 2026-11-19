@@ -809,9 +809,21 @@ const ptLine=(c,kind)=>pick((PT[ptypeOf(c)]||PT.aloof)[kind]);
 function bumpTr(c,o){c.tr=c.tr||{};for(const k in o)c.tr[k]=(c.tr[k]||0)+o[k]}
 function famChips(c){let h='';const sp=c.spouse&&S.cats[c.spouse];if(sp)h+=`<span class="chip gold">💍 ${esc(sp.name)}의 배우자</span>`;
   const pa=c.parents&&S.cats[c.parents.a],pb=c.parents&&S.cats[c.parents.b];if(pa||pb)h+=`<span class="chip gold">🍼 ${[pa,pb].filter(Boolean).map(x=>esc(x.name)).join('·')}의 아기</span>`;return h}
+const QUIRKS=['박스 성애자','꾹꾹이 장인','창밖 구경러','츄르 감별사','꼬리 사냥꾼','새벽 우다다','식빵 굽기 장인','골골송 가수','발라당 전문가','눈치 백단','밀당 고수','집사 바라기','명당 탐색가','택배 상자 검수관','양말 도둑','물 마시기 장인','이불 속 탐험가','종이봉투 수집가','키보드 위 낮잠러','벌레 사냥꾼','햇빛 일광욕러','숨숨집 애호가','방울 소리 반응러','높은 곳 정복자','혼잣말 냐옹러','발 냄새 감별사','기지개 장인','꼬리 흔들기 달인','털실 해체 전문가','소파 스크래처'];
 function personality(c){
-  const a=c.aff;const base=a<20?'까칠한':a<40?'새침한':a<60?'무난한':a<80?'다정한':'천사 개냥이';
-  const t=[PT[ptypeOf(c)].n,base];if(c.smart>=60)t.push('똑똑한');if(c.strong>=60)t.push('튼튼한');return t;
+  const a=c.aff||0;const base=a<10?'경계심 많은':a<20?'까칠한':a<35?'새침한':a<50?'무난한':a<65?'상냥한':a<80?'다정한':a<92?'애교 많은':'천사 개냥이';
+  const t=[PT[ptypeOf(c)].n,base];
+  const sm=c.smart||0,sg=c.strong||0;if(sm>=85)t.push('천재냥');else if(sm>=60)t.push('똑똑한');else if(sm>=35)t.push('영리한');
+  if(sg>=85)t.push('근육냥');else if(sg>=60)t.push('튼튼한');else if(sg>=35)t.push('활발한');
+  t.push(QUIRKS[Math.abs(strHash('quirk-'+c.id))%QUIRKS.length]);
+  const tr=c.tr||{},st=c.st||{};const life=[];
+  if((c.pop||0)>=30)life.push('마을 인기스타');if(Object.keys(c.ate||{}).length>=5)life.push('미식가');
+  if((tr.trick||0)>=30)life.push('재롱 장인');if((tr.carry||0)>=40)life.push('안기는 거 좋아함');if((tr.talk||0)>=40)life.push('말동무');
+  if(st.clean!=null&&st.clean<25)life.push('꼬질꼬질');else if(st.clean>=95)life.push('깔끔쟁이');
+  if(st.mood!=null&&st.mood>=95)life.push('오늘 기분 최고');else if(st.mood!=null&&st.mood<20)life.push('삐짐 중');
+  if(c.spouse)life.push('사랑꾼');
+  if(life.length)t.push(life[Math.abs(strHash('life-'+c.id+kstDay()))%life.length]);
+  return t;
 }
 function growthNext(c){
   if(c.stage==='kitten')return{to:'junior',lv:5,day:2};
