@@ -634,6 +634,10 @@ const ITEMS={
   knight:{n:'기사 갑옷',t:'body',p:700,s:3,d:'마을을 지키는 기사'},
   galaxy:{n:'은하수 망토',t:'body',p:1200,s:8,d:'별빛이 흐르는 망토'},
   hanbok:{n:'한복',t:'body',p:600,s:2,d:'명절엔 고운 한복'},
+  baroquecoat:{n:'바로크 귀족 코트',t:'body',p:900,d:'금실 장식과 레이스 자보'},
+  guardcoat:{n:'근위병 제복',t:'body',p:800,d:'빨간 제복에 금단추'},
+  detcoat:{n:'명탐정 망토 코트',t:'body',p:700,d:'체크무늬 인버네스 코트'},
+  pipe:{n:'탐정 파이프',t:'face',p:300,d:'뻐끔뻐끔 (비눗방울이에요)'},
   guardhat:{n:'근위병 털모자',t:'hat',p:700,d:'런던 버킹엄 궁전 근무 중'},
   baroque:{n:'바로크 귀족 가발',t:'hat',p:850,d:'베르사유 궁전 무도회 필수템'},
   sherlock:{n:'명탐정 모자',t:'hat',p:600,d:'범인은 바로 이 안에 있다냥'},
@@ -663,7 +667,7 @@ const ITEMS={
   lights:{n:'꼬마전구',t:'room',slot:'lights',p:250,d:'벽 위쪽을 반짝반짝'},
   throne:{n:'고양이 왕좌',t:'room',slot:'throne',p:1500,s:8,d:'마을의 왕'}
 };
-for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;const tier=it.p<150?1:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
+for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;const tier=it.p<=150?0:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
 for(const it of Object.values(ITEMS)){if(it.ex||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;it.p=Math.round(it.p*1.07/10)*10}
 const STACK=new Set(['biscuit','bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
@@ -865,6 +869,7 @@ function catSVG(c,o={}){
     bowtie:`<path d="M100,145 L84,134 L84,156 Z M100,145 L116,134 L116,156 Z" fill="#e2556a" stroke="#b83b51" stroke-width="2" stroke-linejoin="round"/><rect x="95" y="140" width="10" height="10" rx="3" fill="#ff8199" stroke="#b83b51" stroke-width="2"/>`
   };
   const faces={
+    pipe:`<path d="M106,115 Q118,118 124,124" stroke="#4a2f24" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M120,118 h14 v12 q-7,6 -14,0z" fill="#7a4f33" stroke="#4a2f24" stroke-width="2" stroke-linejoin="round"/><circle cx="132" cy="108" r="4" fill="#fff" stroke="#c9e6f7" stroke-width="1" opacity=".9"/><circle cx="138" cy="99" r="3" fill="#fff" stroke="#c9e6f7" stroke-width="1" opacity=".8"/>`,
     starglass:`${[78,122].map(x=>`<polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?8:17,a=-Math.PI/2+i*Math.PI/5;return(x+Math.cos(a)*r).toFixed(1)+','+(94+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="rgba(255,214,80,.35)" stroke="#e0a72a" stroke-width="2.6" stroke-linejoin="round"/>`).join('')}<path d="M94,90 Q100,86 106,90" stroke="#e0a72a" stroke-width="2.6" fill="none"/>`,
     glasses:`<circle cx="78" cy="93" r="15" fill="rgba(255,255,255,.18)" stroke="#3b3346" stroke-width="3"/><circle cx="122" cy="93" r="15" fill="rgba(255,255,255,.18)" stroke="#3b3346" stroke-width="3"/><path d="M93,91 Q100,86 107,91" stroke="#3b3346" stroke-width="3" fill="none"/>`,
     cheekstar:`${[[64,112],[136,112]].map(([x,y])=>`<polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?3.2:7.5,a=-Math.PI/2+i*Math.PI/5;return(x+Math.cos(a)*r).toFixed(1)+','+(y+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="#ffd43b" stroke="#e0a72a" stroke-width="1"/>`).join('')}`,
@@ -880,6 +885,9 @@ function catSVG(c,o={}){
   const top=(fill,extra='')=>`<g clip-path="url(#${id}b)"><rect x="${100-W2}" y="${tY}" width="${W2*2}" height="${bry*1.25}" fill="${fill}"/>${extra}</g>`;
   const skirt=(fill,extra='')=>`<path d="M${100-W2*.82},${mY+2} L${100+W2*.82},${mY+2} L${100+W2*1.12},${bY-6} Q100,${bY+4} ${100-W2*1.12},${bY-6} Z" fill="${fill}" stroke="${shade(fill,-.25)}" stroke-width="2" stroke-linejoin="round"/>${extra}`;
   const clothes={
+    baroquecoat:top('#7a1f3d',`<path d="M${100-W2*.5},${tY} L${100-W2*.18},${bY} M${100+W2*.5},${tY} L${100+W2*.18},${bY}" stroke="#e0b030" stroke-width="3"/>${[0,1,2,3].map(i=>`<circle cx="${100-W2*.32+i*0}" cy="${tY+18+i*11}" r="2.6" fill="#ffd43b"/><circle cx="${100+W2*.32}" cy="${tY+18+i*11}" r="2.6" fill="#ffd43b"/>`).join('')}${[0,1,2].map(i=>`<path d="M${100-12+i*2},${tY+4+i*8} q6,6 12,0 q6,6 12,0" fill="#fff" stroke="#e6e0ee" stroke-width="1.2"/>`).join('')}<path d="M${100-W2},${mY+6} h${W2*2}" stroke="#e0b030" stroke-width="2"/>`),
+    guardcoat:top('#d0312d',`<path d="M${100-W2},${tY+6} Q100,${tY+16} ${100+W2},${tY+6}" stroke="#1f2a5a" stroke-width="8" fill="none"/>${[0,1,2,3].map(i=>`<circle cx="100" cy="${tY+18+i*10}" r="2.8" fill="#ffd43b" stroke="#b9822a" stroke-width=".8"/>`).join('')}<rect x="${100-W2}" y="${mY-2}" width="${W2*2}" height="8" fill="#fff"/><rect x="${100-6}" y="${mY-3}" width="12" height="10" rx="2" fill="#ffd43b" stroke="#b9822a" stroke-width="1"/>`)+`<g clip-path="url(#${id}b)"><rect x="${100-W2}" y="${mY+bry*.25}" width="${W2*2}" height="${bry}" fill="#1f2a5a"/><path d="M${100-W2*.75},${mY+bry*.3} V${bY} M${100+W2*.75},${mY+bry*.3} V${bY}" stroke="#d0312d" stroke-width="3"/></g>`,
+    detcoat:top('#a8845c',`${[0,1,2,3,4].map(i=>`<path d="M${100-W2},${tY+6+i*11} h${W2*2}" stroke="#8a6a46" stroke-width="1.4" opacity=".7"/><path d="M${100-W2+i*W2*.5},${tY} v${bry*1.3}" stroke="#8a6a46" stroke-width="1.4" opacity=".7"/>`).join('')}`)+`<path d="M${100-W2*1.15},${tY+30} Q${100-W2*1.1},${tY+4} 100,${tY+2} Q${100+W2*1.1},${tY+4} ${100+W2*1.15},${tY+30} Q100,${tY+40} ${100-W2*1.15},${tY+30}Z" fill="#9a7650" stroke="#6e5236" stroke-width="2.2" stroke-linejoin="round"/>${[0,1,2].map(i=>`<path d="M${100-W2*.9+i*W2*.9},${tY+8} v24" stroke="#7d5f3e" stroke-width="1.3" opacity=".7"/>`).join('')}<path d="M${100-W2*1.05},${tY+20} Q100,${tY+28} ${100+W2*1.05},${tY+20}" stroke="#7d5f3e" stroke-width="1.3" fill="none" opacity=".7"/>`,
     wdress:top('#ffffff',`<path d="M${100-W2},${tY+6} Q100,${tY+22} ${100+W2},${tY+6}" stroke="#f0e8f2" stroke-width="3" fill="none"/>${[0,1,2,3,4].map(i=>`<circle cx="${100-W2*.6+i*W2*.3}" cy="${tY+12+Math.sin(i)*2}" r="2.4" fill="#f4eef8"/>`).join('')}<path d="M${100-W2},${mY-4} h${W2*2}" stroke="#ffc4d6" stroke-width="5"/>`)+`<path d="M${100-W2*.85},${mY} L${100+W2*.85},${mY} L${100+W2*1.4},${bY+2} Q100,${bY+12} ${100-W2*1.4},${bY+2} Z" fill="#ffffff" stroke="#e3dcea" stroke-width="2.2" stroke-linejoin="round"/>${[0,1,2,3,4,5,6].map(i=>`<circle cx="${100-W2*1.2+i*W2*.4}" cy="${bY+3+(i%2)*3}" r="5" fill="#fff" stroke="#e3dcea" stroke-width="1.5"/>`).join('')}<path d="M${100-W2*.4},${mY+12} q6,4 12,0 M${100+W2*.1},${mY+20} q6,4 12,0" stroke="#efe6f3" stroke-width="2" fill="none"/><circle cx="${100+W2*.55}" cy="${mY-4}" r="5" fill="#ff9fb3"/>`,
     tux:`<g clip-path="url(#${id}b)"><rect x="${100-W2}" y="${mY+bry*.22}" width="${W2*2}" height="${bry*1.2}" fill="#24242e"/><path d="M100,${mY+bry*.3} V${bY+2}" stroke="#15151c" stroke-width="2.2"/><path d="M${100-W2*.82},${mY+bry*.3} L${100-W2*.7},${bY}" stroke="#4a4a5c" stroke-width="2"/><path d="M${100+W2*.82},${mY+bry*.3} L${100+W2*.7},${bY}" stroke="#4a4a5c" stroke-width="2"/><rect x="${100-W2}" y="${mY+bry*.18}" width="${W2*2}" height="5" fill="#15151c"/></g>`+top('#2b2b36',`<path d="M100,${tY} L${100-W2*.32},${tY} L100,${mY+10} L${100+W2*.32},${tY} Z" fill="#ffffff"/><path d="M${100-W2*.32},${tY} L100,${mY+10} L${100-W2*.55},${tY+4} Z M${100+W2*.32},${tY} L100,${mY+10} L${100+W2*.55},${tY+4} Z" fill="#3c3c4c"/><path d="M100,${tY+6} L91,${tY+1} L91,${tY+11} Z M100,${tY+6} L109,${tY+1} L109,${tY+11} Z" fill="#1c1c24"/><circle cx="100" cy="${tY+6}" r="2.6" fill="#1c1c24"/>${[0,1].map(i=>`<circle cx="100" cy="${tY+18+i*9}" r="1.8" fill="#2b2b36"/>`).join('')}<path d="M${100+W2*.5},${tY+14} l6,-3 l-1,6 z" fill="#fff"/>`),
     astronaut:top('#eef1f6',`<path d="M${100-W2},${tY+4} Q100,${tY+16} ${100+W2},${tY+4}" stroke="#b9c1cf" stroke-width="7" fill="none"/><rect x="${100-W2*.38}" y="${tY+18}" width="${W2*.76}" height="20" rx="4" fill="#d6dce8" stroke="#9aa5b8" stroke-width="2"/><circle cx="${100-W2*.18}" cy="${tY+28}" r="3.2" fill="#e2453c"/><circle cx="100" cy="${tY+28}" r="3.2" fill="#4dabf7"/><circle cx="${100+W2*.18}" cy="${tY+28}" r="3.2" fill="#ffd43b"/><path d="M${100-W2},${mY+12} h${W2*2}" stroke="#ff9f43" stroke-width="4"/>`),
@@ -1458,6 +1466,18 @@ function timingGame(){
 }
 
 /* ================= shop / deco ================= */
+const SETS=[{id:'baroque',n:'바로크 귀족 세트',d:'베르사유 궁전 무도회 입장권',items:['baroque','baroquecoat','monocle']},{id:'guard',n:'근위병 세트',d:'버킹엄 궁전 교대식 출근',items:['guardhat','guardcoat']},{id:'detective',n:'명탐정 세트',d:'베이커 가 221B 냥',items:['sherlock','detcoat','pipe']},{id:'chef',n:'요리사 세트',d:'오늘의 셰프냥',items:['chef','apron']},{id:'wizard',n:'마법사 세트',d:'별빛 마법 수업',items:['wizard','galaxy','starglass']}];
+function setInfo(st,u){const inv=(u&&u.inv)||{};const miss=st.items.filter(k=>ITEMS[k]&&!inv[k]);const c=Math.round(miss.reduce((a,k)=>a+ITEMS[k].p,0)*.9/10)*10,sv=miss.reduce((a,k)=>a+(ITEMS[k].s||0),0);return{miss,c,s:sv}}
+async function buySet(id){
+  const st=SETS.find(x=>x.id===id);if(!st)return;let why='',got=[];
+  await Store.tx('users/'+S.me,u=>{if(!u)return u;const I=setInfo(st,u);why='';got=I.miss;if(!I.miss.length){why='이미 다 갖고 있어요';return}if((u.coins||0)<I.c){why='코인이 부족해요';return}if((u.stars||0)<I.s){why='스타가 부족해요';return}u.coins-=I.c;if(I.s)u.stars=(u.stars||0)-I.s;u.inv=u.inv||{};I.miss.forEach(k=>u.inv[k]=1);return u});
+  if(why)return toast(why);toast(`${st.n} 구매 완료! (${got.length}개)`);
+}
+async function wearSet(id){const st=SETS.find(x=>x.id===id),c=activeCat();if(!st||!c)return;const inv=me().inv||{};await catTx(c.id,c=>{st.items.forEach(k=>{if(inv[k])c.eq[ITEMS[k].t]=k})});toast(`${c.name}에게 ${st.n}를 입혔어요`);schedule()}
+function viewSets(){const u=me(),c=activeCat();
+  return`<p class="grow" style="margin:0 0 10px">세트로 사면 없는 것만 골라서 <b>코인 10% 할인</b>돼요.</p><div class="list">${SETS.map(st=>{const I=setInfo(st,u);const eq={};st.items.forEach(k=>{if(ITEMS[k])eq[ITEMS[k].t]=k});
+    return`<div class="item" style="align-items:flex-start"><div class="thumb" style="width:96px;height:96px;flex-basis:96px">${c?catSVG(Object.assign({},live(c),{eq}),{still:true}):''}</div><div class="tx" style="flex:1"><b>${st.n}</b><span>${st.d}</span><span style="display:block;margin-top:4px">${st.items.map(k=>`<span class="chip ${(u.inv||{})[k]?'gray':''}" style="margin:2px 2px 0 0">${ITEMS[k].n}${(u.inv||{})[k]?' ✓':''}</span>`).join('')}</span>
+    <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap">${I.miss.length?`<button class="btn small" data-a="buyset" data-v="${st.id}" ${(u.coins||0)<I.c||(u.stars||0)<I.s?'disabled':''}>세트로 사기 · ${I.c.toLocaleString('ko-KR')}코인${I.s?' ⭐'+I.s:''}</button>`:'<span class="chip gold">세트 완성!</span>'}${st.items.some(k=>(u.inv||{})[k])?`<button class="btn small ghost" data-a="wearset" data-v="${st.id}">입히기</button>`:''}</div></div></div>`}).join('')}</div>`}
 async function buy(id){
   const wedOk=canWedBuy();
   const it=ITEMS[id];let why='';
@@ -2582,9 +2602,11 @@ function viewHome(){
 }
 function viewShop(){
   const u=me(),inv=u.inv||{},c=activeCat();const tab=S.tab.shop;
-  const tabs=[['food','간식'],['hat','모자'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
+  const tabs=[['food','간식'],['set','세트'],['hat','모자'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
   const ids=Object.keys(ITEMS).filter(k=>!ITEMS[k].ex&&(!ITEMS[k].ev||evOn(ITEMS[k].ev))).filter(k=>{const t=ITEMS[k].t;return tab==='wear'?(t==='neck'||t==='face'):tab==='special'?(t==='special'||t==='dye'):tab==='food'?(t==='food'||t==='med'):t===tab});
-  return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
+  const tabsH=`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="shoptab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  if(tab==='set')return tabsH+viewSets();
+  return`${tabsH}
   <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}${it.s?` <em class="star">⭐${it.s}</em>`:''}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(it.wed&&!canWedBuy())||(u.coins||0)<it.p||(u.stars||0)<(it.s||0)?'disabled':''}>${done?'보유 중':it.wed&&!canWedBuy()?'예비 부부만':'사기'}</button></div></div>`}).join('')}</div>
   <p class="grow" style="margin-top:12px">코인: 출석 · 퀘스트 · 운동 최대 60 · 교육 최대 70 · 놀아주기 10 · 레벨 업 · 친구 선물 15 · 쓰다듬기 1번에 1(하루 300까지) · 로또. ⭐ 스타: 출석과 퀘스트로만 얻어요.</p>`;
 }
@@ -2891,6 +2913,8 @@ document.addEventListener('click',async e=>{
     case'rank':openRank(v,el.dataset.k);break;
     case'diary':openDiary(v,el.dataset.k);break;
     case'roster':openRoster();break;
+    case'buyset':await buySet(v);break;
+    case'wearset':await wearSet(v);break;
     case'biscuit':await eatBiscuit();break;
     case'village':openVillage();break;
     case'vcreate':await vilCreate();break;
