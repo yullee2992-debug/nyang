@@ -1333,7 +1333,7 @@ async function feed(kind){
   const f=FOOD[kind];const T=tasteOf(c),fav=kind===T.fav,hate=kind===T.hate;let reveal='';
   qEvent('feed');dyAdd(c.id,'feed:'+kind);
   await catTx(c.id,(c,res)=>{bumpTr(c,{feed:kind==='kibble'?.4:1.2});c.st.hunger=clamp(c.st.hunger+(hate?f.h*.6:f.h));c.st.mood=clamp(c.st.mood+(fav?f.m+12:hate?-5:f.m));c.aff=clamp(c.aff+f.a+(fav?1:0));c.neglect=0;xp(c,res,f.x*2);
-    if(fav||hate){c.tk=c.tk||{};const kk=fav?'fav':'hate';c.tk[kk]=(c.tk[kk]||0)+1;if(c.tk[kk]===2)reveal=kk}});
+    c.ate=c.ate||{};c.ate[kind]=1;if(fav||hate){c.tk=c.tk||{};const kk=fav?'fav':'hate';c.tk[kk]=(c.tk[kk]||0)+1;if(c.tk[kk]===1)reveal=kk}});
   closeSheet();homeFx('eat',kind);if(!hate)S.happyUntil=now()+1200;
   say(fav?`${ITEMS[kind].n} 제일 좋아!! 최고야!`:hate?'...이건 별로냥':kind==='smelt'?'오독오독 열빙어!':kind==='churu'?'츄르 최고냥!!':kind==='cake'?'생일도 아닌데?!':'냠냠냠');
   if(reveal)setTimeout(()=>toast(reveal==='fav'?`${c.name}${iGa(c.name).slice(-1)} 제일 좋아하는 건 ${ITEMS[kind].n}인가 봐요!`:`${c.name}${eunNeun(c.name).slice(-1)} ${ITEMS[kind].n}${eulReul(ITEMS[kind].n).slice(-1)} 싫어하나 봐요...`,3500),1300);
@@ -1629,8 +1629,8 @@ async function gift(id,kind='churu'){
   const nm=ITEMS[kind].n;
   if(!(await useItem(kind)))return toast(`${nm}${iGa(nm).slice(-1)} 없어요. 상점 '간식' 탭에서 살 수 있어요`);
   const f=FOOD[kind];
-  await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.hunger=clamp(c.st.hunger+f.h);c.st.mood=clamp(c.st.mood+f.m);c.neglect=0;return roundCat(c)});
-  await addCoins(15);addBond(id,GIFT_BOND[kind]||5);qEvent('gift');dyAdd(id,'gift:'+ownerName(S.me));log(`${ownerName(S.me)}님이 ${title(v)}에게 ${nm}${eulReul(nm).slice(-1)} 선물했어요.`);toast(`${nm}${eulReul(nm).slice(-1)} 선물했어요 · 친밀도 +${GIFT_BOND[kind]||5} · 우정 보너스 15코인`);closeSheet();
+  let gRev='';{const T=tasteOf(t);await Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());c.st.hunger=clamp(c.st.hunger+f.h);c.st.mood=clamp(c.st.mood+f.m);c.neglect=0;c.ate=c.ate||{};c.ate[kind]=1;if(kind===T.fav||kind===T.hate){c.tk=c.tk||{};const kk=kind===T.fav?'fav':'hate';c.tk[kk]=(c.tk[kk]||0)+1;if(c.tk[kk]===1)gRev=kk}return roundCat(c)})}
+  await addCoins(15);addBond(id,GIFT_BOND[kind]||5);qEvent('gift');dyAdd(id,'gift:'+ownerName(S.me));log(`${ownerName(S.me)}님이 ${title(v)}에게 ${nm}${eulReul(nm).slice(-1)} 선물했어요.`);toast(`${nm}${eulReul(nm).slice(-1)} 선물했어요 · 친밀도 +${GIFT_BOND[kind]||5} · 우정 보너스 15코인`);if(gRev)setTimeout(()=>toast(gRev==='fav'?`${v.name}${iGa(v.name).slice(-1)} ${nm}${eulReul(nm).slice(-1)} 제일 좋아하나 봐요!`:`${v.name}${eunNeun(v.name).slice(-1)} ${nm}${eulReul(nm).slice(-1)} 별로 안 좋아하나 봐요...`,3500),1500);closeSheet();
 }
 function giftButtons(id){const inv=(me()&&me().inv)||{};return GIFT_FOODS.map(k=>`<button class="btn small ${inv[k]?'':'ghost'}" data-a="gift" data-v="${id}" data-k="${k}" ${inv[k]?'':'disabled'}>${ITEMS[k].n} ${inv[k]||0}개</button>`).join('')}
 function proposeCheck(myC,t){
@@ -1938,7 +1938,7 @@ function wxTip(c){const wx=wxOf(kstDay()),E=c.eq||{};return wx==='rain'?(E.body=
 /* ================= food taste ================= */
 const TASTE=['kibble','churu','fish','smelt','cake'];
 function tasteOf(c){const r=seeded(strHash('taste-'+c.id));const fav=TASTE[Math.floor(r()*5)];const H=['churu','fish','smelt','cake'].filter(k=>k!==fav);return{fav,hate:H[Math.floor(r()*H.length)]}}
-function tasteChips(c,mine){const T=tasteOf(c),k=c.tk||{};const f=k.fav>=2,h=k.hate>=2;if(!mine&&!f&&!h)return'';return`<span class="chip pink">좋아함: ${f?ITEMS[T.fav].n:'???'}</span><span class="chip gray">싫어함: ${h?ITEMS[T.hate].n:'???'}</span>`}
+function tasteChips(c,mine){const T=tasteOf(c),k=c.tk||{};const f=k.fav>=1,h=k.hate>=1;if(!mine&&!f&&!h)return'';const tried=Object.keys(c.ate||{}).filter(x=>TASTE.includes(x)).length;return`<span class="chip pink">좋아함: ${f?ITEMS[T.fav].n:'???'}</span><span class="chip gray">싫어함: ${h?ITEMS[T.hate].n:'???'}</span>${mine&&(!f||!h)?`<span class="chip gray" style="opacity:.8">사료·츄르·생선구이·열빙어·케이크를 먹여 보면 알 수 있어요 (${tried}/5)</span>`:''}`}
 
 /* ================= diary ================= */
 S.dyq={};S.petAcc=0;
