@@ -2090,44 +2090,70 @@ const STRAYS=[{id:'cheese',n:'치즈',look:{coat:'#f2a950',pattern:'tabby',pcolo
   {id:'calico',n:'삼색이',look:{coat:'#f6f2ec',pattern:'calico',pcolor:'#f2a950',eyeL:'#d98a2b',eyeR:'#d98a2b',ear:'fold',tail:'fluffy',build:'normal',nose:'#f39bb1',blush:true}},
   {id:'kkam',n:'깜냥',look:{coat:'#3b3739',pattern:'none',pcolor:'#3b3739',eyeL:'#97d6ef',eyeR:'#97d6ef',ear:'round',tail:'fluffy',build:'slim',nose:'#3a3036',blush:false}}];
 const STRAY_FOODS=['kibble','churu','smelt','fish','cake','goguma'];
+const SSTAGE=[{n:'낯선 길냥이',need:0,w:1,dur:90,rare:.05,c:[30,50]},{n:'단골',need:3,w:3,dur:90,rare:.15,c:[60,90]},{n:'친구 냥',need:7,w:4,dur:120,rare:.2,c:[80,110]},{n:'단짝',need:12,w:5,dur:150,rare:.25,c:[100,140]}];
+const strayLv=n=>n>=12?3:n>=7?2:n>=3?1:0;
+const strayF=(u,id)=>(((u||{}).stray||{}).f||{})[id]||0;
+const strayAdopted=(u,id)=>!!((((u||{}).stray||{}).ad||{})[id]);
+function heartBar(n){const lv=strayLv(n),cur=SSTAGE[lv],nx=SSTAGE[lv+1];if(!nx)return`<div class="num" style="color:#e0609a">♥♥♥♥♥ 최고 단계</div>`;const p=(n-cur.need)/(nx.need-cur.need);return`<div class="bar" style="height:8px;margin-top:4px"><i style="width:${Math.round(p*100)}%;background:#ff8fab"></i></div><span class="grow" style="font-size:.78rem">다음 단계 '${nx.n}'까지 밥 ${nx.need-n}번</span>`}
 const strayCat=st=>({look:st.look,stage:'adult',eq:{}});
 const strayName=(u,id)=>{const st=STRAYS.find(x=>x.id===id);return((u&&u.stray&&u.stray.nm)||{})[id]||(st?st.n:'길고양이')};
 function strayVisit(){
   const u=me();if(!u)return null;const D=kstDay(),t=now(),S0=u.stray||{},fed=S0.fed||{},f=S0.f||{};
   const r=seeded(strHash(S.me+D+'stray'));const hrs=[];while(hrs.length<3){const h=8+Math.floor(r()*15);if(!hrs.includes(h))hrs.push(h)}
   for(let i=0;i<3;i++){const st=Date.parse(D+'T'+String(hrs[i]).padStart(2,'0')+':'+String(Math.floor(r()*50)).padStart(2,'0')+':00+09:00');
-    if(t>=st&&t<st+90*MIN&&!fed[D+'_'+i]){const rr=seeded(strHash(S.me+D+'sv'+i))();const W=STRAYS.map(x=>1+((f[x.id]||0)>=3?2:0));const tot=W.reduce((a,b)=>a+b,0);let a=0,pick=STRAYS[0];for(let j=0;j<STRAYS.length;j++){a+=W[j]/tot;if(rr<a){pick=STRAYS[j];break}}return{slot:i,st:pick,left:st+90*MIN-t}}}
+    const ad=S0.ad||{},pool=STRAYS.filter(x=>!ad[x.id]);if(!pool.length)return null;const rr=seeded(strHash(S.me+D+'sv'+i))();const W=pool.map(x=>SSTAGE[strayLv(f[x.id]||0)].w);const tot=W.reduce((a,b)=>a+b,0);let a=0,pick=pool[0];for(let j=0;j<pool.length;j++){a+=W[j]/tot;if(rr<a){pick=pool[j];break}}const durM=SSTAGE[strayLv(f[pick.id]||0)].dur;
+    if(t>=st&&t<st+durM*MIN&&!fed[D+'_'+i]){return{slot:i,st:pick,left:st+durM*MIN-t}}}
   return null;
 }
 function strayGifts(){const g=((me()||{}).stray||{}).g||{};return Object.entries(g).filter(([k,x])=>x&&x.at<=now()).map(([k,x])=>Object.assign({k},x))}
 function strayHTML(){
   const v=strayVisit(),G=strayGifts();let h='';
-  if(v)h+=`<div class="stray" data-a="stray" role="button" aria-label="길고양이"><span class="sb">냐옹?</span>${catSVG(strayCat(v.st),{expr:'normal'})}</div>`;
+  if(v){const lv=strayLv(strayF(me(),v.st.id));h+=`<div class="stray" data-a="stray" role="button" aria-label="길고양이"><span class="sb">${['냐옹?','냐앙~','골골골','쿨… (낮잠 중)'][lv]}</span>${catSVG(strayCat(v.st),{expr:lv===3?'sleep':lv>=1?'happy':'normal'})}</div>`}
   else if(G.length)h+=`<button class="strayg" data-a="straygift" data-v="${G[0].k}" aria-label="보은 선물">${GIFT_SVG('#d9a35a','#7a5641')}</button>`;
   return h;
 }
 function openStray(){
-  const v=strayVisit();if(!v)return toast('길고양이가 떠났어요');const u=me(),inv=u.inv||{},n=((u.stray||{}).f||{})[v.st.id]||0,reg=n>=3,nm=strayName(u,v.st.id);
-  openSheet(`<h2>${reg?esc(nm)+' (단골)':'길고양이가 찾아왔어요'}</h2><div style="width:46%;margin:0 auto">${catSVG(strayCat(v.st),{expr:'happy'})}</div>
-  <p class="lead">${reg?`단골 ${esc(nm)}${iGa(nm).slice(-1)} 또 왔어요! 지금까지 밥을 ${n}번 줬어요.`:`배가 고파 보여요. 밥을 나눠 주면 며칠 뒤에 보은 선물을 물어다 놓을지도 몰라요. ${n?`(밥 준 횟수 ${n}번 · 3번 주면 단골이 돼요)`:''}`} ${dur(v.left)} 뒤에 떠나요.</p>
+  const v=strayVisit();if(!v)return toast('길고양이가 떠났어요');const u=me(),inv=u.inv||{},n=strayF(u,v.st.id),lv=strayLv(n),nm=strayName(u,v.st.id),SG=SSTAGE[lv];
+  const msg=[`배가 고파 보여요. 아직은 경계하는 눈치예요. 밥을 나눠 주면 며칠 뒤에 보은 선물을 물어다 놓을지도 몰라요.`,`단골 ${nm}${iGa(nm).slice(-1)} 또 왔어요! 이제 이름을 불러도 돌아봐요.`,`친구 ${nm}${iGa(nm).slice(-1)} 놀러 왔어요. 우리 고양이랑 꼬리를 살랑살랑 흔들며 인사해요.`,`단짝 ${nm}${iGa(nm).slice(-1)} 우리 집이 제일 편한가 봐요. 방에서 꾸벅꾸벅 낮잠을 자고 있어요.`][lv];
+  const perks=['밥을 주면 보은 선물','더 자주 찾아와요 · 선물이 좋아져요 · 이름 짓기','더 오래 머물러요 · 밥을 주면 우리 고양이 기분도 UP','가장 좋은 선물 · 가족으로 들일 수 있어요'][lv];
+  openSheet(`<h2>${esc(nm)} <span class="chip ${lv?'pink':''}">${SG.n}</span></h2><div style="width:42%;margin:0 auto">${catSVG(strayCat(v.st),{expr:lv===3?'sleep':'happy'})}</div>
+  <p class="lead" style="margin-bottom:4px">${msg} ${dur(v.left)} 뒤에 떠나요.</p>
+  <div class="panel" style="padding:10px 12px;margin-bottom:10px"><b style="font-size:.9rem">친밀도 · 밥 준 횟수 ${n}번</b>${heartBar(n)}<span class="grow" style="display:block;font-size:.78rem;margin-top:4px">지금 단계: ${perks}</span></div>
   <div class="list">${STRAY_FOODS.filter(k=>inv[k]).map(k=>`<div class="item"><div class="thumb" style="width:40px;height:40px;flex-basis:40px">${itemPic(k)}</div><div class="tx"><b>${ITEMS[k].n}</b><span>${inv[k]}개 · ${k==='kibble'?'보통 선물':'좋은 선물 확률 UP'}</span></div><button class="btn small" data-a="strayfeed" data-v="${k}">주기</button></div>`).join('')||'<p class="grow">줄 수 있는 밥이나 간식이 없어요.</p>'}</div>
-  ${reg?`<div class="row" style="margin-top:10px"><input id="strnm" maxlength="8" value="${esc(nm)}" aria-label="길고양이 이름" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:9px"><button class="btn small ghost" data-a="strayname" data-v="${v.st.id}">이름 짓기</button></div>`:''}`);
+  ${lv>=1?`<div class="row" style="margin-top:10px"><input id="strnm" maxlength="8" value="${esc(nm)}" aria-label="길고양이 이름" style="flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:9px"><button class="btn small ghost" data-a="strayname" data-v="${v.st.id}">이름 짓기</button></div>`:''}
+  ${lv===3?`<button class="btn block" style="margin-top:10px;background:#ff8fab" data-a="strayadopt" data-v="${v.st.id}">${esc(nm)}${eulReul(nm).slice(-1)} 가족으로 들이기</button>`:''}`);
 }
 async function feedStray(kind){
   const v=strayVisit();if(!v)return toast('길고양이가 떠났어요');if(!(await useItem(kind)))return toast('밥이 없어요');
   const D=kstDay(),prem=kind!=='kibble';let n=0;
   await Store.tx('users/'+S.me,u=>{if(!u)return u;u.stray=u.stray||{};const X=u.stray;X.fed=Object.fromEntries(Object.entries(X.fed||{}).filter(([k])=>k.slice(0,10)>=kstDay(now()-2*DAY)));X.fed[D+'_'+v.slot]=1;X.f=X.f||{};X.f[v.st.id]=(X.f[v.st.id]||0)+1;n=X.f[v.st.id];X.g=X.g||{};X.g['g'+now()]={s:v.st.id,at:now()+(20+Math.random()*16)*HOUR,p:prem?1:0};return u});
   achAdd('stray');{const c=activeCat();if(c)dyAdd(c.id,'stray:'+strayName(me(),v.st.id))}
-  closeSheet();toast(n===3?`${v.st.n}${iGa(v.st.n).slice(-1)} 단골이 됐어요! 다음에 오면 이름을 지어줄 수 있어요`:'맛있게 먹고 갔어요. 언젠가 보답하러 올지도?',3200);
+  if(strayLv(n)>=2){const c=activeCat();if(c)catTx(c.id,c=>{c.st.mood=clamp(c.st.mood+8)})}
+  const nm=strayName(me(),v.st.id),up={3:`${nm}${iGa(nm).slice(-1)} 단골이 됐어요! 이제 이름을 지어줄 수 있어요`,7:`${nm}${iGa(nm).slice(-1)} 친구 냥이 됐어요! 더 오래 놀다 가요`,12:`${nm}${iGa(nm).slice(-1)} 단짝이 됐어요! 이제 가족으로 들일 수 있어요`}[n];
+  if(up)log(`${ownerName(S.me)}님네 길고양이 ${nm}${iGa(nm).slice(-1)} '${SSTAGE[strayLv(n)].n}' 단계가 됐어요.`);
+  closeSheet();toast(up||(strayLv(n)>=2?'맛있게 먹고 우리 고양이랑 놀다 갔어요. 우리 고양이 기분 +8':'맛있게 먹고 갔어요. 언젠가 보답하러 올지도?'),3500);
 }
 async function strayGift(k){
-  const u=me(),x=(((u.stray||{}).g)||{})[k];if(!x||x.at>now())return;const reg=(((u.stray||{}).f||{})[x.s]||0)>=3;const nm=strayName(u,x.s);
-  const r=Math.random();let rew;const rare=reg?.15:x.p?.1:.05;
-  if(r<rare)rew=(u.inv||{}).goldbell?{c:300}:{it:'goldbell',n:1};else if(r<rare+.15)rew={it:'churu',n:2};else if(r<rare+.4)rew={it:Math.random()<.3?'rose':'wildflower',n:1};else rew={c:Math.round((reg?60:30)+Math.random()*(reg?90:50)*(x.p?1.5:1))};
+  const u=me(),x=(((u.stray||{}).g)||{})[k];if(!x||x.at>now())return;const lv=strayLv(strayF(u,x.s)),reg=lv>=1,SG=SSTAGE[lv];const nm=strayName(u,x.s);
+  const r=Math.random();let rew;const rare=Math.max(SG.rare,x.p&&!reg?.1:0);
+  if(r<rare)rew=(u.inv||{}).goldbell?{c:300}:{it:'goldbell',n:1};else if(r<rare+.15)rew={it:'churu',n:2};else if(r<rare+.4)rew={it:Math.random()<.3?'rose':'wildflower',n:1};else rew={c:Math.round(SG.c[0]+Math.random()*SG.c[1]*(x.p?1.5:1))};
   let ok=false;await Store.tx('users/'+S.me,u=>{if(!u||!u.stray||!u.stray.g||!u.stray.g[k]){ok=false;return}delete u.stray.g[k];if(rew.c)u.coins=(u.coins||0)+rew.c;else{u.inv=u.inv||{};u.inv[rew.it]=(u.inv[rew.it]||0)+rew.n}ok=true;return u});
   if(!ok)return;if(rew.it==='goldbell')log(`${ownerName(S.me)}님이 단골 길고양이 ${nm}에게 '보은의 황금 방울'을 받았어요!`);
   openSheet(`<div class="celebc"><div style="width:80px;margin:0 auto">${rew.it?itemPic(rew.it):GIFT_SVG('#d9a35a','#7a5641')}</div><h2>보은 선물!</h2><p class="lead">${esc(nm)}${iGa(nm).slice(-1)} 문 앞에 선물을 두고 갔어요.<br><b>${rew.c?rew.c+'코인':ITEMS[rew.it].n+' '+rew.n+'개'}</b></p><button class="btn block" data-a="close">고마워!</button></div>`);
 }
+
+async function adoptStray(id){
+  const st=STRAYS.find(x=>x.id===id),u=me();if(!st||strayLv(strayF(u,id))<3)return toast('단짝이 되어야 가족으로 들일 수 있어요');if(strayAdopted(u,id))return;
+  const nm=strayName(u,id);const look=Object.assign({},st.look,{gender:Math.random()<.5?'m':'f'});
+  const c=newCat(S.me,nm,look);c.stage='junior';c.lv=5;c.aff=40;c.strayFrom=id;
+  await Store.set('cats/'+c.id,c);await Store.set(`users/${S.me}/stray/ad/${id}`,now());await Store.set('users/'+S.me+'/active',c.id);
+  log(`${ownerName(S.me)}님이 단짝 길고양이 ${nm}${eulReul(nm).slice(-1)} 가족으로 맞이했어요!`);
+  openSheet(`<div class="celebc"><div class="confetti">${confettiHTML()}</div><h2>새 가족!</h2><div style="width:50%;margin:0 auto">${catSVG(strayCat(st),{expr:'happy'})}</div><p class="lead">${esc(nm)}${iGa(nm).slice(-1)} 이제 우리 집 고양이가 됐어요. '내 고양이'에서 돌볼 수 있어요.</p><button class="btn block" data-a="close">잘 부탁해!</button></div>`);
+}
+function viewStrayAlbum(){const u=me();const met=STRAYS.filter(x=>strayF(u,x.id)>0||strayAdopted(u,x.id));const allReg=STRAYS.every(x=>strayLv(strayF(u,x.id))>=1||strayAdopted(u,x.id));const got=((u.stray||{}).albumGot);
+  return`<div class="sect">길냥이 도감 <small class="grow">· 만난 길고양이 ${met.length}/${STRAYS.length}</small></div><div class="list">${STRAYS.map(x=>{const n=strayF(u,x.id),lv=strayLv(n),ad=strayAdopted(u,x.id),seen=n>0||ad;
+    return`<div class="item"><div class="thumb" style="width:48px;height:48px;flex-basis:48px;${seen?'':'filter:brightness(0) opacity(.25)'}">${catSVG(strayCat(x),{still:true})}</div><div class="tx" style="flex:1"><b>${seen?esc(strayName(u,x.id)):'???'} ${ad?'<span class="chip gold">우리 가족</span>':seen?`<span class="chip ${lv?'pink':''}">${SSTAGE[lv].n}</span>`:''}</b>${seen&&!ad?heartBar(n):`<span>${ad?'가족이 됐어요':'아직 만나지 못했어요'}</span>`}</div></div>`}).join('')}</div>
+  ${allReg&&!got?'<button class="btn block" style="margin-top:8px" data-a="strayalbum">다섯 마리 모두 단골! 보상 받기 · 500코인 ⭐3</button>':got?'<p class="grow">다섯 마리 모두 단골 보상을 받았어요.</p>':'<p class="grow">다섯 마리를 모두 단골로 만들면 500코인과 ⭐3을 받아요.</p>'}`}
 
 /* ================= fashion show ================= */
 const FS_START='2026-11-23';
@@ -2717,6 +2743,7 @@ function viewCats(){
     <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button><button class="btn small ghost" data-a="diary" data-v="${c.id}">일기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?`<button class="btn small teal" data-a="baby" data-v="${c.id}">아기 갖기</button>`:''}${sp&&c.owner===S.me?(()=>{const w=wedOfCat(c);const ph=w&&wedPhase(w);return`<button class="btn small" style="background:#ff9fb3" data-a="wedopen" data-v="${c.id}">${!w?'결혼식 준비':ph==='done'?'결혼식 앨범':ph==='live'?'결혼식 진행 중':'결혼식 준비'}</button>`})():''}</div></div></div>`}).join('')}</div>
   ${viewBadges()}
   ${viewCols()}
+  ${viewStrayAlbum()}
   <div class="row" style="margin-top:12px"><button class="btn teal block" data-a="visit" data-v="${S.me}">우리 집 방명록 보기 (${Object.keys(u.book||{}).length}개 · 누적 방문 ${u.visitTotal||0}명)</button></div>
   <div class="panel" style="margin-top:12px"><p class="lead" style="margin:0 0 10px">광장에는 대표 고양이 한 마리만 나가요. 결혼한 고양이는 조건을 채우면 아기를 가질 수 있어요(결혼 2일 뒤부터, 5일에 한 번, 800코인).</p>${(u.inv||{}).adopt?`<button class="btn block" data-a="adopt">분양권으로 새 고양이 데려오기</button>`:'<p class="grow" style="margin:0">분양권(1,000코인)이 있으면 새 고양이를 직접 만들어 데려올 수도 있어요.</p>'}</div>`;
 }
@@ -3016,6 +3043,8 @@ document.addEventListener('click',async e=>{
     case'visitname':{const n=String(($('#vvisit')||{}).value||'').trim();if(!n)break;if(!S.users[n])return toast('그런 이름의 친구를 찾지 못했어요');closeSheet();S.visit=n;markHist();S.view='visit';window.scrollTo(0,0);render();if(n!==S.me)recordVisit(n);break}
     case'stray':openStray();break;
     case'strayfeed':await feedStray(v);break;
+    case'strayadopt':await adoptStray(v);break;
+    case'strayalbum':{let ok=false;await Store.tx('users/'+S.me,u=>{if(!u)return u;u.stray=u.stray||{};if(u.stray.albumGot){ok=false;return}u.stray.albumGot=now();u.coins=(u.coins||0)+500;u.stars=(u.stars||0)+3;ok=true;return u});if(ok)toast('길냥이 도감 보상! 500코인 ⭐3');break}
     case'straygift':await strayGift(v);break;
     case'strayname':{const n=String(($('#strnm')||{}).value||'').trim().slice(0,8);if(!n)break;await Store.set(`users/${S.me}/stray/nm/${v}`,n);toast(`이름을 '${n}'(으)로 지었어요`);closeSheet();break}
     case'fscat':S.fsPick={cat:v,of:{}};render();break;
