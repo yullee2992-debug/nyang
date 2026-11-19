@@ -786,6 +786,19 @@ const PT={
   sleepy:{n:'잠꾸러기',d:'낮잠을 자주 재우면 생겨요',talk:['하암... 졸려옹','꿈에서 츄르 먹었다냥','zZ... 아 안 잤어','이불 어딨냥'],pet:['스르르... 잠 온다냥','이대로 잘래옹','하암~'],lift:['자는데 왜 드냥...','하암... 어디 가']},
   aloof:{n:'새침데기',d:'아직 뚜렷한 성격이 생기지 않았어요',talk:['흥, 관심 없다냥','...뭐냥','혼자가 편하다옹','부르면 가끔 간다냥'],pet:['...흥, 나쁘지 않네','조금만이다냥','흥'],lift:['으앗! 어디 가냥?','놓아줘옹!']}
 };
+const SLEEP_POKE={
+ default:['음냐... 자니까 건들지 말라냥','5분만 더... 냥','쿨... 쿨... (못 들은 척)','으음... 꿈에서 츄르 먹는 중이었다냥'],
+ cuddly:['음냐... 쓰다듬는 건 좋은데 지금은 잘래냥','꿈에서도 집사 나왔다냥... 쿨','골골... 그대로 재워 줘냥'],
+ lazy:['건들지 마... 귀찮다냥','지금 일어나면 손해다냥','...(꼬리만 탁 친다)'],
+ grumpy:['자는 냥 건드리면 냥냥펀치다!','으르릉... 깨우지 말라냥','한 번만 더 건드리면 화낸다냥'],
+ scaredy:['히익! 누, 누구냥?! ...아 집사구나','깜짝이야! 심장 떨어질 뻔했다냥','무서운 꿈 꿨는데... 계속 옆에 있어 줘냥'],
+ glutton:['음냐... 츄르 주는 거면 일어날게냥','간식 아니면 더 잘래냥','꿈에서 생선 먹고 있었는데! 돌려내냥'],
+ playful:['음냐... 놀 거면 이따 놀자냥','꿈에서 레이저 잡는 중이다냥... 쿨','일어나면 우다다 할 거다냥... 지금은 아니다냥'],
+ smart:['수면은 고양이의 학습 시간이다냥','지금 꿈속에서 복습 중이다냥','방해하지 말라냥... 깊은 생각 중이다'],
+ chatty:['음냐... 할 말 많은데 일어나서 할게냥','잠꼬대: 츄르... 생선... 집사...','쉿, 지금 꿈속 친구랑 수다 중이다냥'],
+ sleepy:['더 자고 싶다냥...','아직 아침 아니다냥... 쿨','잠꾸러기한테 잠은 생명이다냥','5분만... 아니 50분만 더냥'],
+ aloof:['...흥, 자는 중이다냥','깨우지 말라냥. 지금 바쁘다(잠)','...못 본 걸로 할게냥']};
+function sleepLine(c){const p=ptypeOf(c);return pick((SLEEP_POKE[p]||[]).concat(SLEEP_POKE[p]&&p!=='aloof'?[]:SLEEP_POKE.default))}
 function ptypeOf(c){
   const t=c&&c.tr||{};const g=k=>t[k]||0;
   const sc={cuddly:g('pet')*.06+g('trick')*1.2,lazy:g('pester')*5+g('nap')*.4,grumpy:g('drop')*1.6+g('anger'),scaredy:g('scare')*3,glutton:g('feed'),playful:g('play')+g('carry')*.3,smart:g('train')*1.2,chatty:g('talk')*1.2,sleepy:g('nap')};
@@ -1285,8 +1298,8 @@ async function pet(ev){
   const t=now();if(t-lastPet<300)return;lastPet=t;
   const v=live(c);
   if(v.petRestUntil&&v.petRestUntil>t){toast(`${v.name}${eunNeun(v.name).slice(-1)} 지금 피곤해서 쉬는 중이에요 😴 ${dur(v.petRestUntil-t)} 뒤에 다시 쓰다듬을 수 있어요`);return}
+  if(v.sleepUntil&&v.sleepUntil>t){say(sleepLine(v));return}
   spawnHeart(ev);
-  if(v.sleepUntil&&v.sleepUntil>t){say('쿨... 쿨...');return}
   const res=await catTx(c.id,(c,res)=>{
     const d=kstDay();if(c.petDay!==d){c.petDay=d;c.petN=0}
     if(c.st.mood<25&&Math.random()<.4){res.msg='하악! 지금은 삐졌어요';res.refuse=true;return}
@@ -1792,7 +1805,7 @@ function viewVisit(){
 const TALK_QUICK=['안녕!','귀여워!','같이 놀자!','밥 먹었어?','보고 싶었어','츄르 줄까?'];
 function talkReply(v,text){
   const a=v.aff,m=v.st.mood;
-  if(v.sleepUntil&&v.sleepUntil>now())return'쿨... 쿨... (자는 중)';
+  if(v.sleepUntil&&v.sleepUntil>now())return sleepLine(v);
   if(/밥|츄르|간식|먹|열빙어/.test(text))return a>=60?pick(['츄르?! 어디어디?','방금 먹었는데 또 먹을 수 있다냥','열빙어면 더 좋다냥']):'...간식 주면 대답해줄게';
   if(/놀|산책|게임|우다다/.test(text))return m>=40?pick(['좋아! 우다다다!','털실 가져와냥!','레이저 레이저!']):'오늘은 귀찮다냥...';
   if(/귀여|예뻐|이뻐|멋/.test(text))return a>=60?pick(['알고 있다냥','부끄럽다옹... 골골']):'흥, 당연하지';
@@ -3004,7 +3017,7 @@ document.addEventListener('click',async e=>{
     case'dwalkall':document.querySelectorAll('.dcat').forEach(e=>setWalk(e.dataset.v,true));toast('모두 돌아다니기 시작했어요');break;
     case'dset':if(DK&&DK.setSetting){await DK.setSetting(el.dataset.k,!!v);openSettings()}break;
     case'dquit':DK&&DK.quit&&DK.quit();break;
-    case'dpet':{if(now()<deskSuppress)break;deskClicked=v;const s=DS[v];if(v==='guest'||(s&&s.away)){DK&&DK.openMain();break}if(s&&s.mine)pet(e);else{spawnHeart(e);deskHand(v,'pet');friendPet(v)}break}
+    case'dpet':{if(now()<deskSuppress)break;deskClicked=v;const s=DS[v];if(v==='guest'||(s&&s.away)){DK&&DK.openMain();break}if(s&&s.mine)pet(e);else if(s&&s.sleep){deskSay(v,sleepLine(live(S.cats[v])||{}),2600)}else{spawnHeart(e);deskHand(v,'pet');friendPet(v)}break}
     case'create':S.createMode='new';S.draft={look:Object.assign(randomLook(),{gender:null}),step:'fur'};S.draft.odd=S.draft.look.eyeL!==S.draft.look.eyeR;S.screen='create';render();break;
     case'loginform':S.screen='login';render();break;
     case'gate':S.screen='gate';render();break;
@@ -3136,7 +3149,7 @@ document.addEventListener('click',async e=>{
     case'flower':{const id2=el.dataset.id;await giveFlower(id2,v);setTimeout(()=>openCatCard(id2),250);break}
     case'dgift':{closeDeskMenu();const id2=el.dataset.id;if(((me()&&me().inv)||{})[v])deskHand(id2,v);await gift(id2,v);deskSay(id2,pick(v==='smelt'?['오독오독 열빙어!','열빙어 최고냥']:v==='cake'?['케이크?! 생일 아닌데!','달콤하다옹']:v==='fish'?['생선구이 냄새 최고냥','냠냠냠']:['츄르 최고냥!!','고마워옹']),3000);break}
     case'dflower':{closeDeskMenu();const id2=el.dataset.id;await giveFlower(id2,v);deskSay(id2,pick(['꽃이다냥! 고마워♡','향기 좋다옹','나 인기 많아지겠다냥']),3000);break}
-    case'dact':{closeDeskMenu();const s2=DS[el.dataset.id];if(!s2)break;if(s2.sleep){deskSay(el.dataset.id,'쿨... 쿨... (자는 중)',2000);break}deskDo(el.dataset.id,v);if(s2.mine)Store.set('cats/'+el.dataset.id+'/act',{k:v,at:now(),dev:DEV});if(s2.mine&&S.cats[el.dataset.id])catTx(el.dataset.id,c=>{bumpTr(c,v==='angry'?{anger:1}:{trick:1})});break}
+    case'dact':{closeDeskMenu();const s2=DS[el.dataset.id];if(!s2)break;if(s2.sleep){deskSay(el.dataset.id,sleepLine(live(S.cats[el.dataset.id])||{}),2400);break}deskDo(el.dataset.id,v);if(s2.mine)Store.set('cats/'+el.dataset.id+'/act',{k:v,at:now(),dev:DEV});if(s2.mine&&S.cats[el.dataset.id])catTx(el.dataset.id,c=>{bumpTr(c,v==='angry'?{anger:1}:{trick:1})});break}
     case'talk':openTalk(v);break;
     case'tquick':talkUI(el.dataset.id,v);break;
     case'tsend':talkUI(el.dataset.id,($('#tin')||{}).value);break;
@@ -3430,8 +3443,8 @@ async function deskAction(a,id,e){
     case'call':openDeskPanel();break;
     case'wake':await wake();break;
     case'walk':{const on=!walkOn(id);setWalk(id,on);deskSay(id,on?'산책 간다냥~':'여기 가만히 있을게옹',2200);break}
-    case'trick':if(s){if(s.sleep){deskSay(id,'쿨... 쿨... (자는 중)',2000);break}deskDo(id,pickAct(s,true));if(s.mine&&S.cats[id])catTx(id,c=>{bumpTr(c,{trick:1})})}break;
-    case'fpet':deskHand(id,'pet');friendPet(id);break;
+    case'trick':if(s){if(s.sleep){deskSay(id,sleepLine(live(S.cats[id])||{}),2400);break}deskDo(id,pickAct(s,true));if(s.mine&&S.cats[id])catTx(id,c=>{bumpTr(c,{trick:1})})}break;
+    case'fpet':if(s&&s.sleep){deskSay(id,sleepLine(live(S.cats[id])||{}),2600);break}deskHand(id,'pet');friendPet(id);break;
     case'gift':await gift(id);break;
     case'talk':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;
       const m=document.createElement('div');m.id='dmenu';m.innerHTML=`<p>${esc(s.name)}에게 뭐라고 할까요?</p>`+TALK_QUICK.map(q=>`<button data-a="dtalk" data-id="${id}" data-v="${esc(q)}">${esc(q)}</button>`).join('');
