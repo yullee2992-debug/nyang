@@ -694,7 +694,7 @@ const ITEMS={
   lights:{n:'꼬마전구',t:'room',slot:'lights',p:250,d:'벽 위쪽을 반짝반짝'},
   throne:{n:'고양이 왕좌',t:'room',slot:'throne',p:1500,s:8,d:'마을의 왕'}
 };
-for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;const tier=it.p<=150?0:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
+for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;const tier=it.p<=150?0:it.p<300?1:it.p<500?2:it.p<800?3:it.p<1500?5:it.p<2500?8:12;it.s=Math.max(tier,Math.round((it.s||0)*1.5))}
 for(const it of Object.values(ITEMS)){if(it.ex||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;it.p=Math.round(it.p*1.07/10)*10}
 const STACK=new Set(['biscuit','bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
@@ -741,7 +741,7 @@ function tick(c,t){
   }
   c.lastUpdate=t;return c;
 }
-function roundCat(c){if(c.tr){for(const k in c.tr){c.tr[k]=Math.round(c.tr[k]*100)/100;if(c.tr[k]<.01)delete c.tr[k]}}for(const k in c.st)c.st[k]=Math.round(c.st[k]*10)/10;for(const k of['aff','smart','strong','neglect'])c[k]=Math.round(c[k]*10)/10;return c}
+function roundCat(c){if(c.st)for(const k in c.st)if(!isFinite(c.st[k]))c.st[k]=50;for(const k of['aff','smart','strong','neglect','xp','lv'])if(c[k]!=null&&!isFinite(c[k]))c[k]=k==='lv'?1:0;if(c.tr){for(const k in c.tr){c.tr[k]=Math.round(c.tr[k]*100)/100;if(c.tr[k]<.01)delete c.tr[k]}}for(const k in c.st)c.st[k]=Math.round(c.st[k]*10)/10;for(const k of['aff','smart','strong','neglect'])c[k]=Math.round(c[k]*10)/10;return c}
 const live=c=>c?tick(clone(c),now()):null;
 const ageDays=c=>Math.floor((now()-c.born)/DAY)+1;
 const PT={
@@ -1261,13 +1261,15 @@ async function pet(ev){
     if(c.petRestUntil&&c.petRestUntil>now()){res.rest=true;return}
     c.petN++;c.st.mood=clamp(c.st.mood+3);c.neglect=0;
     if(c.petN<=40)c.aff=clamp(c.aff+.4);
-    c.petBurst=(c.petBurst||0)+1;bumpTr(c,{pet:1});{const dd=kstDay();if(c.petCoinDay!==dd){c.petCoinDay=dd;c.petCoinN=0}if(c.petCoinN<300){c.petCoinN++;res.coins=1}}
+    c.petBurst=(c.petBurst||0)+1;bumpTr(c,{pet:1});{const dd=kstDay();if(c.petCoinDay!==dd){c.petCoinDay=dd;c.petCoinN=0}if(c.petCoinN<300){c.petCoinN++;res.coins=1;res.coinLeft=300-c.petCoinN}else res.capped=true}
     if(c.petBurst>=100){c.petBurst=0;c.petRestUntil=now()+2*MIN;res.restNow=true;bumpTr(c,{pester:1})}
     if(c.petN%10===0)xp(c,res,3);
   });
   if(res&&res.refuse){say('하악!');return}
   if(res&&res.restNow){toast('100번 쓰다듬었어요! 잠시 쉬어야 해요 · 2분 뒤에 다시 가능해요',3200);say('너무 많이 만졌다냥... 좀 쉬자');schedule();return}
   if(res&&res.rest){toast('잠시 쉬어야 해요');return}
+  if(res&&res.capped&&S.capWarn!==kstDay()+c.id){S.capWarn=kstDay()+c.id;toast(`${c.name}${eunNeun(c.name).slice(-1)} 오늘 쓰다듬기 코인 300개를 다 받았어요. 내일 0시부터 다시 받아요`,4000)}
+  if(res&&res.coinLeft===50)toast('오늘 쓰다듬기 코인이 50개 남았어요');
   petBonus();qEvent('pet');
   S.happyUntil=now()+900;say(Math.random()<.6?ptLine(S.cats[c.id]||c,'pet'):pick(['골골골...','냐아~','그르릉']));schedule();
 }
