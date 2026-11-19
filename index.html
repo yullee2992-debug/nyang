@@ -634,13 +634,9 @@ const ITEMS={
   knight:{n:'기사 갑옷',t:'body',p:700,s:3,d:'마을을 지키는 기사'},
   galaxy:{n:'은하수 망토',t:'body',p:1200,s:8,d:'별빛이 흐르는 망토'},
   hanbok:{n:'한복',t:'body',p:600,s:2,d:'명절엔 고운 한복'},
-  wig_bob:{n:'단발 가발',t:'wig',p:300,d:'찰랑찰랑 갈색 단발'},
-  wig_long:{n:'긴 생머리 가발',t:'wig',p:450,d:'바람에 날리는 검은 생머리'},
-  wig_curly:{n:'뽀글 파마 가발',t:'wig',p:420,d:'동네 미용실 신상 파마'},
-  wig_twin:{n:'양갈래 가발',t:'wig',p:520,d:'분홍 양갈래와 리본'},
-  wig_blonde:{n:'금발 웨이브 가발',t:'wig',p:680,d:'할리우드 스타 냥'},
-  wig_afro:{n:'아프로 가발',t:'wig',p:600,d:'풍성함의 끝판왕'},
-  wig_mohawk:{n:'모히칸 가발',t:'wig',p:550,d:'오늘부터 락스타'},
+  guardhat:{n:'근위병 털모자',t:'hat',p:700,d:'런던 버킹엄 궁전 근무 중'},
+  baroque:{n:'바로크 귀족 가발',t:'hat',p:850,d:'베르사유 궁전 무도회 필수템'},
+  sherlock:{n:'명탐정 모자',t:'hat',p:600,d:'범인은 바로 이 안에 있다냥'},
   wdress:{n:'웨딩드레스',t:'body',p:1200,s:3,wed:1,d:'결혼식 준비 중인 예비 부부만 · 레이스 드레스'},
   tux:{n:'턱시도',t:'body',p:1200,s:3,wed:1,d:'결혼식 준비 중인 예비 부부만 · 검은 턱시도'},
   veil:{n:'면사포',t:'hat',p:450,s:1,wed:1,d:'결혼식 준비 중인 예비 부부만 · 진주 장식'},
@@ -816,6 +812,9 @@ function catSVG(c,o={}){
     return s;
   };
   const hats={
+    guardhat:`<path d="M68,66 C58,34 70,4 100,2 C130,4 142,34 132,66 Z" fill="#1d1d24" stroke="#000" stroke-width="2"/>${[[80,20],[96,12],[112,18],[74,40],[92,32],[110,36],[126,44],[84,54],[102,50],[118,58]].map(([x,y])=>`<path d="M${x},${y} q4,-5 8,0" stroke="#3a3a46" stroke-width="2" fill="none" stroke-linecap="round"/>`).join('')}<path d="M68,66 C52,92 60,124 100,136 C140,124 148,92 132,66" stroke="#e0b030" stroke-width="3" fill="none"/><circle cx="70" cy="64" r="3.5" fill="#ffd43b" stroke="#b9822a" stroke-width="1"/><circle cx="130" cy="64" r="3.5" fill="#ffd43b" stroke="#b9822a" stroke-width="1"/>`,
+    baroque:`<path d="M52,84 C46,48 70,34 100,32 C130,34 154,48 148,84 C140,70 122,64 100,64 C78,64 60,70 52,84Z" fill="#f6f3ee" stroke="#b8b2a8" stroke-width="2.2" stroke-linejoin="round"/><path d="M70,48 q10,-6 20,0 M92,42 q10,-6 20,0 M112,48 q10,-6 20,0" stroke="#d6d0c6" stroke-width="2" fill="none"/>${[78,96,114].map(y=>`<rect x="30" y="${y-8}" width="30" height="16" rx="8" fill="#f6f3ee" stroke="#b8b2a8" stroke-width="2"/><path d="M38,${y} a5,5 0 1 0 10,0" stroke="#d6d0c6" stroke-width="1.6" fill="none"/><rect x="140" y="${y-8}" width="30" height="16" rx="8" fill="#f6f3ee" stroke="#b8b2a8" stroke-width="2"/><path d="M152,${y} a5,5 0 1 0 10,0" stroke="#d6d0c6" stroke-width="1.6" fill="none"/>`).join('')}<g transform="translate(100,33)"><path d="M0,0 L-11,-7 L-11,7Z M0,0 L11,-7 L11,7Z" fill="#2b2433"/><circle r="3" fill="#2b2433"/></g>`,
+    sherlock:`<path d="M54,74 C52,44 74,36 100,36 C126,36 148,44 146,74 C130,66 70,66 54,74Z" fill="#a8845c" stroke="#6e5236" stroke-width="2.4" stroke-linejoin="round"/>${[70,86,100,114,130].map(x=>`<path d="M${x},${40+Math.abs(x-100)*.12} V70" stroke="#7d5f3e" stroke-width="1.4" opacity=".7"/>`).join('')}${[48,58].map(y=>`<path d="M58,${y} Q100,${y-8} 142,${y}" stroke="#7d5f3e" stroke-width="1.4" fill="none" opacity=".7"/>`).join('')}<path d="M70,70 Q100,62 130,70 Q120,80 100,80 Q80,80 70,70Z" fill="#9a7650" stroke="#6e5236" stroke-width="2"/><path d="M60,58 Q52,40 62,30 M140,58 Q148,40 138,30" stroke="#6e5236" stroke-width="2.4" fill="none"/><path d="M62,30 Q100,22 138,30" stroke="#6e5236" stroke-width="1.6" fill="none" stroke-dasharray="3 3"/><g transform="translate(100,30)"><path d="M0,0 L-6,-4 L-6,4Z M0,0 L6,-4 L6,4Z" fill="#6e5236"/></g>`,
     fishhat:`<path d="M60,60 Q62,28 100,26 Q138,28 140,60 Z" fill="#9aa86a" stroke="#6f7c45" stroke-width="2.5"/><path d="M42,60 Q100,76 158,60 Q150,53 140,56 Q100,64 60,56 Q50,53 42,60Z" fill="#8a9a5b" stroke="#6f7c45" stroke-width="2.5"/><path d="M130,34 q10,4 10,16" stroke="#3b3346" stroke-width="1.2" fill="none"/><path d="M135,50 q5,-5 10,0 q-5,5 -10,0z" fill="#ff8f6b" stroke="#d9603f" stroke-width="1"/>`,
     fscrown:`<path d="M74,56 L78,28 L90,42 L100,22 L110,42 L122,28 L126,56 Z" fill="#ffb3d1" stroke="#e0609a" stroke-width="2.5" stroke-linejoin="round"/><polygon points="${Array.from({length:10},(_,i)=>{const r=i%2?2.6:6.5,a=-Math.PI/2+i*Math.PI/5;return(100+Math.cos(a)*r).toFixed(1)+','+(42+Math.sin(a)*r).toFixed(1)}).join(' ')}" fill="#fff"/><circle cx="85" cy="50" r="3" fill="#c3a6ff"/><circle cx="115" cy="50" r="3" fill="#c3a6ff"/>`,
     veil:`<path d="M62,58 Q40,90 34,170 Q46,160 56,166 Q52,120 66,80 Z M138,58 Q160,90 166,170 Q154,160 144,166 Q148,120 134,80 Z" fill="rgba(255,255,255,.72)" stroke="#e6e0ee" stroke-width="1.5"/><path d="M64,60 Q100,40 136,60" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/>${[70,82,94,106,118,130].map((x,i)=>`<circle cx="${x}" cy="${57-Math.sin((x-64)/72*Math.PI)*9}" r="3.4" fill="#fbf8f2" stroke="#d9cfc0" stroke-width="1"/>`).join('')}<circle cx="100" cy="46" r="5" fill="#ffd6e3" stroke="#ff9fb3" stroke-width="1.5"/>`,
@@ -1135,6 +1134,10 @@ async function afterLogin(vOK){
   // daily bonus
   const d=kstDay();
   await attendance();
+  {const WR={wig_bob:[320,3],wig_long:[480,3],wig_curly:[450,3],wig_twin:[560,5],wig_blonde:[730,5],wig_afro:[640,5],wig_mohawk:[590,5]};const inv=(me()||{}).inv||{};
+   if(Object.keys(WR).some(k=>inv[k])){let rc=0,rs=0;await Store.tx('users/'+S.me,u=>{if(!u)return u;rc=0;rs=0;u.inv=u.inv||{};for(const k in WR)if(u.inv[k]){rc+=WR[k][0];rs+=WR[k][1];delete u.inv[k]}u.coins=(u.coins||0)+rc;u.stars=(u.stars||0)+rs;return u});
+     for(const c of myCats())if(c.eq&&c.eq.wig)await Store.set(`cats/${c.id}/eq/wig`,null);
+     if(rc&&!PET)setTimeout(()=>toast(`가발이 상점에서 빠졌어요. 산 가발 값 ${rc}코인과 ⭐${rs}를 돌려드렸어요`,4500),3000)}}
   {const m=/^#w=(.+)$/.exec(location.hash||'');if(m&&!PET){const wid=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>{if(wedById(wid)){clearLayer();goWedding(wid)}else toast('결혼식을 찾지 못했어요')},800)}}
   if(window.nyangDesk&&PET&&!window.nyangDesk.version&&window.nyangDesk.getSettings){setInterval(async()=>{try{const st=await window.nyangDesk.getSettings();if(st&&st.showPet)window.nyangDesk.setPetVisible(true)}catch(e){}},2500)}
   {const r=await Store.tx('users/'+S.me,u=>{if(!u||u.kibbleInit)return;u.kibbleInit=1;u.inv=u.inv||{};u.inv.kibble=(u.inv.kibble||0)+10;return u});if(r.committed&&!PET)setTimeout(()=>toast('이제 사료도 사서 먹여요. 사료 10개를 선물로 드렸어요!',4000),2500)}
@@ -1909,7 +1912,7 @@ function openDiary(id,idx=0){
 /* ================= badges ================= */
 const BADGES=[['shark','상어 생존자','상어에게 3번 물리기',3,'#6f8599','상어'],['gold','황금 낚시꾼','황금 잉어 낚기',1,'#e0a72a','황금'],['fish','강태공','낚시로 50번 건지기',50,'#4dabf7','낚시'],['guest','단골 하객','결혼식 하객 5번',5,'#ff8fab','하객'],['wed','백년가약','결혼식 올리기',1,'#e2456f','부부'],['adult','육묘 졸업','고양이를 어른냥으로 키우기',1,'#3fb5a0','어른'],['quest','퀘스트 달인','일일 퀘스트 30개 완료',30,'#9775fa','퀘스트'],['rank1','주간 챔피언','주간 랭킹 1위 하기',1,'#f2b33d','1위'],['pet','쓰담 장인','내 고양이 1000번 쓰다듬기',1000,'#ff9f43','쓰담'],['book','수다쟁이','방명록 10개 쓰기',10,'#51b26b','방명록'],['goguma','고구마 장인','군고구마 10개 굽기',10,'#a0569f','고구마'],['rudolph','산타의 친구','루돌프 미니펫 받기',1,'#e2453c','루돌프'],
   ['stray','길냥이 친구','길고양이 밥 10번 주기',10,'#f2a950','길냥'],['fs1','패션왕','패션쇼 1위 하기',1,'#c3a6ff','패션'],
-  ['col_hat','모자 수집가','모자 도감 완성',1,'#ff8fab','모자'],['col_wig','헤어 디자이너','가발 도감 완성',1,'#c97f2a','가발'],['col_body','옷장 부자','옷 도감 완성',1,'#7fb3e8','옷장'],['col_wear','액세서리 왕','액세서리 도감 완성',1,'#e0a72a','장신구'],['col_aura','오라 마스터','배경 효과 도감 완성',1,'#9775fa','오라'],['col_room','인테리어 장인','방 꾸미기 도감 완성',1,'#51b26b','방'],['col_fish','낚시 박사','낚시 도감 완성',1,'#4dabf7','박사']];
+  ['col_hat','모자 수집가','모자 도감 완성',1,'#ff8fab','모자'],['col_body','옷장 부자','옷 도감 완성',1,'#7fb3e8','옷장'],['col_wear','액세서리 왕','액세서리 도감 완성',1,'#e0a72a','장신구'],['col_aura','오라 마스터','배경 효과 도감 완성',1,'#9775fa','오라'],['col_room','인테리어 장인','방 꾸미기 도감 완성',1,'#51b26b','방'],['col_fish','낚시 박사','낚시 도감 완성',1,'#4dabf7','박사']];
 const achAdd=(k,n=1)=>S.me&&Store.tx(`users/${S.me}/ach/${k}`,v=>(v||0)+n);
 function badgeProg(u,k){const a=(u&&u.ach)||{};if(k==='wed')return myWeddings().some(w=>isHost(w)&&wedPhase(w)==='done')?1:0;if(k==='adult')return Object.values(S.cats).some(c=>c&&c.owner===S.me&&c.stage==='adult')?1:0;if(k==='rudolph')return((u.inv||{}).rudolph)?1:0;if(k.startsWith('col_'))return((u.colc||{})[k.slice(4)+'_full'])?1:0;return a[k]||0}
 function medal(b,sz){return`<svg viewBox="0 0 44 44"><path d="M14 2 L22 14 L30 2" stroke="${b[4]}" stroke-width="5" fill="none" opacity=".55"/><circle cx="22" cy="26" r="16" fill="${b[4]}" stroke="${shade(b[4],-.25)}" stroke-width="2"/><circle cx="22" cy="26" r="12" fill="none" stroke="#fff" stroke-width="1.2" opacity=".6"/><text x="22" y="30" font-size="${b[5].length>2?8.5:10.5}" text-anchor="middle" fill="#fff" font-family="Jua">${b[5]}</text></svg>`}
@@ -2025,7 +2028,7 @@ async function strayGift(k){
 /* ================= fashion show ================= */
 const FS_START='2026-11-23';
 const fsOn=()=>{try{if(localStorage.getItem('nyang-fs')==='1')return true}catch(e){}return weekKey()>=FS_START};
-const FS_SLOTS=[['wig','가발'],['hat','모자'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
+const FS_SLOTS=[['hat','모자'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
 const FS_REW=[{c:500,s:5,it:'fscrown'},{c:300,s:3},{c:150,s:1}],FS_JOIN={c:50,s:0};
 function fsEntries(wk){return vEntries().map(([k,u])=>u&&u.fs&&u.fs[wk]&&S.cats[u.fs[wk].cat]?Object.assign({o:k},u.fs[wk]):null).filter(Boolean).sort((a,b)=>Object.keys(b.v||{}).length-Object.keys(a.v||{}).length||a.at-b.at)}
 const fsLook=e=>Object.assign({},live(S.cats[e.cat]),{eq:e.of||{}});
@@ -2090,7 +2093,7 @@ async function fsClaim(){
 setInterval(fsClaim,6000);
 
 /* ================= collections ================= */
-const COLS=[['hat','모자 도감',k=>ITEMS[k].t==='hat'],['wig','가발 도감',k=>ITEMS[k].t==='wig'],['body','옷 도감',k=>ITEMS[k].t==='body'],['wear','액세서리 도감',k=>ITEMS[k].t==='neck'||ITEMS[k].t==='face'],['aura','배경 효과 도감',k=>ITEMS[k].t==='aura'],['room','방 꾸미기 도감',k=>ITEMS[k].t==='room']];
+const COLS=[['hat','모자 도감',k=>ITEMS[k].t==='hat'],['body','옷 도감',k=>ITEMS[k].t==='body'],['wear','액세서리 도감',k=>ITEMS[k].t==='neck'||ITEMS[k].t==='face'],['aura','배경 효과 도감',k=>ITEMS[k].t==='aura'],['room','방 꾸미기 도감',k=>ITEMS[k].t==='room']];
 const COL_HALF={c:200,s:2},COL_FULL={c:1000,s:10},COL_FISH={c:300,s:3,it:'fishhat'};
 function colItems(f){return Object.keys(ITEMS).filter(k=>!ITEMS[k].ex&&!ITEMS[k].wed&&!ITEMS[k].ev&&f(k))}
 function colStat(u,key){if(key==='fish'){const L=FISH.filter(x=>!x.shark);const b=((u.fish||{}).best)||{};return{all:L.map(x=>x.k),own:L.filter(x=>b[x.k]).length,tot:L.length}}const c=COLS.find(x=>x[0]===key);const L=colItems(c[2]);const inv=u.inv||{};return{all:L,own:L.filter(k=>inv[k]).length,tot:L.length}}
@@ -2479,7 +2482,7 @@ function openDeco(){
   const c=activeCat();if(!c)return;const u=me(),inv=u.inv||{},room=u.room||{};const tab=S.tab.deco;
   let body='';
   if(tab==='wear'){
-    const slots=[['wig','가발'],['hat','머리'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
+    const slots=[['hat','머리'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
     body=slots.map(([s,lab])=>{const own=Object.keys(ITEMS).filter(k=>ITEMS[k].t===s&&inv[k]);
       return`<div class="opt"><h3>${lab}</h3>${own.length?`<div class="ch">${own.map(k=>`<button class="${c.eq[s]===k?'on':''}" data-a="equip" data-s="${s}" data-v="${c.eq[s]===k?'':k}">${ITEMS[k].n}</button>`).join('')}</div>`:`<p class="grow">아직 없어요. 상점에서 사 오세요.</p>`}</div>`}).join('');
   }else if(tab==='dye'){
@@ -2579,7 +2582,7 @@ function viewHome(){
 }
 function viewShop(){
   const u=me(),inv=u.inv||{},c=activeCat();const tab=S.tab.shop;
-  const tabs=[['food','간식'],['hat','모자'],['wig','가발'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
+  const tabs=[['food','간식'],['hat','모자'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
   const ids=Object.keys(ITEMS).filter(k=>!ITEMS[k].ex&&(!ITEMS[k].ev||evOn(ITEMS[k].ev))).filter(k=>{const t=ITEMS[k].t;return tab==='wear'?(t==='neck'||t==='face'):tab==='special'?(t==='special'||t==='dye'):tab==='food'?(t==='food'||t==='med'):t===tab});
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}${it.s?` <em class="star">⭐${it.s}</em>`:''}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(it.wed&&!canWedBuy())||(u.coins||0)<it.p||(u.stars||0)<(it.s||0)?'disabled':''}>${done?'보유 중':it.wed&&!canWedBuy()?'예비 부부만':'사기'}</button></div></div>`}).join('')}</div>
