@@ -1236,6 +1236,7 @@ async function afterLogin(vOK){
      for(const c of myCats())if(c.eq&&c.eq.wig)await Store.set(`cats/${c.id}/eq/wig`,null);
      if(rc&&!PET)setTimeout(()=>toast(`가발이 상점에서 빠졌어요. 산 가발 값 ${rc}코인과 ⭐${rs}를 돌려드렸어요`,4500),3000)}}
   {const m=/^#w=(.+)$/.exec(location.hash||'');if(m&&!PET){const wid=decodeURIComponent(m[1]);history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>{if(wedById(wid)){clearLayer();goWedding(wid)}else toast('결혼식을 찾지 못했어요')},800)}}
+  if(PET&&location.protocol.startsWith('http')){let v0=null;const vchk=async()=>{try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(!j||!j.version)return;if(v0===null)v0=j.version;else if(j.version!==v0&&!deskDrag&&!deskMenu)location.reload()}catch(e){}};vchk();setInterval(vchk,3*60e3)}
   if(window.nyangDesk&&PET&&!window.nyangDesk.version&&window.nyangDesk.getSettings){setInterval(async()=>{try{const st=await window.nyangDesk.getSettings();if(st&&st.showPet)window.nyangDesk.setPetVisible(true)}catch(e){}},2500)}
   {const r=await Store.tx('users/'+S.me,u=>{if(!u||u.kibbleInit)return;u.kibbleInit=1;u.inv=u.inv||{};u.inv.kibble=(u.inv.kibble||0)+10;return u});if(r.committed&&!PET)setTimeout(()=>toast('이제 사료도 사서 먹여요. 사료 10개를 선물로 드렸어요!',4000),2500)}
   // persist decay
@@ -3237,7 +3238,7 @@ function renderDesk(){
     }
     const s=DS[it.id]=DS[it.id]||{x:it.mine?W*.62:rnd(40,Math.max(60,W-160)),y:0,vx:0,vy:0,dir:Math.random()<.5?-1:1,mode:walkOn(it.id)?'walk':'sit',until:t+rnd(3e3,8e3),sig:''};
     const c=it.cat,sleeping=c.sleepUntil&&c.sleepUntil>t;
-    const expr=it.away?'':(s.ouchUntil>t)?'ouch':(s.actExpr&&s.actUntil>t)?s.actExpr:sleeping?'sleep':c.sick?'sick':(it.mine&&S.happyUntil>t)?'happy':(c.st&&c.st.mood<25)?'sulky':'normal';
+    const expr=it.away?'':sleeping?'sleep':(s.ouchUntil>t)?'ouch':(s.actExpr&&s.actUntil>t)?s.actExpr:c.sick?'sick':(it.mine&&S.happyUntil>t)?'happy':(c.st&&c.st.mood<25)?'sulky':'normal';
     const sig=it.away?'away':JSON.stringify([c.look,c.eq,c.stage,expr]);
     if(s.sig!==sig){s.sig=sig;el.querySelector('.flip').innerHTML=it.away?LETTER:expr==='sleep'?sleepCatSVG(c):catSVG(c,{expr})}
     s.mood=c.st?c.st.mood:60;s.aff=c.aff||0;s.ptype=it.guest?'aloof':ptypeOf(c);
@@ -3271,7 +3272,7 @@ function deskLoop(){
       if(s.y<=0){
         s.y=0;const hgt=s.fallFrom||0;
         if(s.arriving){deskSay(id,pick(['놀러 왔어요!','안녕! 왔다냥','짠! 나 왔어']),3000)}
-        else if(s.vy>7&&hgt>60){s.ouchUntil=t+1500;if(s.mine&&S.cats[id])catTx(id,c=>{bumpTr(c,{drop:1,scare:hgt>450?1:0})});deskSay(id,hgt>450?'아야야... 너무 높았어!':pick(['아얏!','아야!','으앙 아파!','꽈당!']),2200);el.classList.remove('squash');void el.offsetWidth;el.classList.add('squash');setTimeout(()=>el.classList.remove('squash'),400);renderDesk()}
+        else if(s.vy>7&&hgt>60){s.ouchUntil=t+1500;if(s.mine&&S.cats[id])catTx(id,c=>{bumpTr(c,{drop:1,scare:hgt>450?1:0})});deskSay(id,s.sleep?pick(['음냐... 자는 냥을 왜 던지냥... 쿨','(쿵) ...쿨... 쿨... (계속 잔다)','으음... 지진났냥? ...쿨','자는데 흔들지 말라냥...']):hgt>450?'아야야... 너무 높았어!':pick(['아얏!','아야!','으앙 아파!','꽈당!']),2400);el.classList.remove('squash');void el.offsetWidth;el.classList.add('squash');setTimeout(()=>el.classList.remove('squash'),400);renderDesk()}
         s.arriving=false;s.vy=0;s.vx=0;s.fallFrom=0;s.mode='sit';s.until=t+rnd(2e3,5e3);
       }
     }else{
@@ -3479,7 +3480,7 @@ if(PET){
   });
   document.addEventListener('pointermove',e=>{
     const d=deskDrag;if(!d)return;
-    if(!d.moved&&Math.hypot(e.clientX-d.x0,e.clientY-d.y0)>6){d.moved=true;d.s.held=true;d.s.vy=0;d.s.vx=0;d.s.arriving=false;deskSay(d.id,pick((PT[d.s.ptype]||PT.aloof).lift),1800);if(d.s.mine){const c=S.cats[d.id];if(c)catTx(d.id,c=>{bumpTr(c,{carry:1})})}}
+    if(!d.moved&&Math.hypot(e.clientX-d.x0,e.clientY-d.y0)>6){d.moved=true;d.s.held=true;d.s.vy=0;d.s.vx=0;d.s.arriving=false;deskSay(d.id,d.s.sleep?sleepLine(live(S.cats[d.id])||{}):pick((PT[d.s.ptype]||PT.aloof).lift),1800);if(d.s.mine){const c=S.cats[d.id];if(c)catTx(d.id,c=>{bumpTr(c,{carry:1})})}}
     if(d.moved){const W=window.innerWidth,H=window.innerHeight,w=d.el.offsetWidth,h=d.el.offsetHeight;
       d.s.x=clamp(e.clientX-d.offX,0,W-w);d.s.y=clamp((H-e.clientY)-d.offB,0,H-h);
       const dt=Math.max(8,now()-d.lt);d.vx=(e.clientX-d.lx)/dt*16;d.vy=(e.clientY-d.ly)/dt*16;d.lx=e.clientX;d.ly=e.clientY;d.lt=now()}
