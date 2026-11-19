@@ -228,6 +228,23 @@ html.pet .app{max-width:none;padding:0;min-height:0}
 #dmenu hr{border:0;border-top:1px solid var(--line);margin:4px 6px}
 #dpanel{position:fixed;z-index:50;left:50%;transform:translateX(-50%);bottom:180px;width:min(380px,92vw);max-height:calc(100vh - 200px);overflow:auto;background:#fff;border-radius:20px;padding:16px;box-shadow:0 12px 34px rgba(40,30,60,.3);pointer-events:auto;animation:fade .15s}
 #dpanel h3{font-size:1.2rem}
+.dcat .hand{position:absolute;pointer-events:none;z-index:6}
+.dcat .hand svg{display:block;width:100%;height:auto;filter:drop-shadow(0 2px 3px rgba(0,0,0,.2))}
+.dcat .hand.pet{width:62%;left:24%;top:16%;animation:h-pet 1.9s ease-in-out forwards}
+@keyframes h-pet{0%{opacity:0;transform:translate(40%,-60%) rotate(-8deg)}14%{opacity:1;transform:translate(0,0) rotate(-8deg)}30%{transform:translate(-14%,6%) rotate(-3deg)}46%{transform:translate(12%,0) rotate(-12deg)}62%{transform:translate(-14%,6%) rotate(-3deg)}78%{opacity:1;transform:translate(10%,0) rotate(-10deg)}100%{opacity:0;transform:translate(40%,-60%) rotate(-8deg)}}
+.dcat.petted .body{animation:petted .32s ease-in-out 5 alternate;transform-origin:50% 100%}
+@keyframes petted{from{transform:scaleY(1)}to{transform:scaleY(.94) scaleX(1.03)}}
+.dcat .hand.feed{width:78%;left:47%;top:37%;animation:h-feed 3.2s ease-in-out forwards}
+@keyframes h-feed{0%{opacity:0;transform:translate(45%,-20%)}12%{opacity:1;transform:translate(0,0)}88%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(45%,-20%)}}
+.dcat .hand.feed .tube{transform-box:fill-box;transform-origin:100% 50%;animation:squeeze .5s ease-in-out .5s 5 alternate}
+@keyframes squeeze{from{transform:scaleY(1)}to{transform:scaleY(.62)}}
+.dcat .hand.feed .goo{animation:goo 1s ease-in .4s 3}
+@keyframes goo{0%{transform:scale(.3);opacity:0}40%{opacity:1}100%{transform:scale(1.1);opacity:1}}
+.dcat .hand.feed .food{transform-box:fill-box;transform-origin:0 50%;animation:nibble 2.4s steps(4) .5s forwards}
+@keyframes nibble{to{transform:scale(.15);opacity:.2}}
+.dcat .tongue{position:absolute;left:45%;top:57%;width:10%;height:8%;background:#ff7f9e;border-radius:0 0 50% 50%;border:1.5px solid #e0587a;z-index:5;transform-origin:50% 0;animation:lick .28s ease-in-out .5s 9 alternate;opacity:0;pointer-events:none}
+@keyframes lick{from{transform:scaleY(.2);opacity:1}to{transform:scaleY(1);opacity:1}}
+.dcat.dir-l .hand.feed{left:auto;right:46%}.dcat.dir-l .hand.feed svg{transform:scaleX(-1)}
 .dcat{cursor:grab}.dcat.held{cursor:grabbing}
 .dcat.held .body{animation:dangle .7s ease-in-out infinite;transform-origin:50% 12%}
 @keyframes dangle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
@@ -2972,7 +2989,7 @@ document.addEventListener('click',async e=>{
     case'dwalkall':document.querySelectorAll('.dcat').forEach(e=>setWalk(e.dataset.v,true));toast('모두 돌아다니기 시작했어요');break;
     case'dset':if(DK&&DK.setSetting){await DK.setSetting(el.dataset.k,!!v);openSettings()}break;
     case'dquit':DK&&DK.quit&&DK.quit();break;
-    case'dpet':{if(now()<deskSuppress)break;deskClicked=v;const s=DS[v];if(v==='guest'||(s&&s.away)){DK&&DK.openMain();break}if(s&&s.mine)pet(e);else{spawnHeart(e);friendPet(v)}break}
+    case'dpet':{if(now()<deskSuppress)break;deskClicked=v;const s=DS[v];if(v==='guest'||(s&&s.away)){DK&&DK.openMain();break}if(s&&s.mine)pet(e);else{spawnHeart(e);deskHand(v,'pet');friendPet(v)}break}
     case'create':S.createMode='new';S.draft={look:Object.assign(randomLook(),{gender:null}),step:'fur'};S.draft.odd=S.draft.look.eyeL!==S.draft.look.eyeR;S.screen='create';render();break;
     case'loginform':S.screen='login';render();break;
     case'gate':S.screen='gate';render();break;
@@ -3102,7 +3119,7 @@ document.addEventListener('click',async e=>{
     case'lenter':await lottoEnter();break;
     case'lclaim':await lottoClaim(v);break;
     case'flower':{const id2=el.dataset.id;await giveFlower(id2,v);setTimeout(()=>openCatCard(id2),250);break}
-    case'dgift':{closeDeskMenu();const id2=el.dataset.id;await gift(id2,v);deskSay(id2,pick(v==='smelt'?['오독오독 열빙어!','열빙어 최고냥']:v==='cake'?['케이크?! 생일 아닌데!','달콤하다옹']:v==='fish'?['생선구이 냄새 최고냥','냠냠냠']:['츄르 최고냥!!','고마워옹']),3000);break}
+    case'dgift':{closeDeskMenu();const id2=el.dataset.id;if(((me()&&me().inv)||{})[v])deskHand(id2,v);await gift(id2,v);deskSay(id2,pick(v==='smelt'?['오독오독 열빙어!','열빙어 최고냥']:v==='cake'?['케이크?! 생일 아닌데!','달콤하다옹']:v==='fish'?['생선구이 냄새 최고냥','냠냠냠']:['츄르 최고냥!!','고마워옹']),3000);break}
     case'dflower':{closeDeskMenu();const id2=el.dataset.id;await giveFlower(id2,v);deskSay(id2,pick(['꽃이다냥! 고마워♡','향기 좋다옹','나 인기 많아지겠다냥']),3000);break}
     case'dact':{closeDeskMenu();const s2=DS[el.dataset.id];if(!s2)break;if(s2.sleep){deskSay(el.dataset.id,'쿨... 쿨... (자는 중)',2000);break}deskDo(el.dataset.id,v);if(s2.mine)Store.set('cats/'+el.dataset.id+'/act',{k:v,at:now(),dev:DEV});if(s2.mine&&S.cats[el.dataset.id])catTx(el.dataset.id,c=>{bumpTr(c,v==='angry'?{anger:1}:{trick:1})});break}
     case'talk':openTalk(v);break;
@@ -3298,6 +3315,27 @@ function deskFeed(){
     if(aboutMe){try{const n=new Notification('냥이마을',{body:f.text,icon:'icons/icon-192.png'});n.onclick=()=>DK&&DK.openMain()}catch(e){}}
   }
 }
+
+/* desktop: human hand petting / feeding */
+const SKIN='#ffd8bd',SKIN_L='#d89c78';
+const HAND_PET=`<svg viewBox="0 0 120 90"><path d="M92 6 L118 0 L120 30 L98 36z" fill="#8fb8e8" stroke="#5f8fc8" stroke-width="2.5"/><path d="M96 10 C80 8 60 10 44 16 C30 20 14 26 10 34 C8 40 14 42 22 40 L40 36 C30 42 18 50 16 58 C15 63 21 65 27 62 L46 52 C38 60 30 68 30 74 C30 79 36 80 41 76 L58 62 C54 70 50 76 52 81 C54 85 60 84 64 80 L80 64 C90 56 98 46 100 34z" fill="${SKIN}" stroke="${SKIN_L}" stroke-width="2.5" stroke-linejoin="round"/><path d="M84 18 C76 22 72 28 72 34" stroke="${SKIN_L}" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+function handFeedSVG(kind){
+  const held=kind==='churu'
+    ?`<g class="tube"><path d="M6 34 L58 26 L60 46 L8 42z" fill="#ffb15c" stroke="#e08a2e" stroke-width="2.2" stroke-linejoin="round"/><path d="M16 33 L50 29 M18 41 L50 39" stroke="#fff" stroke-width="2" opacity=".7"/><text x="24" y="40" font-size="8" font-weight="700" fill="#b4560e">CHU</text></g><path d="M8 34 L0 37 L1 41 L8 42z" fill="#ffb15c" stroke="#e08a2e" stroke-width="2"/><circle class="goo" cx="-2" cy="40" r="4.5" fill="#f5a35c" stroke="#d37b2c" stroke-width="1.4"/>`
+    :`<g class="food">${kind==='cake'?`<path d="M4 44 L34 44 L34 28 L4 28z" fill="#fff4e0" stroke="#d9a86b" stroke-width="2"/><path d="M4 28 Q19 18 34 28" fill="#ff9fb3" stroke="#e0607f" stroke-width="2"/><circle cx="19" cy="20" r="4" fill="#e2453c"/>`:kind==='smelt'?`<path d="M2 36 Q20 26 40 34 L48 28 L46 42 L40 38 Q20 46 2 36z" fill="#c9d6de" stroke="#7d93a3" stroke-width="2"/><circle cx="9" cy="35" r="1.6" fill="#333"/>`:`<path d="M0 36 Q22 20 44 34 L56 24 L54 46 L44 38 Q22 52 0 36z" fill="#d9a05f" stroke="#a4682d" stroke-width="2"/><path d="M14 30 L18 42 M24 28 L28 44 M34 30 L37 42" stroke="#8a5420" stroke-width="1.6"/><circle cx="8" cy="34" r="1.8" fill="#333"/>`}</g>`;
+  return`<svg viewBox="-8 0 128 70" overflow="visible"><path d="M96 26 L122 18 L126 52 L100 56z" fill="#8fb8e8" stroke="#5f8fc8" stroke-width="2.5"/>${held}<path d="M100 30 C88 26 72 24 60 26 C52 27 50 34 56 36 L64 36 C58 40 56 46 62 48 L74 46 C70 50 70 56 76 56 L90 54 C96 52 100 46 102 40z" fill="${SKIN}" stroke="${SKIN_L}" stroke-width="2.5" stroke-linejoin="round"/><path d="M60 26 C50 22 44 28 50 32 L60 34" fill="${SKIN}" stroke="${SKIN_L}" stroke-width="2.5" stroke-linejoin="round"/></svg>`;
+}
+function deskHand(id,kind){
+  if(!PET)return;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)return;
+  const s=DS[id];if(s&&(s.sleep||s.away))return;
+  if(kind==='pet'&&el.querySelector('.hand.pet'))return;
+  el.querySelectorAll('.hand,.tongue').forEach(x=>x.remove());el.classList.remove('petted');
+  const h=document.createElement('div');h.className='hand '+(kind==='pet'?'pet':'feed');h.innerHTML=kind==='pet'?HAND_PET:handFeedSVG(kind);
+  el.classList.toggle('dir-l',!!(s&&s.dir<0));el.appendChild(h);
+  let tg=null;if(kind!=='pet'){tg=document.createElement('i');tg.className='tongue';el.appendChild(tg)}else{void el.offsetWidth;el.classList.add('petted')}
+  if(s){s.actExpr='happy';s.actUntil=now()+(kind==='pet'?1900:3200);s.mode='sit';s.vx=0;s.until=Math.max(s.until||0,now()+3500)}
+  setTimeout(()=>{h.remove();if(tg)tg.remove();el.classList.remove('petted')},kind==='pet'?1950:3250);
+}
 /* right-click menu & friend panel */
 function closeDeskMenu(){const m=$('#dmenu');if(m)m.remove();deskMenu=null;setThrough()}
 function closeDeskPanel(){const p=$('#dpanel');if(p)p.remove();deskPanel=false;setThrough()}
@@ -3352,7 +3390,7 @@ async function deskAction(a,id,e){
     case'wake':await wake();break;
     case'walk':{const on=!walkOn(id);setWalk(id,on);deskSay(id,on?'산책 간다냥~':'여기 가만히 있을게옹',2200);break}
     case'trick':if(s){if(s.sleep){deskSay(id,'쿨... 쿨... (자는 중)',2000);break}deskDo(id,pickAct(s,true));if(s.mine&&S.cats[id])catTx(id,c=>{bumpTr(c,{trick:1})})}break;
-    case'fpet':friendPet(id);break;
+    case'fpet':deskHand(id,'pet');friendPet(id);break;
     case'gift':await gift(id);break;
     case'talk':{if(!s)break;const el=document.querySelector(`.dcat[data-v="${id}"]`);if(!el)break;
       const m=document.createElement('div');m.id='dmenu';m.innerHTML=`<p>${esc(s.name)}에게 뭐라고 할까요?</p>`+TALK_QUICK.map(q=>`<button data-a="dtalk" data-id="${id}" data-v="${esc(q)}">${esc(q)}</button>`).join('');
