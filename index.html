@@ -1244,7 +1244,7 @@ async function afterLogin(vOK){
   S.screen='app';render();
   // daily bonus
   const d=kstDay();
-  await attendance();
+  if(!PET&&attCan(me()))setTimeout(()=>{if(!$('#layer').innerHTML&&attCan(me()))openAttPrompt()},900);
   {const WR={wig_bob:[320,3],wig_long:[480,3],wig_curly:[450,3],wig_twin:[560,5],wig_blonde:[730,5],wig_afro:[640,5],wig_mohawk:[590,5]};const inv=(me()||{}).inv||{};
    if(Object.keys(WR).some(k=>inv[k])){let rc=0,rs=0;await Store.tx('users/'+S.me,u=>{if(!u)return u;rc=0;rs=0;u.inv=u.inv||{};for(const k in WR)if(u.inv[k]){rc+=WR[k][0];rs+=WR[k][1];delete u.inv[k]}u.coins=(u.coins||0)+rc;u.stars=(u.stars||0)+rs;return u});
      for(const c of myCats())if(c.eq&&c.eq.wig)await Store.set(`cats/${c.id}/eq/wig`,null);
@@ -2831,7 +2831,7 @@ function nav(){
   const items=[['home','우리집',I.home],['plaza','광장',I.tree],['shop','상점',I.bag],['cats','내 고양이',I.paw],['events','이벤트',I.ticket],['news','소식',I.bell]];
   const VF=vFeed(),newFeed=VF.length&&VF[VF.length-1].at>S.seenFeed&&VF[VF.length-1].by!==S.me;
   const inbox=Object.values(S.props).some(p=>p.status==='pending'&&p.toOwner===S.me);
-  return`<nav class="nav"><div class="in">${items.map(([k,l,i])=>`<button class="${S.view===k?'on':''}" data-a="go" data-v="${k}" aria-label="${l}">${i}${l}${(k==='home'&&mailUnread())||(k==='plaza'&&noticeNew())||(k==='news'&&(newFeed||inbox))||(k==='events'&&(qClaimable(me())||lottoPending(me()).length||!((me().lotto||{})[kstDay()])))?'<span class="dot"></span>':''}</button>`).join('')}</div></nav>`;
+  return`<nav class="nav"><div class="in">${items.map(([k,l,i])=>`<button class="${S.view===k?'on':''}" data-a="go" data-v="${k}" aria-label="${l}">${i}${l}${(k==='home'&&mailUnread())||(k==='plaza'&&noticeNew())||(k==='news'&&(newFeed||inbox))||(k==='events'&&(qClaimable(me())||attCan(me())||lottoPending(me()).length||!((me().lotto||{})[kstDay()])))?'<span class="dot"></span>':''}</button>`).join('')}</div></nav>`;
 }
 
 /* ================= quests & attendance ================= */
@@ -2870,6 +2870,8 @@ async function qClaim(kind,id){
   if(kind==='d')achAdd('quest');coinFx(`+${rew.c} · ⭐${rew.s}`);toast(`보상 받기 완료! ${rew.c}코인 · ⭐${rew.s}`);
 }
 function qClaimable(u){if(!u)return 0;const q=qNorm(clone(u.q));const ids=dailyIds(q.d);let n=0;ids.forEach(k=>{const def=DQ.find(x=>x[0]===k);if((q.dp[k]||0)>=def[2]&&!q.dc[k])n++});if(!q.da&&ids.every(k=>q.dc[k]))n++;WQ.forEach(w=>{if((q.wp[w[0]]||0)>=w[2]&&!q.wc[w[0]])n++});return n}
+function attCan(u){if(!u||!isWeekday())return false;const a=u.att||{};if(a.b!==attBoardId())return true;return a.last!==kstDay()&&(a.n||0)<ATT_CELLS}
+function openAttPrompt(){const u=me();if(!u)return;openSheet(`<h2>오늘 출석하기</h2><p class="lead">출석하기를 눌러야 오늘 도장이 찍혀요. 다음 칸 보상: <b>${(()=>{const rw=attReward(attCur(u)+1);return rw.item?`한정 아이템 '${ITEMS[rw.item].n}'`:[rw.c?rw.c+'코인':'',rw.s?'⭐'+rw.s:''].filter(Boolean).join(' · ')})()}</b></p>${attBoard(attCur(u))}<div class="row" style="margin-top:12px"><button class="btn block" data-a="attend">출석하기</button><button class="btn ghost" data-a="close">나중에</button></div>`)}
 async function attendance(){
   if(!S.me)return;const D=kstDay();let got=null;
   if(!isWeekday())return;
@@ -2890,7 +2892,7 @@ async function attendance(){
 function attBoard(n,justNow){
   const pos=n||0;
   return`<div class="attb">${Array.from({length:ATT_CELLS},(_,i)=>{const d=i+1,rw=attReward(d),done=d<=pos;return`<div class="ac ${done?'done':''} ${rw.item?'ex':''} ${justNow&&d===pos?'now':''}"><span class="num">${d}</span><small>${rw.item?ITEMS[rw.item].n:rw.s?`⭐${rw.s}`:`${rw.c}`}</small>${done?'<i class="stamp">출석</i>':''}</div>`}).join('')}</div>
-  <p class="grow" style="margin:8px 0 0">평일(월~금)에 들어오면 도장이 하나씩 쌓여요. 빠진 날이 있어도 이어서 쌓이고, 5·10·15·20번째 도장에는 상점에 없는 한정 아이템을 줘요. 출석부는 4주마다 새로 바뀌고, 그때까지 못 찍은 칸은 사라져요.</p>`;
+  <p class="grow" style="margin:8px 0 0">평일(월~금)에 출석하기를 누르면 도장이 하나씩 쌓여요. 빠진 날이 있어도 이어서 쌓이고, 5·10·15·20번째 도장에는 상점에 없는 한정 아이템을 줘요. 출석부는 4주마다 새로 바뀌고, 그때까지 못 찍은 칸은 사라져요.</p>`;
 }
 function viewEvents(){
   const tab=S.tab.ev||(isAutumn()?'autumn':isXmas()?'xmas':'quest'),u=me();
@@ -2907,13 +2909,13 @@ function viewEvents(){
     <p class="grow" style="margin-top:10px">⭐ 스타는 퀘스트와 출석으로만 얻어요. 상점의 프리미엄 상품에 써요.</p>`;
   }else if(tab==='att'){
     const n=attCur(u),rg=attRange(attBoardId());
-    body=`<div class="panel stack"><h2>이번 출석부 · ${n} / ${ATT_CELLS}</h2><p class="grow num" style="margin:0">기간 ${rg.start} ~ ${rg.end} · ${rg.left}일 남음${isWeekday()?'':' · 오늘은 주말이라 쉬어요'}</p>${attBoard(n)}</div>`;
+    body=`<div class="panel stack"><h2>이번 출석부 · ${n} / ${ATT_CELLS}</h2><p class="grow num" style="margin:0">기간 ${rg.start} ~ ${rg.end} · ${rg.left}일 남음${isWeekday()?'':' · 오늘은 주말이라 쉬어요'}</p>${attCan(u)?'<button class="btn block" data-a="attend">오늘 출석하기</button>':isWeekday()?'<p class="grow" style="margin:0">오늘 출석 완료! 내일 또 와요</p>':''}${attBoard(n)}</div>`;
   }else if(tab==='xmas'&&isXmas())body=viewXmas();
   else if(tab==='autumn'&&isAutumn())body=viewAutumn();
   else if(tab==='fish')body=viewFishTab();
   else if(tab==='fs')body=viewFS();
   else body=viewLotto();
-  return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="evtab" data-v="${k}">${l}${k==='quest'&&qClaimable(u)?' •':''}</button>`).join('')}</div>${body}`;
+  return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="evtab" data-v="${k}">${l}${(k==='quest'&&qClaimable(u))||(k==='att'&&attCan(u))?' •':''}</button>`).join('')}</div>${body}`;
 }
 
 /* ================= lotto ================= */
@@ -3146,6 +3148,7 @@ document.addEventListener('click',async e=>{
     case'sdel':await Store.set(`users/${S.me}/secret/${v}`,null);toast('지웠어요');break;
     case'pill':await givePill();break;
     case'evtab':S.tab.ev=v;render();break;
+    case'attend':{el.disabled=true;closeSheet();await attendance();render();break}
     case'qclaim':await qClaim(el.dataset.k,v);break;
     case'visit':closeSheet();S.visit=v;markHist();S.view='visit';window.scrollTo(0,0);render();if(v!==S.me)recordVisit(v);break;
     case'bookw':await writeBook(v);break;
