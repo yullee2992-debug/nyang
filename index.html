@@ -356,6 +356,7 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 .bdg.off{opacity:.5;filter:grayscale(1)}
 .bdg.show{border-color:var(--pink-d);background:var(--pink-l)}
 .bdgrow{display:flex;gap:4px;margin-top:4px}.bdgrow svg{width:30px;height:30px}
+[hidden]{display:none!important}
 /* minigames: ox, cups, mouse, catch */
 .oxq{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:18px 16px;text-align:center;font-family:var(--display);font-size:1.25rem;line-height:1.5;min-height:110px;display:grid;place-items:center}
 .oxb{display:flex;gap:12px;margin-top:12px}.oxb button{flex:1;font-family:var(--display);font-size:2.2rem;padding:14px 0;border-radius:18px;border:2px solid var(--line);background:#fff}
@@ -633,6 +634,13 @@ const ITEMS={
   knight:{n:'기사 갑옷',t:'body',p:700,s:3,d:'마을을 지키는 기사'},
   galaxy:{n:'은하수 망토',t:'body',p:1200,s:8,d:'별빛이 흐르는 망토'},
   hanbok:{n:'한복',t:'body',p:600,s:2,d:'명절엔 고운 한복'},
+  wig_bob:{n:'단발 가발',t:'wig',p:300,d:'찰랑찰랑 갈색 단발'},
+  wig_long:{n:'긴 생머리 가발',t:'wig',p:450,d:'바람에 날리는 검은 생머리'},
+  wig_curly:{n:'뽀글 파마 가발',t:'wig',p:420,d:'동네 미용실 신상 파마'},
+  wig_twin:{n:'양갈래 가발',t:'wig',p:520,d:'분홍 양갈래와 리본'},
+  wig_blonde:{n:'금발 웨이브 가발',t:'wig',p:680,d:'할리우드 스타 냥'},
+  wig_afro:{n:'아프로 가발',t:'wig',p:600,d:'풍성함의 끝판왕'},
+  wig_mohawk:{n:'모히칸 가발',t:'wig',p:550,d:'오늘부터 락스타'},
   wdress:{n:'웨딩드레스',t:'body',p:1200,s:3,wed:1,d:'결혼식 준비 중인 예비 부부만 · 레이스 드레스'},
   tux:{n:'턱시도',t:'body',p:1200,s:3,wed:1,d:'결혼식 준비 중인 예비 부부만 · 검은 턱시도'},
   veil:{n:'면사포',t:'hat',p:450,s:1,wed:1,d:'결혼식 준비 중인 예비 부부만 · 진주 장식'},
@@ -659,8 +667,8 @@ const ITEMS={
   lights:{n:'꼬마전구',t:'room',slot:'lights',p:250,d:'벽 위쪽을 반짝반짝'},
   throne:{n:'고양이 왕좌',t:'room',slot:'throne',p:1500,s:8,d:'마을의 왕'}
 };
-for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room'].includes(it.t))continue;const tier=it.p<150?1:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
-for(const it of Object.values(ITEMS)){if(it.ex||!['hat','neck','face','body','aura','room'].includes(it.t))continue;it.p=Math.round(it.p*1.07/10)*10}
+for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;const tier=it.p<150?1:it.p<300?2:it.p<500?3:it.p<800?5:it.p<1500?8:it.p<2500?12:18;it.s=Math.max(tier,(it.s||0)*2)}
+for(const it of Object.values(ITEMS)){if(it.ex||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;it.p=Math.round(it.p*1.07/10)*10}
 const STACK=new Set(['biscuit','bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
 const STAGE={kitten:'아기냥',junior:'청소년냥',adult:'어른냥'};
@@ -833,6 +841,16 @@ function catSVG(c,o={}){
     wizard:`<ellipse cx="100" cy="58" rx="56" ry="10" fill="#6a4fb3" stroke="#4d378a" stroke-width="2.5"/><path d="M72,58 L106,-4 L130,58 Z" fill="#7d5fc9" stroke="#4d378a" stroke-width="2.5" stroke-linejoin="round"/><path d="M106,26 l2,5 5,1 -4,3 1,5 -4,-3 -4,3 1,-5 -4,-3 5,-1z" fill="#ffd166"/><circle cx="92" cy="44" r="2.5" fill="#fff3a6"/><circle cx="116" cy="12" r="2" fill="#fff3a6"/><rect x="74" y="48" width="54" height="7" fill="#ffd166"/>`,
     crown:`<path d="M78,54 L80,28 L90,40 L100,22 L110,40 L120,28 L122,54 Z" fill="#f6c94c" stroke="#c9962a" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="44" r="4" fill="#ff6f91"/><circle cx="87" cy="47" r="3" fill="#6fc0e8"/><circle cx="113" cy="47" r="3" fill="#6fc0e8"/>`
   };
+  const WG=(c)=>{const d=shade(c,-.3);return{base:`<path d="M46,98 Q42,42 100,38 Q158,42 154,98 Q150,80 140,72 Q122,64 106,70 Q100,62 94,70 Q78,64 60,72 Q50,80 46,98Z" fill="${c}" stroke="${d}" stroke-width="2.5" stroke-linejoin="round"/><path d="M70,48 Q86,42 100,44" stroke="#fff" stroke-width="3" opacity=".35" fill="none" stroke-linecap="round"/>`,d}};
+  const wigs={
+    wig_bob:(()=>{const w=WG('#7a4f33');return`<path d="M46,96 Q42,118 54,124 L60,92Z M154,96 Q158,118 146,124 L140,92Z" fill="#7a4f33" stroke="${w.d}" stroke-width="2.5" stroke-linejoin="round"/>${w.base}`})(),
+    wig_long:(()=>{const w=WG('#2e2a33');return`<path d="M48,90 Q34,140 44,176 Q54,180 60,170 Q54,130 62,96Z M152,90 Q166,140 156,176 Q146,180 140,170 Q146,130 138,96Z" fill="#2e2a33" stroke="${w.d}" stroke-width="2.5" stroke-linejoin="round"/>${w.base}`})(),
+    wig_curly:`${[[56,70],[66,54],[82,44],[100,40],[118,44],[134,54],[144,70],[50,88],[150,88],[74,64],[92,58],[110,58],[126,64]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="11" fill="#d9773a" stroke="#a8551f" stroke-width="2"/>`).join('')}${[[60,96],[140,96]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="9" fill="#d9773a" stroke="#a8551f" stroke-width="2"/>`).join('')}`,
+    wig_twin:(()=>{const w=WG('#ff9fc0');return`<path d="M50,80 Q20,90 22,130 Q24,150 36,156 Q34,124 56,96Z M150,80 Q180,90 178,130 Q176,150 164,156 Q166,124 144,96Z" fill="#ff9fc0" stroke="${w.d}" stroke-width="2.5" stroke-linejoin="round"/>${w.base}${[[46,82],[154,82]].map(([x,y])=>`<g transform="translate(${x},${y})"><path d="M0,0 L-9,-7 L-9,7Z M0,0 L9,-7 L9,7Z" fill="#7fb3e8" stroke="#4f86bb" stroke-width="1.5"/><circle r="3" fill="#b5d4f4"/></g>`).join('')}`})(),
+    wig_blonde:(()=>{const w=WG('#f2c94c');return`<path d="M46,92 Q34,112 44,128 Q38,140 50,150 Q58,140 56,124 Q64,110 58,94Z M154,92 Q166,112 156,128 Q162,140 150,150 Q142,140 144,124 Q136,110 142,94Z" fill="#f2c94c" stroke="${w.d}" stroke-width="2.5" stroke-linejoin="round"/>${w.base}<path d="M62,74 q8 6 16 0 M86,70 q8 6 16 0 M110,72 q8 6 16 0" stroke="${w.d}" stroke-width="2" fill="none"/>`})(),
+    wig_afro:`<path d="M30,92 ${Array.from({length:14},(_,i)=>{const a=Math.PI*(1+i/13),r=74;return`Q${(100+Math.cos(a-.12)*(r+10)).toFixed(0)},${(78+Math.sin(a-.12)*(r*0.72+10)).toFixed(0)} ${(100+Math.cos(a)*r).toFixed(0)},${(78+Math.sin(a)*r*.72).toFixed(0)}`}).join(' ')} Q150,70 124,70 Q100,62 76,70 Q50,70 30,92Z" fill="#3b2a24" stroke="#20160f" stroke-width="2.5" stroke-linejoin="round"/>`,
+    wig_mohawk:`${[[68,62],[78,46],[90,34],[102,28],[114,34],[126,46],[134,60]].map(([x,y],i)=>`<path d="M${x-8},${y+16} L${x},${y-10} L${x+8},${y+16}Z" fill="${i%2?'#69db7c':'#3fbf6f'}" stroke="#2f8f4f" stroke-width="2" stroke-linejoin="round"/>`).join('')}`
+  };
   const necks={
     goldbell:`<path d="M64,135 Q100,151 136,135" stroke="#c9a54a" stroke-width="5" fill="none"/><circle cx="100" cy="153" r="10" fill="#ffd43b" stroke="#c9962a" stroke-width="2.5"/><path d="M91,153 h18" stroke="#c9962a" stroke-width="2"/><circle cx="100" cy="158" r="2" fill="#a8740f"/><path d="M114,139 l2,-5 2,5 5,2 -5,2 -2,5 -2,-5 -5,-2z" fill="#fff6c8"/>`,
     jewel:`<path d="M64,133 Q100,153 136,133" stroke="#e0b030" stroke-width="2.6" fill="none"/>${[78,88,112,122].map(x=>`<circle cx="${x}" cy="${140+(1-Math.pow((x-100)/36,2))*7}" r="2.6" fill="#ff8fab" stroke="#d9607f" stroke-width=".8"/>`).join('')}<path d="M100,144 l11,9 -11,15 -11,-15z" fill="#5fd0e8" stroke="#2a8fb0" stroke-width="2" stroke-linejoin="round"/><path d="M95,152 l5,-4 3,3" stroke="#fff" stroke-width="1.6" fill="none" opacity=".85"/>`,
@@ -928,7 +946,7 @@ ${L.blush!==false?both(`<ellipse cx="66" cy="110" rx="9" ry="5" fill="#ff9fb3" o
 <path d="M95,106 L105,106 L100,111.5 Z" fill="${L.nose}" stroke="${L.nose}" stroke-width="2.5" stroke-linejoin="round"/>
 <path d="M100,112 Q96,118 91,115 M100,112 Q104,118 109,115" stroke="${ink}" stroke-width="2.2" fill="none" stroke-linecap="round"/>
 ${both(`<path d="M58,106 L36,102 M58,112 L37,115" stroke="${ink}" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>`)}
-${eq.neck&&necks[eq.neck]||''}${eq.face&&faces[eq.face]||''}${eq.hat&&hats[eq.hat]||''}${expr==='sick'?`<path d="M82,58 v10 M91,56 v12 M100,55 v12 M109,56 v12 M118,58 v10" stroke="#7fb3e8" stroke-width="2.5" opacity=".75" stroke-linecap="round"/><g transform="rotate(22 106 114)"><rect x="104" y="111" width="30" height="6" rx="3" fill="#fff" stroke="#9aa7bd" stroke-width="1.5"/><circle cx="134" cy="114" r="4.5" fill="#e2453c"/></g>`:''}
+${eq.wig&&wigs[eq.wig]||''}${eq.neck&&necks[eq.neck]||''}${eq.face&&faces[eq.face]||''}${eq.hat&&hats[eq.hat]||''}${expr==='sick'?`<path d="M82,58 v10 M91,56 v12 M100,55 v12 M109,56 v12 M118,58 v10" stroke="#7fb3e8" stroke-width="2.5" opacity=".75" stroke-linecap="round"/><g transform="rotate(22 106 114)"><rect x="104" y="111" width="30" height="6" rx="3" fill="#fff" stroke="#9aa7bd" stroke-width="1.5"/><circle cx="134" cy="114" r="4.5" fill="#e2453c"/></g>`:''}
 </g>${eq.aura&&AF[eq.aura]||''}${eq.mpet==='rudolph'&&!o.nompet?rudolphSVG(o.still):''}</svg>`;
 }
 function MAPLE(x,y,s,c,rot=0){return`<g transform="translate(${x},${y}) rotate(${rot}) scale(${s})"><path d="M0,-10 L2.5,-4.5 L7,-6.5 L5.5,-1.5 L10,0 L5,3 L6.5,7 L1.6,5 L.8,11 L-.8,11 L-1.6,5 L-6.5,7 L-5,3 L-10,0 L-5.5,-1.5 L-7,-6.5 L-2.5,-4.5 Z" fill="${c}" stroke="${shade(c,-.35)}" stroke-width="1" stroke-linejoin="round"/></g>`}
@@ -968,7 +986,7 @@ const I={
 const heartSVG=`<svg viewBox="0 0 24 24"><path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z" fill="#ff7a9a"/></svg>`;
 function itemPic(id,cat){
   const it=ITEMS[id];
-  if(['hat','neck','face','body','aura'].includes(it.t)){const c=cat||{look:{coat:'#f6f2ec',pattern:'none',eyeL:'#79c267',eyeR:'#79c267',ear:'pointed',tail:'long',build:'normal',nose:'#f39bb1',blush:true},stage:'adult'};return catSVG(c,{eq:{[it.t]:id},still:true})}
+  if(['hat','neck','face','body','aura','wig'].includes(it.t)){const c=cat||{look:{coat:'#f6f2ec',pattern:'none',eyeL:'#79c267',eyeR:'#79c267',ear:'pointed',tail:'long',build:'normal',nose:'#f39bb1',blush:true},stage:'adult'};return catSVG(c,{eq:{[it.t]:id},still:true})}
   const P={
     churu:`<svg viewBox="0 0 100 100"><g transform="rotate(-30 50 50)"><rect x="38" y="12" width="24" height="70" rx="6" fill="#ffb86b" stroke="#d98a2b" stroke-width="3"/><rect x="38" y="12" width="24" height="14" rx="5" fill="#ff8fab"/><path d="M38 80 h24 l-4 8 h-16z" fill="#ffd6a8" stroke="#d98a2b" stroke-width="3"/><text x="50" y="58" font-size="12" text-anchor="middle" fill="#7a3e00" font-family="Jua">츄르</text></g></svg>`,
     fish:`<svg viewBox="0 0 100 100"><ellipse cx="50" cy="72" rx="40" ry="10" fill="#e8eef2"/><path d="M18 52 Q44 26 70 50 Q44 74 18 52z" fill="#8fb3c9" stroke="#5d8399" stroke-width="3"/><path d="M68 50 L86 38 L84 62 Z" fill="#8fb3c9" stroke="#5d8399" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="48" r="3" fill="#2c2433"/><path d="M40 44 l4 10 M48 42 l4 12 M56 44 l4 10" stroke="#c97f3a" stroke-width="3"/></svg>`,
@@ -1348,29 +1366,32 @@ function cupGame(){
   if(v.sick)return toast('아파서 놀 수 없어요. 알약을 먹여주세요');
   if(v.cd.play>now())return toast(`조금 쉬었다 놀아요 (${dur(v.cd.play-now())})`);
   if(v.st.energy<5)return toast('기력이 없어요. 낮잠을 재워주세요 (2분이면 가득 차요)');
-  const cols=['#ff8fab','#7fb3e8','#ffd166'];
-  openSheet(`<h2>놀아주기: 간식 컵 섞기</h2><p class="lead">츄르가 들어간 컵을 잘 보세요! 섞은 뒤에 맞히면 다음 판은 더 빨라져요. 많이 맞힐수록 ${esc(v.name)}${iGa(v.name).slice(-1)} 더 신나요.</p>
+  openSheet(`<h2>놀아주기: 간식 컵 섞기</h2><p class="lead">츄르가 들어간 컵을 잘 보세요! 맞힐수록 컵이 늘어나고 더 빨리 섞여요. 많이 맞힐수록 ${esc(v.name)}${iGa(v.name).slice(-1)} 더 신나요.</p>
   <div class="gstat num"><span id="cr">연속 0판</span><span id="cm">잘 보세요</span></div>
-  <div class="cups" id="cups" data-live="1">${cols.map((col,i)=>`<div class="cup" data-i="${i}" style="left:${7+i*31}%"><div class="tr">${itemPic('churu')}</div><div class="cv">${CUP_SVG(col)}</div></div>`).join('')}</div>
+  <div class="cups" id="cups" data-live="1"></div>
   <div class="row" style="margin-top:12px;gap:8px"><button class="btn block" style="flex:1" id="cgo2">시작</button><button class="btn ghost" style="flex:1" id="cq" hidden>그만하기</button></div><div id="cres2"></div>`);
-  const cups=[...document.querySelectorAll('.cup')];let slot=[0,1,2],treat=0,streak=0,phase='idle',done=false;
-  const place=ms=>cups.forEach((cp,i)=>{cp.style.transitionDuration=ms+'ms';cp.style.left=(7+slot[i]*31)+'%'});
+  const box=$('#cups');let cups=[],slot=[],treat=0,streak=0,phase='idle',done=false,n=3;
+  const geo=n=>{const W=n===3?26:n===4?21:17;const gap=(100-n*W)/(n+1);return{W,gap}};
+  const place=ms=>{const {W,gap}=geo(n);cups.forEach((cp,i)=>{cp.style.transitionDuration=ms+'ms';cp.style.left=(gap+slot[i]*(W+gap))+'%';cp.style.width=W+'%'})};
+  const build=()=>{box.innerHTML=Array.from({length:n},(_,i)=>`<div class="cup" data-i="${i}"><div class="tr">${itemPic('churu')}</div><div class="cv">${CUP_SVG('#e98aa6')}</div></div>`).join('');cups=[...box.querySelectorAll('.cup')];slot=cups.map((_,i)=>i);place(0);
+    cups.forEach((cp,i)=>cp.addEventListener('click',()=>pick(i)))};
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
-  const round=async()=>{phase='show';$('#cm').textContent='잘 보세요';$('#cq').hidden=true;treat=Math.floor(Math.random()*3);cups.forEach(cp=>cp.classList.remove('up'));
-    cups.forEach(cp=>cp.querySelector('.tr').style.visibility='hidden');cups[treat].querySelector('.tr').style.visibility='visible';
-    cups[treat].classList.add('up');await wait(900);cups[treat].classList.remove('up');await wait(400);
-    const n=4+streak*2,ms=Math.max(170,420-streak*45);$('#cm').textContent='섞는 중...';
-    for(let k=0;k<n;k++){if(!$('#cups'))return;const a=Math.floor(Math.random()*3);let b2=(a+1+Math.floor(Math.random()*2))%3;const ia=slot.indexOf(a),ib=slot.indexOf(b2);slot[ia]=b2;slot[ib]=a;place(ms);await wait(ms+40)}
+  const round=async()=>{phase='show';$('#cq').hidden=true;n=streak>=5?5:streak>=2?4:3;build();treat=Math.floor(Math.random()*n);
+    cups.forEach((cp,i)=>cp.querySelector('.tr').style.visibility=i===treat?'visible':'hidden');$('#cm').textContent='잘 보세요';
+    await wait(250);cups[treat].classList.add('up');await wait(Math.max(450,800-streak*50));cups[treat].classList.remove('up');await wait(350);
+    const swaps=7+streak*2,ms=Math.max(110,300-streak*28);$('#cm').textContent='섞는 중...';
+    for(let k=0;k<swaps;k++){if(!$('#cups'))return;const a=Math.floor(Math.random()*n);let b2=Math.floor(Math.random()*(n-1));if(b2>=a)b2++;const ia=slot.indexOf(a),ib=slot.indexOf(b2);slot[ia]=b2;slot[ib]=a;place(ms);await wait(ms+25)}
     phase='pick';$('#cm').textContent='어느 컵일까요?'};
   const finish=async()=>{if(done)return;done=true;phase='end';const s2=streak;
-    const coins=Math.min(50,5+s2*4),mood=Math.min(25,8+s2*2);
-    await catTx(c.id,(c,res)=>{c.st.mood=clamp(c.st.mood+mood);c.st.hunger=clamp(c.st.hunger-5);c.st.energy=clamp(c.st.energy-5);c.aff=clamp(c.aff+1);c.neglect=0;c.cd.play=now()+2*MIN;bumpTr(c,{play:1});res.coins=coins;xp(c,res,6+s2*2)});
+    const coins=Math.min(50,5+s2*5),mood=Math.min(25,8+s2*3);
+    await catTx(c.id,(c,res)=>{c.st.mood=clamp(c.st.mood+mood);c.st.hunger=clamp(c.st.hunger-5);c.st.energy=clamp(c.st.energy-5);c.aff=clamp(c.aff+1);c.neglect=0;c.cd.play=now()+2*MIN;bumpTr(c,{play:1});res.coins=coins;xp(c,res,6+s2*3)});
     qEvent('play');S.happyUntil=now()+1500;
-    $('#cres2').innerHTML=`<div class="empty"><h2>${s2>=6?'눈썰미 천재냥!':s2>=3?'신나게 놀았어요!':'재밌었다냥!'}</h2><p>연속 ${s2}판 · 기분 +${mood} · ${coins}코인</p></div>`;
+    $('#cres2').innerHTML=`<div class="empty"><h2>${s2>=7?'눈썰미 천재냥!':s2>=4?'신나게 놀았어요!':'재밌었다냥!'}</h2><p>연속 ${s2}판 · 기분 +${mood} · ${coins}코인</p></div>`;
     $('#cq').hidden=true;const g=$('#cgo2');g.hidden=false;g.disabled=false;g.textContent='닫기';g.onclick=closeSheet;schedule()};
-  cups.forEach((cp,i)=>cp.addEventListener('click',async()=>{if(phase!=='pick')return;phase='reveal';cp.classList.add('up');
-    if(i===treat){streak++;$('#cr').textContent=`연속 ${streak}판`;$('#cm').textContent='정답! 냐옹!';await wait(800);$('#cgo2').hidden=false;$('#cgo2').textContent='다음 판';$('#cgo2').disabled=false;$('#cq').hidden=false;phase='between'}
-    else{$('#cm').textContent='아쉬워요! 여기 있었어요';cups[treat].classList.add('up');await wait(900);finish()}}));
+  const pick=async i=>{if(phase!=='pick')return;phase='reveal';cups[i].classList.add('up');
+    if(i===treat){streak++;$('#cr').textContent=`연속 ${streak}판`;$('#cm').textContent=streak===2?'정답! 다음 판은 컵이 4개!':streak===5?'정답! 이제 컵이 5개!':'정답! 냐옹!';await wait(800);$('#cgo2').hidden=false;$('#cgo2').textContent='다음 판';$('#cgo2').disabled=false;$('#cq').hidden=false;phase='between'}
+    else{$('#cm').textContent='아쉬워요! 여기 있었어요';cups[treat].classList.add('up');await wait(900);finish()}};
+  build();
   $('#cgo2').onclick=()=>{if(phase==='idle'||phase==='between'){$('#cgo2').hidden=true;round()}};
   $('#cq').onclick=()=>finish();
 }
@@ -1888,7 +1909,7 @@ function openDiary(id,idx=0){
 /* ================= badges ================= */
 const BADGES=[['shark','상어 생존자','상어에게 3번 물리기',3,'#6f8599','상어'],['gold','황금 낚시꾼','황금 잉어 낚기',1,'#e0a72a','황금'],['fish','강태공','낚시로 50번 건지기',50,'#4dabf7','낚시'],['guest','단골 하객','결혼식 하객 5번',5,'#ff8fab','하객'],['wed','백년가약','결혼식 올리기',1,'#e2456f','부부'],['adult','육묘 졸업','고양이를 어른냥으로 키우기',1,'#3fb5a0','어른'],['quest','퀘스트 달인','일일 퀘스트 30개 완료',30,'#9775fa','퀘스트'],['rank1','주간 챔피언','주간 랭킹 1위 하기',1,'#f2b33d','1위'],['pet','쓰담 장인','내 고양이 1000번 쓰다듬기',1000,'#ff9f43','쓰담'],['book','수다쟁이','방명록 10개 쓰기',10,'#51b26b','방명록'],['goguma','고구마 장인','군고구마 10개 굽기',10,'#a0569f','고구마'],['rudolph','산타의 친구','루돌프 미니펫 받기',1,'#e2453c','루돌프'],
   ['stray','길냥이 친구','길고양이 밥 10번 주기',10,'#f2a950','길냥'],['fs1','패션왕','패션쇼 1위 하기',1,'#c3a6ff','패션'],
-  ['col_hat','모자 수집가','모자 도감 완성',1,'#ff8fab','모자'],['col_body','옷장 부자','옷 도감 완성',1,'#7fb3e8','옷장'],['col_wear','액세서리 왕','액세서리 도감 완성',1,'#e0a72a','장신구'],['col_aura','오라 마스터','배경 효과 도감 완성',1,'#9775fa','오라'],['col_room','인테리어 장인','방 꾸미기 도감 완성',1,'#51b26b','방'],['col_fish','낚시 박사','낚시 도감 완성',1,'#4dabf7','박사']];
+  ['col_hat','모자 수집가','모자 도감 완성',1,'#ff8fab','모자'],['col_wig','헤어 디자이너','가발 도감 완성',1,'#c97f2a','가발'],['col_body','옷장 부자','옷 도감 완성',1,'#7fb3e8','옷장'],['col_wear','액세서리 왕','액세서리 도감 완성',1,'#e0a72a','장신구'],['col_aura','오라 마스터','배경 효과 도감 완성',1,'#9775fa','오라'],['col_room','인테리어 장인','방 꾸미기 도감 완성',1,'#51b26b','방'],['col_fish','낚시 박사','낚시 도감 완성',1,'#4dabf7','박사']];
 const achAdd=(k,n=1)=>S.me&&Store.tx(`users/${S.me}/ach/${k}`,v=>(v||0)+n);
 function badgeProg(u,k){const a=(u&&u.ach)||{};if(k==='wed')return myWeddings().some(w=>isHost(w)&&wedPhase(w)==='done')?1:0;if(k==='adult')return Object.values(S.cats).some(c=>c&&c.owner===S.me&&c.stage==='adult')?1:0;if(k==='rudolph')return((u.inv||{}).rudolph)?1:0;if(k.startsWith('col_'))return((u.colc||{})[k.slice(4)+'_full'])?1:0;return a[k]||0}
 function medal(b,sz){return`<svg viewBox="0 0 44 44"><path d="M14 2 L22 14 L30 2" stroke="${b[4]}" stroke-width="5" fill="none" opacity=".55"/><circle cx="22" cy="26" r="16" fill="${b[4]}" stroke="${shade(b[4],-.25)}" stroke-width="2"/><circle cx="22" cy="26" r="12" fill="none" stroke="#fff" stroke-width="1.2" opacity=".6"/><text x="22" y="30" font-size="${b[5].length>2?8.5:10.5}" text-anchor="middle" fill="#fff" font-family="Jua">${b[5]}</text></svg>`}
@@ -2004,7 +2025,7 @@ async function strayGift(k){
 /* ================= fashion show ================= */
 const FS_START='2026-11-23';
 const fsOn=()=>{try{if(localStorage.getItem('nyang-fs')==='1')return true}catch(e){}return weekKey()>=FS_START};
-const FS_SLOTS=[['hat','모자'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
+const FS_SLOTS=[['wig','가발'],['hat','모자'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
 const FS_REW=[{c:500,s:5,it:'fscrown'},{c:300,s:3},{c:150,s:1}],FS_JOIN={c:50,s:0};
 function fsEntries(wk){return vEntries().map(([k,u])=>u&&u.fs&&u.fs[wk]&&S.cats[u.fs[wk].cat]?Object.assign({o:k},u.fs[wk]):null).filter(Boolean).sort((a,b)=>Object.keys(b.v||{}).length-Object.keys(a.v||{}).length||a.at-b.at)}
 const fsLook=e=>Object.assign({},live(S.cats[e.cat]),{eq:e.of||{}});
@@ -2069,7 +2090,7 @@ async function fsClaim(){
 setInterval(fsClaim,6000);
 
 /* ================= collections ================= */
-const COLS=[['hat','모자 도감',k=>ITEMS[k].t==='hat'],['body','옷 도감',k=>ITEMS[k].t==='body'],['wear','액세서리 도감',k=>ITEMS[k].t==='neck'||ITEMS[k].t==='face'],['aura','배경 효과 도감',k=>ITEMS[k].t==='aura'],['room','방 꾸미기 도감',k=>ITEMS[k].t==='room']];
+const COLS=[['hat','모자 도감',k=>ITEMS[k].t==='hat'],['wig','가발 도감',k=>ITEMS[k].t==='wig'],['body','옷 도감',k=>ITEMS[k].t==='body'],['wear','액세서리 도감',k=>ITEMS[k].t==='neck'||ITEMS[k].t==='face'],['aura','배경 효과 도감',k=>ITEMS[k].t==='aura'],['room','방 꾸미기 도감',k=>ITEMS[k].t==='room']];
 const COL_HALF={c:200,s:2},COL_FULL={c:1000,s:10},COL_FISH={c:300,s:3,it:'fishhat'};
 function colItems(f){return Object.keys(ITEMS).filter(k=>!ITEMS[k].ex&&!ITEMS[k].wed&&!ITEMS[k].ev&&f(k))}
 function colStat(u,key){if(key==='fish'){const L=FISH.filter(x=>!x.shark);const b=((u.fish||{}).best)||{};return{all:L.map(x=>x.k),own:L.filter(x=>b[x.k]).length,tot:L.length}}const c=COLS.find(x=>x[0]===key);const L=colItems(c[2]);const inv=u.inv||{};return{all:L,own:L.filter(k=>inv[k]).length,tot:L.length}}
@@ -2458,7 +2479,7 @@ function openDeco(){
   const c=activeCat();if(!c)return;const u=me(),inv=u.inv||{},room=u.room||{};const tab=S.tab.deco;
   let body='';
   if(tab==='wear'){
-    const slots=[['hat','머리'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
+    const slots=[['wig','가발'],['hat','머리'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
     body=slots.map(([s,lab])=>{const own=Object.keys(ITEMS).filter(k=>ITEMS[k].t===s&&inv[k]);
       return`<div class="opt"><h3>${lab}</h3>${own.length?`<div class="ch">${own.map(k=>`<button class="${c.eq[s]===k?'on':''}" data-a="equip" data-s="${s}" data-v="${c.eq[s]===k?'':k}">${ITEMS[k].n}</button>`).join('')}</div>`:`<p class="grow">아직 없어요. 상점에서 사 오세요.</p>`}</div>`}).join('');
   }else if(tab==='dye'){
@@ -2558,7 +2579,7 @@ function viewHome(){
 }
 function viewShop(){
   const u=me(),inv=u.inv||{},c=activeCat();const tab=S.tab.shop;
-  const tabs=[['food','간식'],['hat','모자'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
+  const tabs=[['food','간식'],['hat','모자'],['wig','가발'],['body','옷'],['wear','목·얼굴'],['aura','배경 효과'],['flower','꽃'],['room','방 꾸미기'],['special','특별']];
   const ids=Object.keys(ITEMS).filter(k=>!ITEMS[k].ex&&(!ITEMS[k].ev||evOn(ITEMS[k].ev))).filter(k=>{const t=ITEMS[k].t;return tab==='wear'?(t==='neck'||t==='face'):tab==='special'?(t==='special'||t==='dye'):tab==='food'?(t==='food'||t==='med'):t===tab});
   return`<div class="tabs">${tabs.map(([k,l])=>`<button class="${tab===k?'on':''}" data-a="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
   <div class="grid">${ids.map(k=>{const it=ITEMS[k],own=inv[k]||0,stack=STACK.has(k),done=!stack&&own;return`<div class="card"><div class="pic">${itemPic(k,c)}</div><b>${it.n}</b><div class="d">${it.d||''}${stack&&own?` · ${own}개 보유`:''}</div><div class="price"><span class="num"><i></i>${it.p.toLocaleString('ko-KR')}${it.s?` <em class="star">⭐${it.s}</em>`:''}</span><button class="btn small ${done?'ghost':''}" data-a="buy" data-v="${k}" ${done||(it.wed&&!canWedBuy())||(u.coins||0)<it.p||(u.stars||0)<(it.s||0)?'disabled':''}>${done?'보유 중':it.wed&&!canWedBuy()?'예비 부부만':'사기'}</button></div></div>`}).join('')}</div>
