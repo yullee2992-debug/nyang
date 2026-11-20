@@ -1491,11 +1491,11 @@ function cupGame(){
   const build=()=>{box.innerHTML=Array.from({length:n},(_,i)=>`<div class="cup" data-i="${i}"><div class="tr">${itemPic('churu')}</div><div class="cv">${CUP_SVG('#e98aa6')}</div></div>`).join('');cups=[...box.querySelectorAll('.cup')];slot=cups.map((_,i)=>i);place(0);
     cups.forEach((cp,i)=>cp.addEventListener('click',()=>pick(i)))};
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
-  const round=async()=>{phase='show';$('#cq').hidden=true;n=streak>=7?5:streak>=4?4:3;build();treat=Math.floor(Math.random()*n);
+  const round=async()=>{phase='show';$('#cq').hidden=true;n=streak>=6?5:streak>=3?4:3;build();treat=Math.floor(Math.random()*n);
     cups.forEach((cp,i)=>cp.querySelector('.tr').style.visibility=i===treat?'visible':'hidden');$('#cm').textContent='잘 보세요';
-    await wait(250);cups[treat].classList.add('up');await wait(Math.max(650,1000-streak*40));cups[treat].classList.remove('up');await wait(350);
-    const swaps=5+Math.round(streak*1.3),ms=Math.max(165,360-streak*22);$('#cm').textContent='섞는 중...';
-    for(let k=0;k<swaps;k++){if(!$('#cups'))return;const a=Math.floor(Math.random()*n);let b2=Math.floor(Math.random()*(n-1));if(b2>=a)b2++;const ia=slot.indexOf(a),ib=slot.indexOf(b2);slot[ia]=b2;slot[ib]=a;place(ms);await wait(ms+60)}
+    await wait(250);cups[treat].classList.add('up');await wait(Math.max(600,950-streak*42));cups[treat].classList.remove('up');await wait(350);
+    const swaps=6+Math.round(streak*1.3),ms=Math.max(150,345-streak*24);$('#cm').textContent='섞는 중...';
+    for(let k=0;k<swaps;k++){if(!$('#cups'))return;const a=Math.floor(Math.random()*n);let b2=Math.floor(Math.random()*(n-1));if(b2>=a)b2++;const ia=slot.indexOf(a),ib=slot.indexOf(b2);slot[ia]=b2;slot[ib]=a;place(ms);await wait(ms+52)}
     phase='pick';$('#cm').textContent='어느 컵일까요?'};
   const finish=async()=>{if(done)return;done=true;phase='end';const s2=streak;
     const coins=Math.min(50,5+s2*5),mood=Math.min(25,8+s2*3);
