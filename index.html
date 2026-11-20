@@ -1328,7 +1328,7 @@ async function pet(ev){
   if(res&&res.refuse){say('하악!');return}
   if(res&&res.restNow){toast(`${c.name}${eunNeun(c.name).slice(-1)} 너무 많이 만져서 피곤해해요 😿 2분만 쉬게 해 주고 이따 다시 쓰다듬어 주세요`,3500);say('너무 많이 만졌다냥... 좀 쉬자');schedule();return}
   if(res&&res.rest){toast(`${c.name}${eunNeun(c.name).slice(-1)} 지금 피곤해서 쉬는 중이에요 😴`);return}
-  petBonus();qEvent('pet');
+  petBonus();qEvent('pet');gogDrop();
   S.happyUntil=now()+900;say(Math.random()<.6?ptLine(S.cats[c.id]||c,'pet'):pick(['골골골...','냐아~','그르릉']));schedule();
 }
 function buzz(ms=12){try{if(navigator.vibrate&&matchMedia('(pointer:coarse)').matches)navigator.vibrate(ms)}catch(e){}}
@@ -1714,6 +1714,11 @@ function babySheet(id){
 let lastPtr={x:innerWidth/2,y:innerHeight/2};
 document.addEventListener('pointerdown',e=>{lastPtr={x:e.clientX,y:e.clientY}},true);
 function coinFx(text){const d=document.createElement('div');d.className='coinfx';d.style.left=lastPtr.x+'px';d.style.top=lastPtr.y+'px';d.innerHTML=`<i></i><b>${esc(text)}</b>`;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
+async function gogDrop(){
+  if(!isAutumn()||Math.random()>=1/20||!S.me)return;const d=kstDay();let ok=false,n=0;
+  await Store.tx('users/'+S.me,u=>{if(!u)return u;const g=u.gogDrop&&u.gogDrop.d===d?u.gogDrop:{d,n:0};if(g.n>=10)return;g.n++;n=g.n;u.gogDrop=g;u.inv=u.inv||{};u.inv.rawgoguma=(u.inv.rawgoguma||0)+1;ok=true;return u});
+  if(!ok)return;buzz([15,30,15]);coinFx('🍠 생고구마 발견!');if(!PET)toast(`쓰다듬다가 생고구마를 찾았어요! 오늘 ${n}/10개 · 이벤트 탭 모닥불에서 구워요`,3000);else deskSay(deskClicked||(activeCat()||{}).id,`🍠 생고구마 발견! (오늘 ${n}/10)`,2600);
+}
 function petBonus(amt=50){
   if(!PET)return;
   const K='nyang-petbonus-'+S.me;let left=0;try{left=+localStorage.getItem(K)||0}catch(e){}
@@ -2490,7 +2495,7 @@ function viewAutumn(){
   ${L.some(l=>l.open&&!l.got)?'<button class="btn small" data-a="go" data-v="plaza">광장에서 줍기</button>':''}</div>
   <div class="sect">낙엽 교환</div><div class="list">${LEAF_EX.map(([k,cost,name])=>{const own=k!=='coins'&&!STACK.has(k)&&inv[k];return`<div class="item"><div class="thumb" style="width:48px;height:48px;flex-basis:48px">${k==='coins'?`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="#ffd43b" stroke="#d99a1e" stroke-width="4"/><text x="50" y="60" font-size="28" text-anchor="middle" fill="#a8740f" font-family="Jua">40</text></svg>`:itemPic(k,k==='maplepin'||k==='autumn'?c:undefined)}</div><div class="tx"><b>${name}</b><span>낙엽 ${cost}장${k==='rawgoguma'?' · 모닥불 땔감과 바꿔요':''}</span></div>${own?'<span class="chip gray">보유</span>':`<button class="btn small" data-a="leaftrade" data-v="${k}" ${st.n<cost?'disabled':''}>교환</button>`}</div>`}).join('')}</div>
   <div class="sect">김장철 고구마 굽기</div>
-  <div class="panel stack" style="background:#fff7ef;border-color:#f2d9bf"><p class="lead" style="margin:0">생고구마를 모닥불에 올리고, 노란 칸에 들어왔을 때 눌러 꺼내면 <b>군고구마</b>! 덜 익으면 다시 돌려받고, 너무 오래 두면 타버려요.</p>
+  <div class="panel stack" style="background:#fff7ef;border-color:#f2d9bf"><p class="grow" style="margin:0 0 4px">🍠 냥이를 쓰다듬다 보면 가끔 생고구마를 찾아요 (하루 ${Math.min(10,(me().gogDrop&&me().gogDrop.d===kstDay())?me().gogDrop.n:0)}/10개)</p><p class="lead" style="margin:0">생고구마를 모닥불에 올리고, 노란 칸에 들어왔을 때 눌러 꺼내면 <b>군고구마</b>! 덜 익으면 다시 돌려받고, 너무 오래 두면 타버려요.</p>
   <div><b>마을 공동 목표</b> · 군고구마 <span class="num">${Math.min(vil,GOG_GOAL)} / ${GOG_GOAL}</span>개<div class="bar" style="height:9px;margin-top:6px"><i style="width:${Math.min(100,vil/GOG_GOAL*100)}%;background:#ff9f43"></i></div><p class="grow" style="margin:4px 0 0">달성하면 모두에게 ${GOG_REW.c}코인 + 군고구마 ${GOG_REW.n}개${u.gogGoal===curYear()?' · <b>받았어요!</b>':''}</p></div>
   <p class="num" style="margin:0">내가 구운 군고구마 ${g}개 · 생고구마 ${inv.rawgoguma||0}개 · 군고구마 ${inv.goguma||0}개</p>
   <div class="row"><button class="btn" style="flex:1" data-a="gogo" ${inv.rawgoguma?'':'disabled'}>고구마 굽기</button><button class="btn ghost" style="flex:1" data-a="buy" data-v="rawgoguma">생고구마 사기 · 12코인</button></div></div>`;
