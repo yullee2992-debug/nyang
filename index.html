@@ -2283,11 +2283,11 @@ function viewFS(){
     ${FS_SLOTS.map(([sl,lab])=>{const own=Object.keys(ITEMS).filter(k=>ITEMS[k].t===sl&&inv[k]);return own.length?`<div class="opt"><h3>${lab}</h3><div class="ch"><button class="${!pk.of[sl]?'on':''}" data-a="fspick" data-s="${sl}" data-v="">없음</button>${own.map(k=>`<button class="${pk.of[sl]===k?'on':''}" data-a="fspick" data-s="${sl}" data-v="${k}">${ITEMS[k].n}</button>`).join('')}</div></div>`:''}).join('')}
     <button class="btn block" style="background:#b78af0" data-a="fsenter">대회 나가기</button><p class="grow" style="margin:0">한 주에 한 마리만 나갈 수 있고, 나간 뒤에는 옷을 바꿀 수 없어요.</p>`:''}</div>`}
   else h+=`<div class="sect">내 출전작</div><div class="item" style="background:#f6eefe;border-color:#e2d3fb"><div class="thumb" style="width:64px;height:64px;flex-basis:64px;background:#fff">${catSVG(fsLook(mine),{still:true})}</div><div class="tx"><b>${esc(S.cats[mine.cat].name)}</b><span>지금 ${Object.keys(mine.v||{}).length}표 · 댓글 ${Object.keys(mine.cm||{}).length}개 · ${E.findIndex(e=>e.o===S.me)+1}위</span></div><button class="btn small ghost" data-a="fscm" data-v="${S.me}">댓글 보기</button></div>`;
-  const voters=myCats().filter(c=>!fsv[c.id]);
-  h+=`<div class="sect">출전작 · 투표 <small class="grow">· 남은 표 ${voters.length}장 (고양이 한 마리당 한 표)</small></div>`;
+  const voters=myCats().filter(c=>!fsv[c.id]),allV=myCats().slice(0,4);
+  h+=`<div class="sect">출전작 · 투표 <small class="grow">· 남은 표 ${voters.length}장 (고양이 한 마리당 한 표 · 언제든 다시 눌러 바꿀 수 있어요)</small></div>`;
   h+=E.length?`<div class="fsgrid">${E.map((e,i)=>{const c=S.cats[e.cat],vn=Object.keys(e.v||{}).length,cmn=Object.keys(e.cm||{}).length,myv=Object.entries(fsv).filter(([k,o])=>o===e.o).map(([k])=>(S.cats[k]||{}).name).filter(Boolean);
     return`<div class="fscard ${i===0&&vn?'top1':''}"><div class="pic">${catSVG(fsLook(e),{still:true})}</div><b>${i+1}위 · ${esc(c.name)}</b><span class="grow" style="font-size:.75rem">${esc(ownerName(e.o))} · <b style="color:#e0609a">♥ ${vn}표</b></span>
-    ${e.o===S.me?'<span class="chip gray">내 출전작</span>':myv.length?`<span class="chip pink">${esc(myv.join(', '))}의 표</span>`:voters.slice(0,2).map(v=>`<button class="btn small" style="background:#e0609a" data-a="fsvote" data-v="${esc(e.o)}" data-k="${v.id}">${esc(v.name)}의 한 표</button>`).join('')}
+    ${e.o===S.me?'<span class="chip gray">내 출전작</span>':allV.map(v=>{const here=fsv[v.id]===e.o,else_=fsv[v.id]&&!here;return`<button class="btn small ${here?'':else_?'ghost':''}" style="${here?'background:#e0609a':else_?'':'background:#f59fc3'}" data-a="fsvote" data-v="${esc(e.o)}" data-k="${v.id}">${here?`✓ ${esc(v.name)}의 표 (취소)`:else_?`${esc(v.name)} 표 여기로 옮기기`:`${esc(v.name)}의 한 표`}</button>`}).join('')}
     <button class="btn small ghost" data-a="fscm" data-v="${esc(e.o)}">댓글 ${cmn}</button></div>`}).join('')}</div>`:'<div class="empty">아직 출전한 고양이가 없어요. 첫 번째로 나가 보세요!</div>';
   return h;
 }
@@ -2301,9 +2301,10 @@ async function fsEnter(){
 }
 async function fsVote(o,catId){
   const wk=weekKey(),c=S.cats[catId],e=((S.users[o]||{}).fs||{})[wk];if(!c||c.owner!==S.me||!e)return;if(o===S.me)return toast('내 출전작에는 투표할 수 없어요');
-  if((((me().fsv||{})[wk])||{})[catId])return toast(`${c.name}${eunNeun(c.name).slice(-1)} 이미 투표했어요`);
-  let ok=false;await Store.tx(`users/${S.me}/fsv/${wk}/${catId}`,v=>{if(v){ok=false;return}ok=true;return o});if(!ok)return;
-  await Store.set(`users/${o}/fs/${wk}/v/${catId}`,S.me);toast(`${c.name}의 한 표를 줬어요!`);
+  const prev=(((me().fsv||{})[wk])||{})[catId];
+  if(prev===o){await Store.set(`users/${S.me}/fsv/${wk}/${catId}`,null);await Store.set(`users/${o}/fs/${wk}/v/${catId}`,null);return toast(`${c.name}의 표를 취소했어요. 다른 출전작에 다시 투표할 수 있어요`)}
+  await Store.set(`users/${S.me}/fsv/${wk}/${catId}`,o);if(prev)await Store.set(`users/${prev}/fs/${wk}/v/${catId}`,null);
+  await Store.set(`users/${o}/fs/${wk}/v/${catId}`,S.me);toast(prev?`${c.name}의 표를 옮겼어요!`:`${c.name}의 한 표를 줬어요!`);
 }
 function openFsComments(o){
   const wk=weekKey(),e=((S.users[o]||{}).fs||{})[wk];if(!e)return;const c=S.cats[e.cat];const L=Object.values(e.cm||{}).sort((a,b)=>a.at-b.at);
