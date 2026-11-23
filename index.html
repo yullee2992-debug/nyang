@@ -488,6 +488,12 @@ html.noscroll,html.noscroll body{overflow:hidden}
 .dexms span{font-size:.75rem;color:var(--muted)}.dexms .btn.small{padding:4px 10px}
 .dexms .can{border-color:#f2b33d;background:#fff8e6}.dexms .done{opacity:.6}
 .rfish{animation:rfish 3s ease-in-out infinite alternate}@keyframes rfish{to{transform:translateX(70px)}}
+.accg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:6px 0 14px;width:100%}
+.accc{position:relative}
+.accp{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px 12px;border:2px solid var(--line);border-radius:18px;background:#fff;cursor:pointer}
+.accp:hover{border-color:var(--pink)}.accp .av{width:78%}.accp .av svg{display:block;width:100%;height:auto}.accp .ld{aspect-ratio:1;display:grid;place-items:center;color:var(--muted)}
+.accp b{font-family:var(--display);font-weight:400;font-size:1.1rem}.accp span{font-size:.78rem;color:var(--muted)}
+.accx{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:#f1edf6;color:var(--muted);font-size:1rem;line-height:1}
 .oxq{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:18px 16px;text-align:center;font-family:var(--display);font-size:1.25rem;line-height:1.5;min-height:110px;display:grid;place-items:center}
 .oxb{display:flex;gap:12px;margin-top:12px}.oxb button{flex:1;font-family:var(--display);font-size:2.2rem;padding:14px 0;border-radius:18px;border:2px solid var(--line);background:#fff}
 .oxb .o{color:#2f86c9;border-color:#bfe0f7}.oxb .x{color:#e2456f;border-color:#ffd0dc}
@@ -1475,8 +1481,20 @@ async function login(owner,pin){
   if(u.pin!==pinH)throw'비밀번호 4자리가 맞지 않아요.';
   setSession(key,pinH);
 }
-function setSession(key,pin){S.session={key,pin};try{localStorage.setItem('nyang-session',JSON.stringify(S.session))}catch(e){}S.me=key;subscribe();if(DK&&!PET)DK.sessionChanged()}
-function logout(){S.subs.forEach(f=>f());S.subs=[];S.me=null;S.session=null;try{localStorage.removeItem('nyang-session')}catch(e){}S.screen='gate';closeSheet();render();if(DK&&!PET)DK.sessionChanged()}
+function accList(){try{const L=JSON.parse(localStorage.getItem('nyang-accounts')||'[]');if(Array.isArray(L))return L.filter(x=>x&&x.key)}catch(e){}return[]}
+function accSave(L){try{localStorage.setItem('nyang-accounts',JSON.stringify(L))}catch(e){}}
+function accAdd(key,pin){const L=accList().filter(x=>x.key!==key);L.unshift({key,pin});accSave(L)}
+function accRemove(key){accSave(accList().filter(x=>x.key!==key));delete (S.accInfo||{})[key]}
+function setSession(key,pin){S.session={key,pin};accAdd(key,pin);try{localStorage.setItem('nyang-session',JSON.stringify(S.session))}catch(e){}S.me=key;subscribe();if(DK&&!PET)DK.sessionChanged()}
+function goAccounts(){S.subs.forEach(f=>f());S.subs=[];S.me=null;S.view='home';S.screen='accounts';closeSheet();render();accLoad()}
+async function accLoad(){S.accInfo=S.accInfo||{};for(const a of accList()){try{const u=await Store.get('users/'+a.key);if(!u||u.pin!==a.pin){S.accInfo[a.key]={bad:1};continue}const c=u.main?await Store.get('cats/'+u.main):null;S.accInfo[a.key]={name:u.name,vname:u.vname||'',cat:c?norm(c):null}}catch(e){}}if(S.screen==='accounts')render()}
+async function accPick(key){const a=accList().find(x=>x.key===key);if(!a)return;const u=await Store.get('users/'+key);if(!u||u.pin!==a.pin){accRemove(key);toast('비밀번호가 바뀌어서 다시 로그인해야 해요');render();return}
+  S.subs.forEach(f=>f());S.subs=[];S.users={};S.cats={};S.view='home';S.tab={shop:'food',deco:'wear'};S.screen='app';setSession(key,a.pin)}
+function viewAccounts(){const L=accList(),I=S.accInfo||{};
+  return`<div class="gate"><h1>어떤 냥이로 놀까요?</h1><p>이 기기에 저장된 계정이에요. 냥이를 누르면 바로 들어가요.</p>
+  <div class="accg">${L.map(a=>{const i=I[a.key];return`<div class="accc"><button class="accp" data-a="accpick" data-v="${esc(a.key)}" ${i&&i.bad?'disabled':''}><div class="av">${i&&i.cat?catSVG(live(i.cat),{still:true}):'<div class="ld">…</div>'}</div><b>${i&&i.cat?esc(i.cat.name):''}</b><span>${esc((i&&i.name)||a.key)}${i&&i.vname?' · '+esc(i.vname):''}</span></button><button class="accx" data-a="accdel" data-v="${esc(a.key)}" aria-label="이 기기에서 빼기">×</button></div>`}).join('')}</div>
+  <button class="btn block" data-a="create">새 냥이 계정 만들기</button><button class="btn ghost block" data-a="loginform">다른 계정으로 로그인</button></div>`}
+function logout(){if(S.me)accRemove(S.me);S.subs.forEach(f=>f());S.subs=[];S.me=null;S.session=null;try{localStorage.removeItem('nyang-session')}catch(e){}S.screen=accList().length?'accounts':'gate';if(S.screen==='accounts')accLoad();closeSheet();render();if(DK&&!PET)DK.sessionChanged()}
 
 /* ================= actions ================= */
 async function catTx(id,fn){
@@ -3201,7 +3219,7 @@ async function openSettings(){
   ${DK?(st?`<div class="item"><div class="tx"><b>바탕화면 고양이</b><span>${st.showPet?'지금 바탕화면에 보이고 있어요':'숨겨져 있어요'}</span></div><button class="btn small ${st.showPet?'ghost':'teal'}" data-a="dset" data-k="showPet" data-v="${st.showPet?'':'1'}">${st.showPet?'숨기기':'보이기'}</button></div>
   <div class="item"><div class="tx"><b>게임 창을 닫으면</b><span>${st.closeQuits?'냥이마을이 완전히 꺼져요 (바탕화면 고양이도 사라져요)':'창만 닫히고 바탕화면 고양이는 계속 있어요'}</span></div><button class="btn small ghost" data-a="dset" data-k="closeQuits" data-v="${st.closeQuits?'':'1'}">${st.closeQuits?'고양이 남기기로':'완전히 종료로'}</button></div>
   <div class="item"><div class="tx"><b>윈도우 시작할 때 자동 실행</b><span>${st.autoStart?'켜져 있어요':'꺼져 있어요'}</span></div><button class="btn small ghost" data-a="dset" data-k="autoStart" data-v="${st.autoStart?'':'1'}">${st.autoStart?'끄기':'켜기'}</button></div>`:''):`<div class="item"><div class="tx"><b>바탕화면에 설치</b><span id="ins">${S.installEvt?'버튼을 누르면 앱처럼 설치돼요.':'크롬·엣지 주소창 오른쪽의 설치 아이콘을 누르거나, 휴대폰은 공유 → 홈 화면에 추가를 눌러주세요.'}</span></div>${S.installEvt?'<button class="btn small teal" data-a="install">설치</button>':''}</div>`}
-  </div><div class="row" style="margin-top:14px"><button class="btn ghost" data-a="logout">로그아웃</button>${DK?'<button class="btn ghost" data-a="dquit">냥이마을 종료</button>':''}${DEMO?'<button class="btn ghost" data-a="reset">체험 데이터 지우기</button>':''}</div>${DEMO?'<div class="mode" style="margin-top:14px">체험 모드 전용: 며칠을 기다리지 않고 결혼·아기 기능을 미리 해볼 수 있어요.<div class="row" style="margin-top:8px"><button class="btn small teal" data-a="cheat">지금 고양이를 어른냥으로 + 3,000코인</button></div></div>':''}`);
+  </div><div class="row" style="margin-top:14px"><button class="btn ghost" data-a="accswitch">계정 바꾸기</button><button class="btn ghost" data-a="logout">이 기기에서 로그아웃</button>${DK?'<button class="btn ghost" data-a="dquit">냥이마을 종료</button>':''}${DEMO?'<button class="btn ghost" data-a="reset">체험 데이터 지우기</button>':''}</div>${DEMO?'<div class="mode" style="margin-top:14px">체험 모드 전용: 며칠을 기다리지 않고 결혼·아기 기능을 미리 해볼 수 있어요.<div class="row" style="margin-top:8px"><button class="btn small teal" data-a="cheat">지금 고양이를 어른냥으로 + 3,000코인</button></div></div>':''}`);
 }
 function openCatCard(id){
   const t=live(S.cats[id]);if(!t)return;const u=me(),mine=t.owner===S.me;
@@ -3478,7 +3496,7 @@ async function lottoClaim(R){
 function viewGate(){
   const hero={look:{coat:'#f2a950',pattern:'tabby',pcolor:'#c9692e',eyeL:'#79c267',eyeR:'#79c267',ear:'pointed',tail:'fluffy',build:'normal',nose:'#f39bb1',blush:true},stage:'kitten',eq:{hat:'ribbon'}};
   return`<div class="gate"><div class="hero">${catSVG(hero,{expr:'happy'})}</div><h1>우리 냥이마을</h1><p>나만의 아기 고양이를 키우고, 광장에서 친구들 고양이를 만나요.</p>
-  <button class="btn block" data-a="create">새 고양이 데려오기</button><button class="btn ghost block" data-a="loginform">이미 고양이가 있어요</button>
+  <button class="btn block" data-a="create">새 고양이 데려오기</button><button class="btn ghost block" data-a="loginform">이미 고양이가 있어요</button>${accList().length?'<button class="btn ghost block" data-a="gate2acc">저장된 냥이 계정 보기</button>':''}
   ${DEMO?'<div class="mode">지금은 <b>체험 모드</b>예요. 이 브라우저에만 저장되고 예시 친구 3명이 함께 있어요. Firebase를 연결하면 진짜 친구들과 실시간으로 함께할 수 있어요.</div>':''}</div>`;
 }
 function viewLogin(){
@@ -3517,6 +3535,7 @@ function render(){
   else if(S.screen==='login')R.innerHTML=viewLogin();
   else if(S.screen==='create')R.innerHTML=viewCreate();
   else if(S.screen==='village')R.innerHTML=viewVillage();
+  else if(S.screen==='accounts')R.innerHTML=viewAccounts();
   else if(S.screen==='app'){
     if(!me())return;
     {const ae=document.activeElement;if(ae&&ae.matches&&ae.matches('main input:not([type=checkbox]),main textarea')&&ae.value){clearTimeout(S.rdef);S.rdef=setTimeout(schedule,1500);return}}
@@ -3550,7 +3569,11 @@ document.addEventListener('click',async e=>{
     case'dpet':{if(now()<deskSuppress)break;deskClicked=v;const s=DS[v];if(v==='guest'||(s&&s.away)){DK&&DK.openMain();break}if(s&&s.mine)pet(e);else if(s&&s.sleep){deskSay(v,sleepLine(live(S.cats[v])||{}),2600)}else{spawnHeart(e);deskHand(v,'pet');friendPet(v)}break}
     case'create':S.createMode='new';S.draft={look:Object.assign(randomLook(),{gender:null}),step:'fur'};S.draft.odd=S.draft.look.eyeL!==S.draft.look.eyeR;S.screen='create';render();break;
     case'loginform':S.screen='login';render();break;
-    case'gate':S.screen='gate';render();break;
+    case'accswitch':goAccounts();break;
+    case'gate2acc':S.screen='accounts';render();accLoad();break;
+    case'accpick':await accPick(v);break;
+    case'accdel':if(confirm('이 기기의 계정 목록에서 뺄까요? (계정은 지워지지 않아요)')){accRemove(v);if(!accList().length){S.screen='gate'}render()}break;
+    case'gate':S.screen=accList().length&&!S.me?'accounts':'gate';if(S.screen==='accounts')accLoad();render();break;
     case'dologin':{const o=$('#lo').value,p=$('#lp').value;if(!o.trim()||!/^\d{4}$/.test(p)){$('#le').textContent='주인이름과 숫자 4자리를 적어주세요.';break}try{el.disabled=true;await login(o,p)}catch(err){$('#le').textContent=String(err);el.disabled=false}break}
     case'random':{const keep=S.draft.look.gender;S.draft.look=Object.assign(randomLook(),{gender:keep});S.draft.odd=S.draft.look.eyeL!==S.draft.look.eyeR;render();break}
     case'step':saveNameFields();S.draft.step=v;render();break;
@@ -4035,7 +4058,10 @@ if(!PET){let visStart=0,lastNag=0;
 /* ================= boot ================= */
 const style=document.createElement('style');style.textContent='.tail{animation:wag 2.6s ease-in-out infinite}@keyframes wag{50%{transform:rotate(9deg)}}.blink{transform-origin:100px 93px;animation:blink 5s infinite}.fxa,.fxs,.fxf,.fxp{transform-box:fill-box;transform-origin:center}.fxa{animation:fxa 3.2s ease-in-out infinite}@keyframes fxa{0%{transform:translateY(8px);opacity:0}30%{opacity:1}100%{transform:translateY(-16px);opacity:0}}.fxs{animation:fxs 1.8s ease-in-out infinite}@keyframes fxs{0%,100%{opacity:.25;transform:scale(.6)}50%{opacity:1;transform:scale(1.1)}}.fxf{animation:fxf 4s linear infinite}@keyframes fxf{0%{transform:translate(0,-10px) rotate(0);opacity:0}15%{opacity:1}100%{transform:translate(-16px,60px) rotate(170deg);opacity:0}}.fxp{animation:fxp 2.6s ease-in-out infinite}@keyframes fxp{50%{opacity:.5}}@keyframes blink{0%,95%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}';document.head.appendChild(style);
 await seedDemo();
-if(S.session){const u=await Store.get('users/'+S.session.key);if(u&&u.pin===S.session.pin){S.me=S.session.key;S.screen='app';render();subscribe()}else{logout()}}
+if(S.session&&!accList().some(a=>a.key===S.session.key))accAdd(S.session.key,S.session.pin);
+if(!PET&&accList().length>1){S.screen='accounts';render();accLoad()}
+else if(S.session){const u=await Store.get('users/'+S.session.key);if(u&&u.pin===S.session.pin){S.me=S.session.key;S.screen='app';render();subscribe()}else{logout()}}
+else if(!PET&&accList().length===1){await accPick(accList()[0].key)}
 else render();
 })();
 </script>
