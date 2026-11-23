@@ -363,6 +363,7 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 /* sky & weather */
 .skyfx{position:absolute;inset:0;pointer-events:none;z-index:20}
 .skyfx.in{z-index:1}
+.skyfx.lampglow{z-index:21;mix-blend-mode:screen}
 .scene>.catwrap{z-index:2}
 .sky-dawn{background:linear-gradient(180deg,rgba(255,180,140,.3),rgba(255,220,200,.06))}
 .sky-dusk{background:linear-gradient(180deg,rgba(255,120,80,.34),rgba(170,80,160,.2))}
@@ -2068,8 +2069,7 @@ async function talk(id,text,secret){
   if(v.status==='runaway'){toast('지금은 가출 중이에요');return null}
   talkT=now();addBond(id,2);qEvent('talk');dyAdd(id,'talk:'+ownerName(S.me));
   Store.tx('cats/'+id,c=>{if(!c)return c;norm(c);tick(c,now());bumpTr(c,{talk:1});const nt=ptypeOf(c);if(nt!==c.ptype&&c.ptype){const pn=PT[nt].n;setTimeout(()=>log(`${title(c)}의 성격이 '${pn}'${josa(pn,'으로','로').slice(pn.length)} 바뀌었어요.`),0)}c.ptype=nt;return roundCat(c)});
-  if(secret){await Store.push(`users/${v.owner}/secret`,{by:S.me,cat:v.id,text,at:now()})}
-  else log(`${ownerName(S.me)}님이 ${title(v)}에게 말을 걸었어요: "${text}"`);
+  if(v.owner!==S.me)await Store.push(`users/${v.owner}/secret`,Object.assign({by:S.me,cat:v.id,text,at:now()},secret?{}:{pub:1}));
   return talkReply(v,text);
 }
 function openTalk(id){
@@ -2177,6 +2177,7 @@ function skyHTML(out){
   const ph=dayPhase(),wx=wxOf(kstDay());let h='';
   if(ph!=='day')h+=`<div class="skyfx sky-${ph}${out?'':' in'}"></div>`;
   if(out){
+    if(ph==='night'||ph==='dusk')h+=`<div class="skyfx lampglow"><svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%"><defs><radialGradient id="lg"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".85"/><stop offset=".35" stop-color="#ffd76a" stop-opacity=".35"/><stop offset="1" stop-color="#ffd76a" stop-opacity="0"/></radialGradient></defs>${[122,278].map(x=>`<ellipse cx="${x}" cy="150" rx="46" ry="58" fill="url(#lg)"/><ellipse cx="${x}" cy="172" rx="34" ry="8" fill="#ffe08a" opacity=".35"/><path d="M${x-8} 124 h16 l-3 -10 h-10z" fill="#fff3b0"/>`).join('')}</svg></div>`;
     if(ph==='night')h+=`<div class="skyfx"><svg viewBox="0 0 400 400" preserveAspectRatio="none" style="width:100%;height:100%">${Array.from({length:26},(_,i)=>{const r=seeded(strHash('st'+i));return`<circle cx="${(r()*400).toFixed(0)}" cy="${(r()*150).toFixed(0)}" r="${(.8+r()*1.6).toFixed(1)}" fill="#fff" class="twk" style="animation-delay:${(-r()*2.4).toFixed(1)}s"/>`}).join('')}<path d="M346 40 a22 22 0 1 0 18 34 a18 18 0 1 1 -18 -34z" fill="#fff4c2"/></svg></div>`;
     if(wx==='cloud'||wx==='rain'||wx==='snow')h+=`<div class="skyfx sky-cloud"${wx==='rain'?' style="background:rgba(90,100,125,.28)"':''}></div><div class="skyfx"><svg viewBox="0 0 400 400" preserveAspectRatio="none" style="width:100%;height:100%">${[[300,58,1.25],[120,40,.9],[214,26,.7]].map(([x,y,k])=>`<g transform="translate(${x},${y}) scale(${k})" opacity="${ph==='night'?.55:.95}"><ellipse cx="0" cy="8" rx="44" ry="16" fill="${wx==='rain'?'#c3cad6':'#eef1f5'}"/><circle cx="-16" cy="-2" r="18" fill="${wx==='rain'?'#c3cad6':'#eef1f5'}"/><circle cx="12" cy="-8" r="22" fill="${wx==='rain'?'#cbd2dd':'#f4f6f9'}"/></g>`).join('')}</svg></div>`;
     if(wx==='rain')h+=`<div class="rainfx">${Array.from({length:40},(_,i)=>`<i style="left:${(i*29+7)%110}%;animation-duration:${.55+(i%5)*.08}s;animation-delay:${-((i*.13)%1)}s"></i>`).join('')}</div>`;
@@ -2345,9 +2346,9 @@ function openMailbox(){
   const up={};SM.filter(m=>!m.read).forEach(m=>up[`users/${S.me}/secret/${m.k}/read`]=true);INV.filter(w=>!(w.seen||{})[S.me]).forEach(w=>up[`cats/${w.id}/wedding/seen/${S.me}`]=true);
   const newSec=new Set(SM.filter(m=>!m.read).map(m=>m.k)),newInv=new Set(INV.filter(w=>!(w.seen||{})[S.me]).map(w=>w.id));
   if(Object.keys(up).length)setTimeout(()=>Store.update(up),600);
-  openSheet(`<h2>우체통</h2><p class="lead">받은 청첩장과 비밀 메시지를 모아 둬요. 직접 지우기 전까지 그대로 남아 있어요.</p>
+  openSheet(`<h2>우체통</h2><p class="lead">받은 청첩장과, 친구들이 내 냥이에게 건 말·비밀 메시지를 모아 둬요. 직접 지우기 전까지 그대로 남아 있어요.</p>
   <div class="sect">청첩장 ${INV.length}통</div>${INV.length?`<div class="list">${INV.map(w=>{const ph=wedPhase(w);return`<div class="item" style="background:linear-gradient(90deg,#fff7fa,#fffdf5);border-color:#ffd6e3;align-items:flex-start"><div class="tx" style="flex:1"><b>${esc(wedNames(w))} 결혼식${newInv.has(w.id)?' <span class="chip pink">새 편지</span>':''}</b><span>${wedWhen(w)} · ${{prep:'준비 중',soon:'곧 시작',live:'지금 진행 중!',done:'끝났어요'}[ph]}</span></div><div class="row" style="flex-direction:column;gap:6px"><button class="btn small" data-a="wgo" data-v="${w.id}">${ph==='done'?'앨범 보기':'결혼식장 가기'}</button><button class="btn small ghost" data-a="mailhide" data-v="${w.id}">버리기</button></div></div>`}).join('')}</div>`:'<p class="grow">받은 청첩장이 없어요.</p>'}
-  <div class="sect">비밀 메시지 ${SM.length}통 <small class="grow">· 나만 볼 수 있어요</small></div>${SM.length?`<div class="list">${SM.slice(0,40).map(m=>`<div class="item" style="align-items:flex-start;${newSec.has(m.k)?'background:#f1ecff;border-color:#d9ccff':''}"><div class="tx" style="flex:1"><b>${esc(ownerName(m.by))}${newSec.has(m.k)?' <span class="chip pink">새 편지</span>':''}</b><span style="display:block;color:var(--ink);font-size:.92rem;margin:2px 0">${esc(m.text)}</span><span>${ago(m.at)}${m.cat&&S.cats[m.cat]?' · '+esc(S.cats[m.cat].name)+'에게':''}</span></div><div class="row" style="flex-direction:column;gap:6px"><button class="btn small" data-a="srep" data-v="${m.by}">답장</button><button class="btn small ghost" data-a="mdel" data-v="${m.k}">지우기</button></div></div>`).join('')}</div>${SM.length>1?'<button class="btn small ghost block" style="margin-top:8px" data-a="mdelall">비밀 메시지 모두 지우기</button>':''}`:'<p class="grow">받은 비밀 메시지가 없어요.</p>'}`);
+  <div class="sect">받은 메시지 ${SM.length}통 <small class="grow">· 나만 볼 수 있어요</small></div>${SM.length?`<div class="list">${SM.slice(0,40).map(m=>`<div class="item" style="align-items:flex-start;${newSec.has(m.k)?'background:#f1ecff;border-color:#d9ccff':''}"><div class="tx" style="flex:1"><b>${esc(ownerName(m.by))} <span class="chip ${m.pub?'':'pink'}" style="font-size:.7rem">${m.pub?'말 걸기':'비밀'}</span>${newSec.has(m.k)?' <span class="chip pink">새 편지</span>':''}</b><span style="display:block;color:var(--ink);font-size:.92rem;margin:2px 0">${esc(m.text)}</span><span>${ago(m.at)}${m.cat&&S.cats[m.cat]?' · '+esc(S.cats[m.cat].name)+'에게':''}</span></div><div class="row" style="flex-direction:column;gap:6px"><button class="btn small" data-a="srep" data-v="${m.by}">답장</button><button class="btn small ghost" data-a="mdel" data-v="${m.k}">지우기</button></div></div>`).join('')}</div>${SM.length>1?'<button class="btn small ghost block" style="margin-top:8px" data-a="mdelall">비밀 메시지 모두 지우기</button>':''}`:'<p class="grow">받은 비밀 메시지가 없어요.</p>'}`);
 }
 
 /* ================= village notice board ================= */
@@ -3309,7 +3310,7 @@ async function sendSecret(to){
 function viewNews(){
   const SM=secretList();const unread=SM.filter(m=>!m.read);
   if(unread.length&&!S.secMark){S.secMark=1;const up={};unread.forEach(m=>up[`users/${S.me}/secret/${m.k}/read`]=true);setTimeout(()=>{Store.update(up);S.secMark=0},1500)}
-  const secHtml=SM.length?`<div class="sect">비밀 메시지 <small class="grow">· 나만 볼 수 있어요</small></div><div class="list">${SM.slice(0,20).map(m=>`<div class="item" style="align-items:flex-start;${m.read?'':'background:#f1ecff;border-color:#d9ccff'}"><div class="tx"><b>${esc(ownerName(m.by))}${m.read?'':' <span class="chip pink">새 메시지</span>'}</b><span style="display:block;color:var(--ink);font-size:.92rem;margin:2px 0">${esc(m.text)}</span><span>${ago(m.at)}${m.cat&&S.cats[m.cat]?' · '+esc(S.cats[m.cat].name)+'에게':''}</span></div><div class="row" style="flex-direction:column;gap:6px"><button class="btn small" data-a="srep" data-v="${m.by}">답장</button><button class="btn small ghost" data-a="sdel" data-v="${m.k}">지우기</button></div></div>`).join('')}</div>`:'';
+  const secHtml=SM.length?`<div class="sect">나에게 온 메시지 <small class="grow">· 나만 볼 수 있어요</small></div><div class="list">${SM.slice(0,20).map(m=>`<div class="item" style="align-items:flex-start;${m.read?'':'background:#f1ecff;border-color:#d9ccff'}"><div class="tx"><b>${esc(ownerName(m.by))}${m.read?'':' <span class="chip pink">새 메시지</span>'}</b><span style="display:block;color:var(--ink);font-size:.92rem;margin:2px 0">${esc(m.text)}</span><span>${ago(m.at)}${m.cat&&S.cats[m.cat]?' · '+esc(S.cats[m.cat].name)+'에게':''}</span></div><div class="row" style="flex-direction:column;gap:6px"><button class="btn small" data-a="srep" data-v="${m.by}">답장</button><button class="btn small ghost" data-a="sdel" data-v="${m.k}">지우기</button></div></div>`).join('')}</div>`:'';
   const P=Object.entries(S.props).map(([k,p])=>Object.assign({k},p)).filter(p=>p.status==='pending');
   const inbox=P.filter(p=>p.toOwner===S.me),sent=P.filter(p=>p.fromOwner===S.me);
   const feed=[...vFeed()].reverse().slice(0,60);
@@ -3879,7 +3880,7 @@ let deskSecSeen=null;
 function deskSecret(){
   const L=secretList(),ids=L.map(m=>m.k);if(deskSecSeen===null){deskSecSeen=new Set(ids);return}
   const nw=L.filter(m=>!deskSecSeen.has(m.k)&&!m.read);ids.forEach(k=>deskSecSeen.add(k));if(!nw.length)return;
-  const m=activeCat();const t=`${ownerName(nw[0].by)}님에게서 비밀 메시지가 왔어요. 우리집 우체통에서 확인해요`;
+  const m=activeCat();const t=nw[0].pub?`${ownerName(nw[0].by)}님이 ${(S.cats[nw[0].cat]||{}).name||'냥이'}에게 말을 걸었어요: "${nw[0].text}"`:`${ownerName(nw[0].by)}님에게서 비밀 메시지가 왔어요. 우리집 우체통에서 확인해요`;
   if(m)deskSay(m.id,t,7000);try{const n=new Notification('냥이마을',{body:t,icon:'icons/icon-192.png'});n.onclick=()=>DK&&DK.openMain()}catch(e){}
 }
 function deskFeed(){
