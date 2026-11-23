@@ -361,8 +361,9 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (min-width:640px){.actions{gap:10px}}
 /* sky & weather */
-.skyfx{position:absolute;inset:0;pointer-events:none;z-index:250}
-.skyfx.in{z-index:auto}
+.skyfx{position:absolute;inset:0;pointer-events:none;z-index:20}
+.skyfx.in{z-index:1}
+.scene>.catwrap{z-index:2}
 .sky-dawn{background:linear-gradient(180deg,rgba(255,180,140,.3),rgba(255,220,200,.06))}
 .sky-dusk{background:linear-gradient(180deg,rgba(255,120,80,.34),rgba(170,80,160,.2))}
 .sky-night{background:linear-gradient(180deg,rgba(18,22,70,.58),rgba(30,30,85,.4))}
@@ -2164,7 +2165,12 @@ setInterval(()=>{celebPop();wrClaim();gogClaim()},5000);
 /* ================= sky & weather ================= */
 const WXN={sun:'맑음',cloud:'흐림',rain:'비',wind:'바람',snow:'눈'};
 const WXI={sun:'☀',cloud:'☁',rain:'☂',wind:'≋',snow:'❄'};
-function wxOf(day){const r=seeded(strHash('wx-'+day))();const m=+String(day).slice(5,7);const winter=m===12||m<=2;if(r<.42)return'sun';if(r<.6)return'cloud';if(r<.8)return winter?'snow':'rain';return'wind'}
+let WXL=null;try{WXL=JSON.parse(localStorage.getItem('nyang-wx')||'null')}catch(e){}
+function wxCode(c,wind){if([51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(c))return'rain';if([71,73,75,77,85,86].includes(c))return'snow';if(wind>=28)return'wind';if([2,3,45,48].includes(c))return'cloud';return'sun'}
+async function wxFetch(){try{const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=36.019&longitude=129.343&current=temperature_2m,weather_code,wind_speed_10m&timezone=Asia%2FSeoul',{cache:'no-store'});if(!r.ok)return;const j=await r.json();const c=j.current;if(!c)return;
+  const w=wxCode(c.weather_code,c.wind_speed_10m||0),prev=WXL&&WXL.w;WXL={w,tmp:Math.round(c.temperature_2m),at:now(),d:kstDay()};try{localStorage.setItem('nyang-wx',JSON.stringify(WXL))}catch(e){}if(prev!==w)schedule()}catch(e){}}
+wxFetch();setInterval(wxFetch,20*60e3);
+function wxOf(day){if(WXL&&day===kstDay()&&WXL.d===day&&now()-WXL.at<3*HOUR)return WXL.w;const r=seeded(strHash('wx-'+day))();const m=+String(day).slice(5,7);const winter=m===12||m<=2;if(r<.42)return'sun';if(r<.6)return'cloud';if(r<.8)return winter?'snow':'rain';return'wind'}
 function dayPhase(t){const h=new Date((t||now())+9*HOUR).getUTCHours();return h>=5&&h<7?'dawn':h>=7&&h<17?'day':h>=17&&h<19?'dusk':'night'}
 const PHN={dawn:'새벽',day:'낮',dusk:'노을',night:'밤'};
 function skyHTML(out){
@@ -3233,7 +3239,7 @@ function viewHome(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const inst=!DK&&coarse&&!standalone&&!instHide?`<div class="panel row" style="padding:10px 12px;gap:10px;background:var(--gold-l);border-color:#f4dfa4"><span style="flex:1;min-width:0;font-size:.86rem">${ios?'공유 버튼 → <b>홈 화면에 추가</b>를 누르면 앱처럼 쓸 수 있어요.':'홈 화면에 추가하면 앱처럼 바로 열 수 있어요.'}</span>${S.installEvt?'<button class="btn small" data-a="install">추가</button>':''}<button class="btn small ghost" data-a="instdismiss">닫기</button></div>`:'';
   const qq=qNorm(clone(u.q)),qIds=dailyIds(qq.d),qDone=qIds.filter(k=>qq.dc[k]).length,qCan=qClaimable(u);
-  const wxb=`<div class="wxbar">${isWeekend()?'<span class="chip gold">주말 경험치 2배!</span>':''}<span class="chip">${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
+  const wxb=`<div class="wxbar">${isWeekend()?'<span class="chip gold">주말 경험치 2배!</span>':''}<span class="chip">포항 ${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]}${WXL&&now()-WXL.at<3*HOUR?' '+WXL.tmp+'°':''} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
   return`${inst}${sw}<div class="scene">${roomScene(u)}${skyHTML(false)}${strayHTML()}${mailboxHTML()}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
   <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping sg-'+c.stage:''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}${sleeping?`<div class="pillow">${PILLOW}</div>`:''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div>${sleeping?`<div class="blanket">${BLANKET}</div>`:''}</div></div>
   ${wxb}
