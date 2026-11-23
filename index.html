@@ -386,6 +386,19 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 .bdgrow{display:flex;gap:4px;margin-top:4px}.bdgrow svg{width:30px;height:30px}
 [hidden]{display:none!important}
 /* minigames: ox, cups, mouse, catch */
+.cmdwrap{display:flex;align-items:flex-end;gap:10px;margin:4px 0 8px}
+.cmdcat{width:34%;flex:none}.cmdcat svg{display:block;width:100%;height:auto;transform-origin:50% 95%}
+.cmdcat.act-roll svg{animation:a-roll .62s linear}.cmdcat.act-lie svg{animation:a-lie 1.6s ease-in-out}.cmdcat.act-cute svg{animation:a-cute 1.2s ease-in-out}.cmdcat.act-stretch svg{animation:a-stretch 1.1s ease-in-out}.cmdcat.act-jump svg{animation:a-jump .8s ease-out}
+.cmdcat.act-sit svg{animation:a-sit .7s ease-in-out}@keyframes a-sit{50%{transform:scale(1.08,.86)}}
+.cmdcat.act-paw svg{animation:a-paw .7s ease-in-out}@keyframes a-paw{30%,70%{transform:rotate(-10deg) translateX(-4%)}}
+.cmdcat.act-no svg{animation:a-angry .15s linear 4}
+.cmdsay{flex:1;background:#fff;border:2px solid var(--line);border-radius:18px 18px 18px 4px;padding:14px 12px;font-family:var(--display);font-size:1.3rem;text-align:center;min-height:64px;display:grid;place-items:center;position:relative;overflow:hidden}
+.cmdsay i{position:absolute;left:0;bottom:0;height:4px;background:#ff8fab;width:100%;transform-origin:0 50%}
+.cmdgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cmdgrid button{padding:12px 6px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:1rem;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cmdgrid button span{font-size:1.6rem;line-height:1}
+.cmdgrid button.ok{background:#dff5e8;border-color:#7cc9a0}.cmdgrid button.bad{background:#ffe3ea;border-color:#f08aa5}
+.cmdskip{width:100%;margin-top:8px}
 .oxq{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:18px 16px;text-align:center;font-family:var(--display);font-size:1.25rem;line-height:1.5;min-height:110px;display:grid;place-items:center}
 .oxb{display:flex;gap:12px;margin-top:12px}.oxb button{flex:1;font-family:var(--display);font-size:2.2rem;padding:14px 0;border-radius:18px;border:2px solid var(--line);background:#fff}
 .oxb .o{color:#2f86c9;border-color:#bfe0f7}.oxb .x{color:#e2456f;border-color:#ffd0dc}
@@ -1497,6 +1510,41 @@ function catchGame(){
   $('#cgo').onclick=()=>{if(run)return;run=true;$('#cgo').disabled=true;end=now()+20e3;spawn=0;last=0;raf=requestAnimationFrame(loop)};
 }
 const OXQ=[['고양이는 하루에 12~16시간 정도 잔다',1,'고양이는 정말 잠꾸러기예요.'],['고양이에게 초콜릿을 줘도 괜찮다',0,'초콜릿은 고양이에게 독이에요.'],['고양이는 단맛을 거의 느끼지 못한다',1,'단맛을 느끼는 감각이 거의 없어요.'],['고양이 수염은 잘라도 아무 문제 없다',0,'수염은 중요한 감각 기관이라 자르면 안 돼요.'],['고양이가 눈을 천천히 깜빡이는 건 좋아한다는 신호다',1,'"고양이 키스"라고 불러요.'],['우유는 모든 고양이에게 좋은 음료다',0,'많은 고양이가 우유를 소화하지 못해요.'],['고양이 코 무늬는 고양이마다 다르다',1,'사람 지문처럼 저마다 달라요.'],['고양이가 꼬리를 바짝 세우면 기분이 나쁘다는 뜻이다',0,'반가울 때 꼬리를 세워요.'],['고양이는 발바닥으로 땀을 흘린다',1,'땀샘이 발바닥에 있어요.'],['양파는 고양이에게 해롭다',1,'양파와 마늘은 고양이에게 위험해요.'],['고양이는 색을 전혀 구분하지 못한다',0,'사람보다 덜하지만 일부 색은 구분해요.'],['삼색 고양이는 대부분 암컷이다',1,'유전 때문에 거의 다 암컷이에요.'],['고양이가 골골송을 부르는 건 항상 기분이 좋을 때뿐이다',0,'아프거나 불안할 때도 골골거려요.'],['고양이 귀에는 근육이 30개 넘게 있다',1,'그래서 귀를 이리저리 잘 돌려요.'],['고양이는 어두운 곳에서 사람보다 잘 본다',1,'적은 빛으로도 잘 봐요.'],['백합은 고양이에게 매우 위험한 꽃이다',1,'꽃가루만 핥아도 위험할 수 있어요.'],['꾹꾹이는 아기 고양이 때 습관에서 왔다',1,'엄마 젖을 먹을 때 하던 행동이에요.'],['고양이 혀에는 작은 가시 같은 돌기가 있다',1,'그래서 혀가 까끌까끌해요.'],['고양이는 단거리보다 장거리 달리기를 잘한다',0,'짧고 빠르게 달리는 단거리 선수예요.'],['고양이가 배를 보여 주면 항상 만져 달라는 뜻이다',0,'믿는다는 뜻이지, 만져도 된다는 뜻은 아닐 때가 많아요.'],['포도는 고양이에게 줘도 안전하다',0,'포도와 건포도는 위험해요.'],['고양이는 떨어질 때 몸을 돌려 발로 착지하려 한다',1,'"정위 반사"라고 해요.'],['고양이 수염은 몸이 지나갈 폭을 재는 센서 역할을 한다',1,'좁은 틈을 지날 때 수염으로 재요.'],['모든 고양이는 캣닢에 반응한다',0,'반응하지 않는 고양이도 꽤 많아요.'],['고양이는 앞발 발가락이 뒷발보다 많다',1,'앞발 5개, 뒷발 4개예요.'],['고양이에게 사람용 진통제를 줘도 된다',0,'사람 약은 고양이에게 아주 위험해요.'],['아기 고양이는 태어날 때부터 눈을 뜨고 있다',0,'태어나고 1~2주 뒤에 눈을 떠요.'],['꼬리가 크게 부풀면 기분이 아주 좋다는 뜻이다',0,'놀라거나 겁날 때 부풀어요.'],['고양이는 사람보다 훨씬 높은 소리를 들을 수 있다',1,'쥐의 찍찍 소리도 잘 들려요.'],['고양이는 흐르는 물을 더 좋아하는 편이다',1,'그래서 정수기형 물그릇을 좋아하기도 해요.'],['고양이 심장은 사람보다 빨리 뛴다',1,'1분에 140~220번 정도 뛰어요.'],['고양이는 집사 목소리를 구분할 수 있다',1,'낯선 사람 목소리와 구분한다는 연구가 있어요.'],['고양이가 하악질하는 건 겁나거나 경계할 때다',1,'"가까이 오지 마"라는 뜻이에요.'],['고양이는 짠 사람 음식을 먹어도 괜찮다',0,'소금이 많은 음식은 해로워요.'],['고양이는 하루에도 여러 번 그루밍을 한다',1,'깨어 있는 시간의 꽤 많은 부분을 그루밍해요.'],['다 자란 고양이의 이빨은 30개 정도다',1,'어른 고양이는 이빨이 30개예요.']];
+const CMD_ACTS=[['sit','앉기','🍞',['앉아!','앉아 볼까?','식빵 자세!','얌전히 앉아!']],['paw','손 주기','🐾',['손!','손 줘!','악수!','다른 손!']],['lie','빵야','💥',['빵야!','쓰러져!','탕!']],['jump','점프','⬆️',['점프!','뛰어!','폴짝!','높이 뛰어!']],['roll','구르기','🔄',['굴러!','데굴데굴!','한 바퀴!']],['stretch','기지개','🙆',['기지개 켜!','쭉쭉!','스트레칭!']],['cute','애교','💕',['애교 부려 봐!','귀여운 척!','애교 한 번!']]];
+function cmdGame(){
+  const v=checkTrain('train','cmd');if(!v)return;const N=15;const others=['구름','나비','치즈','콩이','모모','두부','레오','호두'].filter(x=>x!==v.name);
+  openSheet(`<h2>집사 말 알아듣기</h2><p class="lead">집사가 <b>${esc(v.name)}</b>${eulReul(v.name).slice(-1)} 부르면 맞는 동작을 골라요. <b>다른 이름</b>을 부르면 <b>못 들은 척</b>! 갈수록 빨라져요.</p>
+  <div class="gstat num"><span id="cmn">1 / ${N}</span><span id="cms">맞힌 수 0</span></div>
+  <div class="cmdwrap"><div class="cmdcat" id="cmcat">${catSVG(v,{still:true})}</div><div class="cmdsay" id="cmsay" data-live="1">시작을 눌러주세요<i id="cmbar" style="transform:scaleX(0)"></i></div></div>
+  <div class="cmdgrid" id="cmgrid"></div><button class="btn ghost cmdskip" id="cmskip" disabled>😼 못 들은 척</button>
+  <button class="btn block" id="cmgo" style="margin-top:10px">시작</button><div id="cmr"></div>`);
+  let i=0,ok=0,ms=0,lock=true,done=false,cur=null,tmr=0,t1=0;
+  const anim=k=>{const el=$('#cmcat');if(!el)return;el.className='cmdcat';void el.offsetWidth;el.classList.add('act-'+k)};
+  const limit=()=>Math.max(1300,2900-i*115);
+  const next=()=>{if(!$('#cmgrid'))return;if(i>=N)return finish();
+    const decoy=i>1&&Math.random()<.25,a=pick(CMD_ACTS),opts=[a,...CMD_ACTS.filter(x=>x!==a).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);
+    cur={a,decoy};$('#cmn').textContent=`${i+1} / ${N}`;
+    const nm=decoy?pick(others):v.name;$('#cmsay').innerHTML=`${esc(nm)}${josa(nm,'아','야').slice(nm.length)}, ${pick(a[3])}<i id="cmbar"></i>`;
+    $('#cmgrid').innerHTML=opts.map(o=>`<button data-k="${o[0]}"><span>${o[2]}</span>${o[1]}</button>`).join('');
+    $('#cmgrid').querySelectorAll('button').forEach(b=>b.onclick=()=>answer(b.dataset.k,b));
+    const L=limit(),bar=$('#cmbar');bar.style.transition='none';bar.style.transform='scaleX(1)';void bar.offsetWidth;bar.style.transition=`transform ${L}ms linear`;bar.style.transform='scaleX(0)';
+    t1=now();lock=false;clearTimeout(tmr);tmr=setTimeout(()=>answer(null,null),L)};
+  const answer=(k,btn)=>{if(lock||done||!cur)return;lock=true;clearTimeout(tmr);const dt=now()-t1;
+    const right=cur.decoy?(k===null||k==='skip'):(k===cur.a[0]);if(right){ok++;ms+=Math.min(dt,limit())}else ms+=limit();
+    $('#cms').textContent='맞힌 수 '+ok;
+    if(btn&&k!=='skip')btn.classList.add(right?'ok':'bad');
+    if(!cur.decoy&&!right){const g=$('#cmgrid').querySelector(`[data-k="${cur.a[0]}"]`);if(g)g.classList.add('ok')}
+    if(right&&!cur.decoy)anim(cur.a[0]);else if(!right)anim('no');
+    const say=$('#cmsay');if(say)say.innerHTML=right?(cur.decoy?'😼 모른 척 성공!':'잘했어! 🎉'):(cur.decoy?'앗, 내 이름이 아니었다냥!':k===null?'늦었다냥...':'그게 아니다냥!');
+    i++;setTimeout(next,right?750:1100)};
+  const finish=async()=>{done=true;$('#cmskip').disabled=true;$('#cmgrid').innerHTML='';
+    const coins=ok*5,smart=ok*.55;let rk='';await trainReward(v,smart,coins,6+Math.round(ok*1.4),ok>=13?5:0,'cmd');if(ok){const nb=await saveBest('cmd',{ok,ms});rk=rankLine('cmd',nb)}
+    $('#cmsay').textContent=ok>=14?'말귀 천재냥!':ok>=11?'척척 알아들어요!':ok>=7?'꽤 알아들어요':'아직 냥어만 알아요';
+    $('#cmr').innerHTML=`<div class="empty"><p>${ok}/${N} 정답 · 반응 ${(ms/1000).toFixed(1)}초 · 똑똑함 +${smart.toFixed(1)} · ${coins}코인</p>${rk}</div>`;
+    const b=$('#cmgo');b.hidden=false;b.textContent='닫기';b.onclick=closeSheet};
+  $('#cmskip').onclick=()=>answer('skip',null);
+  $('#cmgo').onclick=()=>{$('#cmgo').hidden=true;$('#cmskip').disabled=false;next()};
+}
 function oxGame(){
   const v=checkTrain('train','ox');if(!v)return;
   const Q=OXQ.map(q=>({q,r:Math.random()})).sort((a,b)=>a.r-b.r).slice(0,10).map(x=>x.q);
@@ -1553,8 +1601,8 @@ function cupGame(){
 }
 function trainGame(){
   const v=checkTrain('train');if(!v)return;
-  const G=[['timing','명령 연습','막대가 초록 칸에 들어올 때 누르기','쉬움'],['match','카드 짝 맞추기','같은 그림 카드 6쌍을 적은 횟수로 찾기','기억력'],['ox','냥이 OX 퀴즈','고양이 상식 10문제를 O·X로 빨리 풀기','상식']];
-  openSheet(`<h2>교육: 어떤 공부를 할까요?</h2><p class="lead">잘할수록 똑똑함과 코인을 더 많이 받아요. 교육마다 따로 5분에 한 번씩 할 수 있어요. 카드 짝 맞추기와 냥이 OX 퀴즈는 마을 랭킹이 있어요.</p><div class="list">${G.map(([k,n,d,tag])=>{const cd=v.cd['tr_'+k]>now()?v.cd['tr_'+k]-now():0;return`<div class="item" style="flex-wrap:wrap"><button data-a="tgame" data-v="${k}" style="display:flex;flex:1;min-width:0;align-items:center;gap:10px;text-align:left" ${cd?'disabled':''}><div class="tx"><b>${n}</b><span>${d}</span></div><span class="chip ${cd?'gray':''}">${cd?dur(cd)+' 뒤':tag}</span></button>${k!=='timing'?`<button class="btn small ghost" data-a="rank" data-v="${k}">랭킹</button>`:''}</div>`}).join('')}</div>`);
+  const G=[['timing','명령 연습','막대가 초록 칸에 들어올 때 누르기','쉬움'],['match','카드 짝 맞추기','같은 그림 카드 6쌍을 적은 횟수로 찾기','기억력'],['cmd','집사 말 알아듣기','내 이름을 부르면 맞는 동작 고르기, 다른 이름이면 못 들은 척','반응']];
+  openSheet(`<h2>교육: 어떤 공부를 할까요?</h2><p class="lead">잘할수록 똑똑함과 코인을 더 많이 받아요. 교육마다 따로 5분에 한 번씩 할 수 있어요. 카드 짝 맞추기와 집사 말 알아듣기는 마을 랭킹이 있어요.</p><div class="list">${G.map(([k,n,d,tag])=>{const cd=v.cd['tr_'+k]>now()?v.cd['tr_'+k]-now():0;return`<div class="item" style="flex-wrap:wrap"><button data-a="tgame" data-v="${k}" style="display:flex;flex:1;min-width:0;align-items:center;gap:10px;text-align:left" ${cd?'disabled':''}><div class="tx"><b>${n}</b><span>${d}</span></div><span class="chip ${cd?'gray':''}">${cd?dur(cd)+' 뒤':tag}</span></button>${k!=='timing'?`<button class="btn small ghost" data-a="rank" data-v="${k}">랭킹</button>`:''}</div>`}).join('')}</div>`);
 }
 async function trainReward(v,smart,coins,xpN,mood,game){
   S.pendingFx='train';
@@ -1904,7 +1952,8 @@ async function talkUI(id,text){
 
 /* ================= training rankings ================= */
 const RANKG={match:{n:'카드 짝 맞추기',better:(a,b)=>!b||a.moves<b.moves||(a.moves===b.moves&&a.ms<b.ms),fmt:r=>`${r.moves}번 · ${(r.ms/1000).toFixed(1)}초`,cmp:(a,b)=>a.moves-b.moves||a.ms-b.ms},
-  ox:{n:'냥이 OX 퀴즈',better:(a,b)=>!b||a.ok>b.ok||(a.ok===b.ok&&a.ms<b.ms),fmt:r=>`${r.ok}/10 · ${(r.ms/1000).toFixed(1)}초`,cmp:(a,b)=>b.ok-a.ok||a.ms-b.ms},
+  cmd:{n:'집사 말 알아듣기',better:(a,b)=>!b||a.ok>b.ok||(a.ok===b.ok&&a.ms<b.ms),fmt:r=>`${r.ok}/15 · ${(r.ms/1000).toFixed(1)}초`,cmp:(a,b)=>b.ok-a.ok||a.ms-b.ms},
+  ox:{n:'냥이 OX 퀴즈',hide:1,better:(a,b)=>!b||a.ok>b.ok||(a.ok===b.ok&&a.ms<b.ms),fmt:r=>`${r.ok}/10 · ${(r.ms/1000).toFixed(1)}초`,cmp:(a,b)=>b.ok-a.ok||a.ms-b.ms},
   mouse:{n:'쥐 잡기',back:'exercise',better:(a,b)=>!b||a.score>b.score,fmt:r=>`${r.score}마리`,cmp:(a,b)=>b.score-a.score||a.at-b.at},
   fishc:{n:'생선 받아먹기',back:'exercise',better:(a,b)=>!b||a.score>b.score,fmt:r=>`${r.score}점`,cmp:(a,b)=>b.score-a.score||a.at-b.at}};
 async function saveBest(g,rec){
@@ -1938,7 +1987,7 @@ function openRank(g,mode){
   const wk=weekKey(),L=rankList(g,mode==='week'?wk:null);const col=['#e0a72a','#9aa7bd','#c97f2a'];
   const P=rankList(g,weekKey(now()-7*DAY)).slice(0,3);
   const left=Date.parse(wk+'T00:00:00+09:00')+7*DAY-now();
-  openSheet(`<h2>${RANKG[g].n} 랭킹</h2><p class="lead">${{match:'적은 횟수로 6쌍을 찾을수록, 같으면 더 빠를수록 위예요.',ox:'많이 맞힐수록, 같으면 더 빨리 풀수록 위예요.',mouse:'20초 동안 많이 잡을수록 위예요.',fishc:'20초 동안 점수가 높을수록 위예요.'}[g]||''}</p>
+  openSheet(`<h2>${RANKG[g].n} 랭킹</h2><p class="lead">${{match:'적은 횟수로 6쌍을 찾을수록, 같으면 더 빠를수록 위예요.',cmd:'많이 맞힐수록, 같으면 더 빨리 반응할수록 위예요.',ox:'많이 맞힐수록, 같으면 더 빨리 풀수록 위예요.',mouse:'20초 동안 많이 잡을수록 위예요.',fishc:'20초 동안 점수가 높을수록 위예요.'}[g]||''}</p>
   <div class="tabs" style="margin-bottom:10px"><button class="${mode==='week'?'on':''}" data-a="rank" data-v="${g}" data-k="week">이번 주</button><button class="${mode==='all'?'on':''}" data-a="rank" data-v="${g}" data-k="all">역대 최고</button></div>
   ${mode==='week'?`<div class="panel" style="background:var(--gold-l);border-color:#f3dfa0;margin-bottom:10px;font-size:.88rem"><b>주간 보상</b> · 월요일 0시 마감 (${dur(left)} 남음)<br>1위 ${rewTxt(WRREW[0])} · 2위 ${rewTxt(WRREW[1])} · 3위 ${rewTxt(WRREW[2])}<br><span class="grow">다음 주에 접속하면 자동으로 받아요.</span>${P.length?`<br><span class="grow">지난주: ${P.map((x,i)=>`${i+1}위 ${esc(x.name)}`).join(' · ')}</span>`:''}</div>`:''}
   ${L.length?`<div class="list">${L.slice(0,20).map((x,i)=>`<div class="item" style="${x.k===S.me?'background:var(--pink-l);border-color:#ffc4d4':''}"><b class="num" style="font-family:var(--display);font-weight:400;font-size:1.2rem;width:30px;text-align:center;color:${col[i]||'var(--muted)'}">${i+1}</b><div class="tx"><b>${esc(x.name)}${x.k===S.me?' (나)':''}</b><span>${ago(x.r.at)}</span></div><span class="chip ${i<3?'gold':''} num">${RANKG[g].fmt(x.r)}</span></div>`).join('')}</div>`:'<div class="empty">아직 기록이 없어요. 첫 번째 주인공이 되어 보세요!</div>'}
@@ -2809,7 +2858,7 @@ function viewHome(){
   <div class="actions">
    <button class="act" data-a="food" ${dis}><span class="ic" style="background:#fff0e0;color:#d9822b">${I.bowl}</span>밥주기</button>
    <button class="act" data-a="cups" ${dis}>${cdTxt('play')}<span class="ic" style="background:var(--pink-l);color:var(--pink-d)">${I.yarn}</span>놀아주기</button>
-   <button class="act" data-a="train" ${dis}>${(['timing','match','ox'].every(k=>c.cd['tr_'+k]>t)?`<small class="num">${Math.ceil((Math.min(...['timing','match','ox'].map(k=>c.cd['tr_'+k]))-t)/MIN)}분</small>`:'')}<span class="ic" style="background:#ece6fb;color:#7b62c4">${I.cap}</span>교육</button>
+   <button class="act" data-a="train" ${dis}>${(['timing','match','cmd'].every(k=>c.cd['tr_'+k]>t)?`<small class="num">${Math.ceil((Math.min(...['timing','match','cmd'].map(k=>c.cd['tr_'+k]))-t)/MIN)}분</small>`:'')}<span class="ic" style="background:#ece6fb;color:#7b62c4">${I.cap}</span>교육</button>
    <button class="act" data-a="exercise" ${dis}>${['mouse','fishc'].every(k=>c.cd['ex_'+k]>t)?`<small class="num">${Math.ceil((Math.min(...['mouse','fishc'].map(k=>c.cd['ex_'+k]))-t)/MIN)}분</small>`:''}<span class="ic" style="background:#e3f5dc;color:#4c9a3c">${I.dumbbell}</span>운동</button>
    <button class="act" data-a="bath" ${dis}><span class="ic" style="background:#e0f2fb;color:#3b95c4">${I.bath}</span>목욕</button>
    ${sleeping?`<button class="act" data-a="wake"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>깨우기<small class="num">${Math.round(c.st.energy)}%</small></button>`:`<button class="act" data-a="nap"><span class="ic" style="background:#e7e8f7;color:#5b5ea6">${I.moon}</span>낮잠</button>`}
@@ -3111,7 +3160,7 @@ document.addEventListener('click',async e=>{
     case'play':play();break;
     case'cups':cupGame();break;
     case'train':trainGame();break;
-    case'tgame':closeSheet();({timing:timingGame,match:matchGame,ox:oxGame})[v]();break;
+    case'tgame':closeSheet();({timing:timingGame,match:matchGame,ox:oxGame,cmd:cmdGame})[v]();break;
     case'egame':closeSheet();({mouse:mouseGame,fishc:catchGame})[v]();break;
     case'exercise':exerciseGame();break;
     case'bath':bath();break;
