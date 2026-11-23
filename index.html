@@ -436,6 +436,9 @@ html.noscroll,html.noscroll body{overflow:hidden}
 .aqcat.walk .flip svg{animation:hop .45s ease-in-out infinite}
 .aqcat span{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);font-family:var(--display);font-size:11px;background:rgba(255,255,255,.92);color:#3b3346;border-radius:9px;padding:0 7px;white-space:nowrap}
 .aqcat.me span{background:#ffd6e3}
+.aqjump{display:flex;gap:6px;padding:8px 12px 0;background:#123555;overflow-x:auto}
+.aqjump button{flex:1;min-width:max-content;border:2px solid;border-radius:12px;background:#fffdf6;color:#3b3346;font-family:var(--display);font-size:.85rem;padding:5px 8px}
+.aqbtn{-webkit-touch-callout:none}
 .aqctl{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#123555}
 .aqbtn{width:64px;height:56px;border-radius:16px;border:0;background:#4dabf7;color:#fff;font-size:1.4rem;touch-action:none;user-select:none;-webkit-user-select:none}
 .aqbtn:active{background:#2f86c9}
@@ -2796,13 +2799,21 @@ function openAqua(){
      return`<button class="aqtank ${x.r===4?'leg':''}" data-a="aqinfo" data-v="${x.k}" style="left:${it.x0+10}px;width:${it.w-20}px"><div class="aqwater"><div class="aqfish ${x.still||x.junk?'still':''}" style="animation-delay:-${dl}s;animation-duration:${du}s;${s?'':'filter:brightness(0);opacity:.3'}">${fishPicK(x.k)}</div>${[0,1,2].map(j=>`<i class="aqbub" style="left:${20+j*28}%;animation-delay:-${(i+j)%3}s"></i>`).join('')}</div><div class="aqplate" style="border-color:${x.r?RAR[x.r].c:'#b9b2c2'}">${s?esc(x.n):'???'}${s&&s.max?` · ${s.max.sz}cm`:''}</div></button>`}).join('')}
    <div class="aqcats" id="aqcats"></div>
   </div></div>
-  <div class="aqctl"><button class="aqbtn" id="aql" aria-label="왼쪽으로">◀</button><div class="aqtip" id="aqtip">바닥을 누르거나 화살표로 움직여요 · 수조를 누르면 자세히 봐요</div><button class="aqbtn" id="aqr" aria-label="오른쪽으로">▶</button></div>
+  <div class="aqjump">${items.filter(it=>it.sign).map(it=>`<button data-x="${it.x0+it.w/2}" style="border-color:${it.sign.c}">${it.sign.n}</button>`).join('')}</div>
+  <div class="aqctl"><button class="aqbtn" id="aql" aria-label="왼쪽으로">◀</button><div class="aqtip" id="aqtip">화면을 옆으로 밀거나, 누르고 있으면 걸어가요 · 위 버튼으로 바로 이동 · 수조를 누르면 자세히 봐요</div><button class="aqbtn" id="aqr" aria-label="오른쪽으로">▶</button></div>
   <div class="aqwho" id="aqwho"></div>`;
   document.body.appendChild(el);document.documentElement.classList.add('noscroll');
   AQ={W,x:AQ_PAD/2+20,tx:null,dir:0,f:1,cat:c.id,others:{},lastSent:0,sentX:-1,raf:0,lt:now(),el};
   const hold=(b,d)=>{const s=e=>{e.preventDefault();AQ.dir=d;AQ.tx=null};const t=()=>{if(AQ&&AQ.dir===d)AQ.dir=0};b.addEventListener('pointerdown',s);['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,t))};
   hold($('#aql'),-1);hold($('#aqr'),1);
-  $('#aqv').addEventListener('click',e=>{if(e.target.closest('[data-a]'))return;const r=$('#aqw').getBoundingClientRect();AQ.tx=clamp(e.clientX-r.left,40,AQ.W-40)});
+  el.querySelectorAll('.aqbtn').forEach(b=>b.addEventListener('contextmenu',e=>e.preventDefault()));
+  el.querySelectorAll('.aqjump button').forEach(b=>b.addEventListener('click',()=>{AQ.dir=0;AQ.tx=+b.dataset.x;AQ.run=true}));
+  const vp=$('#aqv');let dg=null;
+  vp.addEventListener('pointerdown',e=>{dg={x0:e.clientX,cx:AQ.x,moved:false,id:e.pointerId}});
+  vp.addEventListener('pointermove',e=>{if(!dg)return;const dx=e.clientX-dg.x0;if(!dg.moved&&Math.abs(dx)>8){dg.moved=true;try{vp.setPointerCapture(dg.id)}catch(_){}}if(dg.moved){AQ.dir=0;AQ.tx=clamp(dg.cx-dx*1.6,40,AQ.W-40);AQ.run=true}});
+  const up=e=>{if(!dg)return;const m=dg.moved;dg=null;if(m){AQ.supClick=now()+250;return}};
+  vp.addEventListener('pointerup',up);vp.addEventListener('pointercancel',()=>{dg=null});
+  vp.addEventListener('click',e=>{if(now()<(AQ.supClick||0)){e.stopPropagation();e.preventDefault();return}if(e.target.closest('[data-a]'))return;const r=$('#aqw').getBoundingClientRect();AQ.tx=clamp(e.clientX-r.left,40,AQ.W-40);AQ.run=false},true);
   AQ.kd=e=>{if(!AQ)return;if(e.key==='ArrowLeft'){AQ.dir=-1;AQ.tx=null}else if(e.key==='ArrowRight'){AQ.dir=1;AQ.tx=null}};AQ.ku=e=>{if(AQ&&(e.key==='ArrowLeft'||e.key==='ArrowRight'))AQ.dir=0};
   window.addEventListener('keydown',AQ.kd);window.addEventListener('keyup',AQ.ku);
   aqSend(true);aqLoop();
@@ -2810,8 +2821,8 @@ function openAqua(){
 function aqSend(force){if(!AQ)return;const t=now();if(!force&&(t-AQ.lastSent<450||(Math.abs(AQ.x-AQ.sentX)<2&&t-AQ.lastSent<5000)))return;AQ.lastSent=t;AQ.sentX=AQ.x;Store.set(`users/${S.me}/mz`,{x:Math.round(AQ.x),f:AQ.f,at:t,cat:AQ.cat}).catch(()=>{})}
 function aqCatEl(k,cat,mine){const d=document.createElement('div');d.className='aqcat'+(mine?' me':'');d.dataset.k=k;d.innerHTML=`<div class="flip">${catSVG(live(cat),{still:true})}</div><span>${esc(mine?ownerName(S.me)+'(나)':ownerName(k))}</span>`;return d}
 function aqLoop(){
-  if(!AQ)return;const t=now(),dt=Math.min(.05,(t-AQ.lt)/1000);AQ.lt=t;const sp=190;
-  if(AQ.dir){AQ.x=clamp(AQ.x+AQ.dir*sp*dt,40,AQ.W-40);AQ.f=AQ.dir}else if(AQ.tx!=null){const d=AQ.tx-AQ.x;if(Math.abs(d)<4)AQ.tx=null;else{AQ.f=d>0?1:-1;AQ.x+=Math.sign(d)*Math.min(Math.abs(d),sp*dt)}}
+  if(!AQ)return;const t=now(),dt=Math.min(.05,(t-AQ.lt)/1000);AQ.lt=t;if(AQ.dir){AQ.hold=(AQ.hold||0)+dt}else AQ.hold=0;const sp=AQ.run?620:AQ.dir?Math.min(560,300+AQ.hold*260):320;
+  if(AQ.dir){AQ.x=clamp(AQ.x+AQ.dir*sp*dt,40,AQ.W-40);AQ.f=AQ.dir}else if(AQ.tx!=null){const d=AQ.tx-AQ.x;if(Math.abs(d)<4){AQ.tx=null;AQ.run=false}else{AQ.f=d>0?1:-1;AQ.x+=Math.sign(d)*Math.min(Math.abs(d),(AQ.run?Math.max(620,Math.abs(d)*2.6):sp)*dt)}}
   const box=$('#aqcats'),vp=$('#aqv');if(!box||!vp){aqClose();return}
   const moving=!!AQ.dir||AQ.tx!=null;
   let me_=box.querySelector('.aqcat.me');const c=S.cats[AQ.cat];if(!me_&&c){me_=aqCatEl(S.me,c,true);box.appendChild(me_)}
@@ -2819,7 +2830,7 @@ function aqLoop(){
   const vw=vp.clientWidth;const cam=clamp(AQ.x-vw/2,0,Math.max(0,AQ.W-vw));$('#aqw').style.transform=`translateX(${-cam}px)`;
   // others
   const here=[];for(const [k,u] of vEntries()){if(k===S.me||!u||!u.mz||now()-u.mz.at>15000)continue;const cat=S.cats[u.mz.cat]||S.cats[u.main];if(!cat)continue;here.push(k);
-    let o=AQ.others[k];if(!o){o=AQ.others[k]={x:u.mz.x,el:aqCatEl(k,cat,false)};box.appendChild(o.el)}const d=u.mz.x-o.x;o.x+=Math.sign(d)*Math.min(Math.abs(d),sp*dt*1.2);
+    let o=AQ.others[k];if(!o){o=AQ.others[k]={x:u.mz.x,el:aqCatEl(k,cat,false)};box.appendChild(o.el)}const d=u.mz.x-o.x;o.x+=Math.sign(d)*Math.min(Math.abs(d),Math.max(sp,Math.abs(d)*3)*dt);
     o.el.style.transform=`translateX(${o.x}px)`;o.el.classList.toggle('walk',Math.abs(d)>3);o.el.querySelector('.flip').style.transform=`scaleX(${-(Math.abs(d)>3?Math.sign(d):u.mz.f||1)})`}
   for(const k in AQ.others)if(!here.includes(k)){AQ.others[k].el.remove();delete AQ.others[k]}
   const wl=$('#aqwho');const sig=here.join(',');if(wl&&wl.dataset.s!==sig){wl.dataset.s=sig;wl.innerHTML=here.length?`지금 함께 구경 중: ${here.map(k=>`<b>${esc(ownerName(k))}</b>`).join(', ')}`:'지금은 나 혼자 구경 중이에요'}
