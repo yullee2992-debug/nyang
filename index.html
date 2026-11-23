@@ -3467,7 +3467,7 @@ function openDeskMenu(id){
   let html='';
   if(s.guest)html=it('open','냥이마을 열기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.away)html=`<p>${esc(s.name)}${iGa(s.name).slice(-1)} 집을 나갔어요</p>`+it('open','찾으러 가기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
-  else if(s.mine)html=`<p>${esc(s.name)}${s.sleep?' (자는 중)':''}</p>`+(s.sleep?it('wake','깨우기'):'')+((live(S.cats[id])||{}).sick?it('pill','알약 먹이기',(inv.pill||0)+'개'):'')+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료 '+(inv.kibble||0)+'개')+it('play','놀아주기')+it('acts','동작 시키기')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('call','친구 부르기')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
+  else if(s.mine)html=`<p>${esc(s.name)}${s.sleep?' (자는 중)':''}</p>`+(s.sleep?it('wake','깨우기'):'')+((live(S.cats[id])||{}).sick?it('pill','알약 먹이기',(inv.pill||0)+'개'):'')+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료 '+(inv.kibble||0)+'개')+it('play','놀아주기')+it('acts','동작 시키기')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('call','친구 부르기')+(deskCalled.length?it('sendall','친구 모두 돌려보내기',deskCalled.length+'마리'):'')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기',(()=>{const b=bondInfo(myBond(S.cats[id]));return b.name})())+it('talk','말 걸기')+it('flowers','꽃 선물')+it('foods','간식 선물')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
   const m=document.createElement('div');m.id='dmenu';m.innerHTML=html;document.body.appendChild(m);
   const w=el.offsetWidth,W=window.innerWidth;
@@ -3507,6 +3507,7 @@ async function deskAction(a,id,e){
     case'kibble':await feed('kibble');break;
     case'play':{const ok=await play();if(ok&&s){s.vy=-15;s.y=Math.max(s.y,1);s.fallFrom=0}break}
     case'call':openDeskPanel();break;
+    case'sendall':{const ks=[...deskCalled];ks.forEach((k,i)=>{const c=S.cats[(S.users[k]||{}).main];if(c&&DS[c.id])deskSay(c.id,pick(['안녕~ 또 올게!','집에 갈게옹','재밌었다냥!']),1400)});setTimeout(()=>ks.forEach(k=>deskCall(k,false)),1200);deskSay(id,'다들 잘 가~ 또 놀러 와냥!',2200);break}
     case'wake':await wake();break;
     case'walk':{const on=!walkOn(id);setWalk(id,on);deskSay(id,on?'산책 간다냥~':'여기 가만히 있을게옹',2200);break}
     case'trick':if(s){if(s.sleep){deskSay(id,sleepLine(live(S.cats[id])||{}),2400);break}deskDo(id,pickAct(s,true));if(s.mine&&S.cats[id])catTx(id,c=>{bumpTr(c,{trick:1})})}break;
