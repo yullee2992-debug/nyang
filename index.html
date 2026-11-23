@@ -668,6 +668,7 @@ const BUILDS=[['slim','날씬'],['normal','보통'],['chubby','통통']];
 const NOSES=[['분홍','#f39bb1'],['살구','#f0b49a'],['갈색','#8a5a44'],['검정','#3a3036']];
 const ITEMS={
   bait:{n:'낚시 미끼',t:'fish',p:0,ex:true,d:'낚시할 때 1번에 1개 써요'},
+  honey:{n:'채집용 꿀',t:'fish',p:0,ex:true,d:'곤충을 부를 때 1번에 1개 써요'},
   biscuit:{n:'성장 비스킷',t:'food',p:550,d:'경험치 +50 · 고양이 한 마리당 하루 3개까지'},
   kibble:{n:'사료',t:'food',p:10,d:'배부름 +25 (1회분)'},
   kibble10:{n:'사료 10개 묶음',t:'food',p:90,pack:['kibble',10],d:'사료 10회분 · 10% 할인'},
@@ -835,7 +836,7 @@ const ITEMS={
 };
 for(const it of Object.values(ITEMS)){if(it.ex||it.wed||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;const tier=it.p<=150?0:it.p<300?1:it.p<500?2:it.p<800?3:it.p<1500?5:it.p<2500?8:12;it.s=Math.max(tier,Math.round((it.s||0)*1.5))}
 for(const it of Object.values(ITEMS)){if(it.ex||!['hat','neck','face','body','aura','room','wig'].includes(it.t))continue;it.p=Math.round(it.p*1.07/10)*10}
-const STACK=new Set(['biscuit','bait','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
+const STACK=new Set(['biscuit','bait','honey','rawgoguma','goguma','kibble','kibble10','pill','churu','fish','smelt','cake','dye','ring','adopt','wildflower','rose','sunflower','bouquet']);
 const FLOWER_IDS=['wildflower','rose','sunflower','bouquet'];
 const STAGE={kitten:'아기냥',junior:'청소년냥',adult:'어른냥'};
 const need=lv=>40+lv*25;
@@ -2919,36 +2920,40 @@ const AQ_BLD=`<svg viewBox="0 0 124 92"><ellipse cx="58" cy="87" rx="46" ry="5" 
 const BUG_BLD=`<svg viewBox="0 0 124 92"><ellipse cx="62" cy="87" rx="46" ry="5" fill="rgba(40,60,40,.18)"/><path d="M50 16 Q40 0 30 4 M74 16 Q84 0 94 4" stroke="#2b2433" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="30" cy="4" r="4" fill="#2b2433"/><circle cx="94" cy="4" r="4" fill="#2b2433"/><rect x="24" y="52" width="76" height="34" rx="6" fill="#fff4e0" stroke="#8a6a48" stroke-width="3"/><path d="M14 58 Q12 12 62 12 Q112 12 110 58Z" fill="#e2453c" stroke="#a52a24" stroke-width="3" stroke-linejoin="round"/><path d="M62 12 V58" stroke="#a52a24" stroke-width="2.6"/>${[[36,30,7],[86,30,7],[44,48,5],[80,48,5],[62,24,0]].filter(a=>a[2]).map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#2b2433"/>`).join('')}<path d="M30 20 Q40 14 50 16" stroke="#fff" stroke-width="3" fill="none" opacity=".6" stroke-linecap="round"/><path d="M52 86 V70 a10 10 0 0 1 20 0 V86Z" fill="#a4774d" stroke="#6e4c2e" stroke-width="2"/><circle cx="67" cy="78" r="1.6" fill="#ffd166"/><circle cx="36" cy="70" r="6" fill="#bfe6ff" stroke="#8a6a48" stroke-width="2"/><circle cx="88" cy="70" r="6" fill="#bfe6ff" stroke="#8a6a48" stroke-width="2"/><path d="M14 84 q4 -8 8 0 M100 84 q4 -8 8 0" stroke="#5fae6a" stroke-width="3" fill="none"/></svg>`;
 function aqBldHTML(){const n=aqCount('fish'),m=aqCount('bug');return`<button class="aqbld" data-a="aqua" data-k="fish" aria-label="마을 수족관 들어가기">${AQ_BLD}<span class="lbl">마을 수족관</span>${n?`<span class="cnt">${n}</span>`:''}</button><button class="aqbld bugb" data-a="aqua" data-k="bug" aria-label="마을 채집관 들어가기">${BUG_BLD}<span class="lbl">마을 채집관</span>${m?`<span class="cnt">${m}</span>`:''}</button>`}
 /* ---- bug catching game ---- */
-const BUG_N=5,BUG_REST=10*MIN;
+const BUG_N=5,BUG_REST=10*MIN,HONEY_PACK={n:10,p:50};
+function honeyPic(){return`<svg viewBox="0 0 100 100"><path d="M30 34 h40 l4 10 v34 q0 10 -10 10 h-32 q-10 0 -10 -10 v-34z" fill="#ffc83d" stroke="#c9902a" stroke-width="3"/><rect x="28" y="22" width="44" height="14" rx="4" fill="#e8a24a" stroke="#c9902a" stroke-width="3"/><path d="M30 44 q10 8 20 0 q10 8 20 0 q4 -2 4 0" fill="#ffe08a"/><path d="M40 60 q10 -6 20 0" stroke="#fff3c4" stroke-width="3" fill="none"/><circle cx="74" cy="18" r="5" fill="#ffd166" stroke="#2b2433" stroke-width="1.4"/><path d="M71 15 l6 6 M77 15 l-6 6" stroke="#2b2433" stroke-width="1.2"/></svg>`}
+async function buyHoney(){let why='';await Store.tx('users/'+S.me,u=>{if(!u)return u;why='';if((u.coins||0)<HONEY_PACK.p){why='코인이 부족해요';return}u.coins-=HONEY_PACK.p;u.inv=u.inv||{};u.inv.honey=(u.inv.honey||0)+HONEY_PACK.n;return u});toast(why||`채집용 꿀 ${HONEY_PACK.n}개를 샀어요`)}
 function bugLeft(u){const f=(u||me()||{}).bug||{};if(f.until>now())return 0;if(f.until&&f.until<=now())return BUG_N;return f.left==null?BUG_N:f.left}
 function viewBugTab(){
   const u=me(),f=u.bug||{},left=bugLeft(u),rest=f.until>now()?f.until-now():0;
-  return`<div class="panel stack" style="background:#f3faee;border-color:#d4ebc8"><h2>냥이 풀숲 채집</h2><p class="lead" style="margin:0">풀숲에 나타난 곤충을 <b>잠자리채로 톡!</b> 눌러서 잡아요. 희귀한 곤충일수록 빨리 날아가요. <b style="color:#c43d3d">말벌은 잡으면 쏘여요!</b> (알약으로 치료) 잠자리채를 ${BUG_N}번 휘두르면 10분 쉬어요.</p>
-  <button class="btn block" style="background:#5fae6a" data-a="buggo" ${rest?'disabled':''}>${rest?`쉬는 중 · ${dur(rest)} 뒤에 다시`:`채집하러 가기 · ${left}번 남음`}</button></div>
+  return`<div class="panel stack" style="background:#f3faee;border-color:#d4ebc8"><h2>냥이 풀숲 채집</h2><p class="lead" style="margin:0">꿀을 발라 두면 곤충이 모여요. 풀숲에 나타난 곤충을 <b>잠자리채로 톡!</b> 눌러서 잡아요. 희귀한 곤충일수록 빨리 날아가요. <b style="color:#c43d3d">말벌은 잡으면 쏘여요!</b> (알약으로 치료) 잠자리채를 ${BUG_N}번 휘두르면 10분 쉬어요.</p>
+  <div class="item" style="background:#fffbea"><div class="thumb" style="width:44px;height:44px;flex-basis:44px">${honeyPic()}</div><div class="tx"><b>채집용 꿀 ${(u.inv||{}).honey||0}개</b><span>곤충을 부를 때마다 1개 · ${HONEY_PACK.n}개 묶음 ${HONEY_PACK.p}코인</span></div><button class="btn small" data-a="buyhoney" ${(u.coins||0)<HONEY_PACK.p?'disabled':''}>${HONEY_PACK.n}개 사기</button></div>
+  <button class="btn block" style="background:#5fae6a" data-a="buggo" ${rest||!((u.inv||{}).honey)?'disabled':''}>${rest?`쉬는 중 · ${dur(rest)} 뒤에 다시`:!((u.inv||{}).honey)?'꿀이 있어야 채집할 수 있어요':`채집하러 가기 · ${left}번 남음`}</button></div>
   <div class="panel stack" style="background:#f7fbf3;border-color:#dcebd0"><b style="font-family:var(--display);font-weight:400;font-size:1.1rem">채집 도감</b><p class="grow" style="margin:0">곤충 ${dexCount(S.me,'bug')} / ${BUGDEX.length}종 · 잡은 횟수 ${f.cnt||0}번 · 지금 나오는 곤충 ${BUGDEX.filter(x=>condOk(x)).length}종</p>
   <p class="grow" style="margin:0">계절, 낮과 밤, 날씨에 따라 나오는 곤충이 달라요. 마을에서 처음 잡으면 <b>광장의 마을 채집관</b>에 이름이 남아요.</p>
   <div class="row"><button class="btn small" style="flex:1" data-a="dex" data-v="${S.me}" data-k="bug">도감 보기</button><button class="btn small teal" style="flex:1" data-a="aqua" data-k="bug">마을 채집관 가기</button></div></div>`;
 }
 function bugGame(){
   if(bugLeft()<=0)return toast('조금 쉬었다가 다시 채집해요');
+  if(!((me().inv||{}).honey))return toast('채집용 꿀이 없어요. 채집 탭에서 꿀을 사 주세요');
   const c=activeCat();
   openSheet(`<h2>냥이 풀숲 채집</h2><p class="lead">곤충이 나타나면 <b>곤충을 눌러</b> 잠자리채를 휘둘러요. 빗나가면 날아가 버려요!</p>
   <div class="meadow" id="mdw" data-live="1"><svg class="mbg" viewBox="0 0 320 200" preserveAspectRatio="none"><rect width="320" height="200" fill="#cfeefc"/><path d="M0 110 Q80 90 160 104 T320 96 V200 H0Z" fill="#9fd68a"/><path d="M0 140 Q90 124 180 138 T320 132 V200 H0Z" fill="#7cc46b"/>${Array.from({length:22},(_,i)=>`<path d="M${i*15+4} 200 q${i%2?4:-4} -26 ${i%3-1} -${30+i%4*8}" stroke="#4e9a46" stroke-width="3" fill="none" stroke-linecap="round"/>`).join('')}${[[40,120,'#ff8fab'],[110,150,'#ffd166'],[250,128,'#fff'],[290,160,'#c9a2ff'],[180,168,'#ff8fab']].map(([x,y,cl])=>`<circle cx="${x}" cy="${y}" r="5" fill="${cl}"/><circle cx="${x}" cy="${y}" r="2" fill="#ffd166"/>`).join('')}</svg>
   <div class="mcat">${c?catSVG(live(c),{still:true}):''}</div><div class="mbug" id="mbug" hidden></div><div class="fmsg" id="bmsg">시작을 눌러주세요</div></div>
-  <div class="gstat num"><span id="bleft">남은 횟수 ${bugLeft()}</span><span id="bcnt">잡은 것 0</span></div>
+  <div class="gstat num"><span id="bleft">남은 횟수 ${bugLeft()}</span><span id="bhoney">꿀 ${((me().inv||{}).honey)||0}개</span><span id="bcnt">잡은 것 0</span></div>
   <button class="btn block" style="background:#5fae6a" id="bbtn">시작</button><div class="list" id="bcatch" style="margin-top:10px"></div>`);
   const md=$('#mdw'),bg=$('#mbug');let cur=null,timer=0,raf=0,caught=0,busy=false,alive=true;
   const msg=t=>{const m=$('#bmsg');if(m)m.textContent=t};
   const stop=()=>{clearTimeout(timer);cancelAnimationFrame(raf)};
-  const spawn=()=>{if(!$('#mdw'))return stop();busy=false;const x=bugRoll();const life=x.shark?3200:x.junk?2600:[0,3600,2900,2300,1800][x.r];
+  const spawn=async()=>{if(!$('#mdw'))return stop();if(!(await useItem('honey'))){msg('꿀이 다 떨어졌어요. 채집 탭에서 꿀을 사 주세요');const b=$('#bbtn');b.hidden=false;b.textContent='닫기';b.onclick=closeSheet;return}const hb=$('#bhoney');if(hb)hb.textContent='꿀 '+(((me().inv||{}).honey)||0)+'개';busy=false;const x=bugRoll();const life=x.shark?3200:x.junk?2600:[0,3600,2900,2300,1800][x.r];
     cur={x,t0:now(),life,px:15+Math.random()*70,py:15+Math.random()*45,vx:(Math.random()<.5?-1:1)*(x.r>=3?26:16),ph:Math.random()*6};
     bg.innerHTML=bugPic(x.k);bg.hidden=false;bg.className='mbug in'+(x.a&&(x.a.sh==='bfly'||x.a.sh==='moth'||x.a.sh==='dfly'||x.a.sh==='wasp'||x.a.sh==='firefly')?' fly':'');msg(x.r>=3?'반짝! 뭔가 특별한 게 나타났어요':'곤충이 나타났어요! 눌러서 잡아요');
     const step=()=>{if(!cur||!$('#mdw'))return;const e=(now()-cur.t0)/1000;cur.px+=cur.vx*.016*(cur.x.junk?0:1);if(cur.px<8||cur.px>88)cur.vx*=-1;const yy=cur.py+Math.sin(e*3+cur.ph)*(bg.classList.contains('fly')?8:2);
       bg.style.left=cur.px+'%';bg.style.top=yy+'%';bg.style.transform=`translate(-50%,-50%) scaleX(${cur.vx>0?-1:1})`;if(now()-cur.t0>cur.life){flee('놓쳤어요... 날아가 버렸어요');return}raf=requestAnimationFrame(step)};step()};
   const left=()=>bugLeft();
-  const after=()=>{const l=left();$('#bleft').textContent='남은 횟수 '+l;if(l<=0){const b=$('#bbtn');b.hidden=false;b.textContent='오늘은 여기까지! 10분 뒤에 다시';b.disabled=true;const b2=document.createElement('button');b2.className='btn ghost block';b2.style.marginTop='8px';b2.textContent='닫기';b2.onclick=closeSheet;b.after(b2);alive=false}else timer=setTimeout(spawn,900+Math.random()*1400)};
+  const after=()=>{const l=remain;$('#bleft').textContent='남은 횟수 '+l;if(l<=0){const b=$('#bbtn');b.hidden=false;b.textContent='오늘은 여기까지! 10분 뒤에 다시';b.disabled=true;const b2=document.createElement('button');b2.className='btn ghost block';b2.style.marginTop='8px';b2.textContent='닫기';b2.onclick=closeSheet;b.after(b2);alive=false}else timer=setTimeout(spawn,900+Math.random()*1400)};
   const flee=async(t)=>{stop();if(!cur)return;bg.className='mbug out';cur=null;msg(t);await useSwing();after()};
-  const useSwing=async()=>{let ok=false;await Store.tx('users/'+S.me+'/bug',f=>{f=f||{};if(f.until>now()){ok=false;return}if(f.until){delete f.until;f.left=BUG_N}const l=f.left==null?BUG_N:f.left;if(l<=0){ok=false;return}f.left=l-1;if(f.left<=0)f.until=now()+BUG_REST;ok=true;return f});return ok};
+  let remain=bugLeft();const useSwing=async()=>{let ok=false;await Store.tx('users/'+S.me+'/bug',f=>{f=f||{};if(f.until>now()){ok=false;return}if(f.until){delete f.until;f.left=BUG_N}const l=f.left==null?BUG_N:f.left;if(l<=0){ok=false;return}f.left=l-1;remain=f.left;if(f.left<=0)f.until=now()+BUG_REST;ok=true;return f});if(!ok)remain=0;return ok};
   bg.addEventListener('click',async e=>{e.stopPropagation();if(!cur||busy)return;busy=true;stop();const x=cur.x;cur=null;
     md.insertAdjacentHTML('beforeend',`<div class="mnet" style="left:${bg.style.left};top:${bg.style.top}">🥅</div>`);setTimeout(()=>{const n=md.querySelector('.mnet');if(n)n.remove()},500);
     const esc_=x.r?[0,.08,.15,.25,.33][x.r]:0;if(Math.random()<esc_){bg.className='mbug out';msg(`앗! ${x.n}${iGa(x.n).slice(-1)} 잠자리채를 피했어요`);await useSwing();return after()}
@@ -3556,6 +3561,7 @@ document.addEventListener('click',async e=>{
     case'gogo':gogumaGame();break;
     case'fishgo':fishGame();break;
     case'buybait':await buyBait();break;
+    case'buyhoney':await buyHoney();render();break;
     case'cheer':await cheer(v,el.dataset.k);break;
     case'celebgot':await celebGot(v,el.dataset.k);break;
     case'srep':openSecretReply(v);break;
