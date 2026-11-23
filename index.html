@@ -421,7 +421,7 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 .meadow{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/10;border:2px solid #fff;cursor:crosshair;user-select:none}
 .meadow .mbg{position:absolute;inset:0;width:100%;height:100%}
 .meadow .mcat{position:absolute;left:3%;bottom:2%;width:22%;pointer-events:none}.meadow .mcat svg{display:block;width:100%;height:auto}
-.mbug{position:absolute;width:11%;max-width:54px;cursor:pointer;z-index:3;transition:opacity .25s,top .3s ease-out}.mbug svg{display:block;width:100%;height:auto;filter:drop-shadow(0 3px 2px rgba(0,0,0,.25))}
+.mbug{position:absolute;width:10%;max-width:48px;cursor:pointer;z-index:3;transition:opacity .25s,top .3s ease-out}.mbug svg{display:block;width:100%;height:auto;filter:drop-shadow(0 3px 2px rgba(0,0,0,.25))}
 .mbug.fly svg{animation:flap .25s ease-in-out infinite alternate}@keyframes flap{to{transform:scaleY(.82)}}
 .mbug.out{opacity:0;pointer-events:none}
 .mnet{position:absolute;transform:translate(-50%,-50%);font-size:2rem;z-index:4;pointer-events:none;animation:netsw .45s ease-out}.mnet.miss{font-size:1.6rem}
@@ -2798,7 +2798,7 @@ function viewXmas(){
 
 /* ================= fishing ================= */
 /* ================= fish dex & village aquarium ================= */
-const RAR=[null,{n:'흔함',c:'#8fa3b5',bg:'#eef3f7',win:650,esc:.12,w:10},{n:'보통',c:'#4fa36b',bg:'#e6f5ea',win:560,esc:.2,w:5},{n:'희귀',c:'#4d7fd6',bg:'#e6eefc',win:470,esc:.3,w:2},{n:'전설',c:'#d99a1e',bg:'#fff4d6',win:400,esc:.4,w:.9}];
+const RAR=[null,{n:'흔함',c:'#8fa3b5',bg:'#eef3f7',win:530,esc:.18,w:10},{n:'보통',c:'#4fa36b',bg:'#e6f5ea',win:450,esc:.28,w:4.5},{n:'희귀',c:'#4d7fd6',bg:'#e6eefc',win:380,esc:.38,w:1.5},{n:'전설',c:'#d99a1e',bg:'#fff4d6',win:320,esc:.5,w:.6}];
 const FISHDEX=[
  {k:'smelt',n:'열빙어',r:1,sz:[12,22],it:'smelt',a:{c:'#c9d6de',c2:'#f6f0d8',slim:1,fin:'#aab9c4'},d:'오독오독 씹히는 알이 가득한 작은 물고기.'},
  {k:'fish',n:'고등어',r:1,sz:[25,45],it:'fish',a:{c:'#4f7fa0',c2:'#eef3f6',spot:'#2f4f6a'},d:'등 무늬가 파도처럼 보이는 국민 생선.'},
@@ -3016,8 +3016,8 @@ function bugGame(){
   const md=$('#mdw'),bg=$('#mbug');let cur=null,timer=0,raf=0,caught=0,busy=false,alive=true;
   const msg=t=>{const m=$('#bmsg');if(m)m.textContent=t};
   const stop=()=>{clearTimeout(timer);cancelAnimationFrame(raf)};
-  const spawn=async()=>{if(!$('#mdw'))return stop();if(!(await useItem('honey'))){msg('꿀이 다 떨어졌어요. 채집 탭에서 꿀을 사 주세요');const b=$('#bbtn');b.hidden=false;b.textContent='닫기';b.onclick=closeSheet;return}const hb=$('#bhoney');if(hb)hb.textContent='꿀 '+(((me().inv||{}).honey)||0)+'개';busy=false;const x=bugRoll();const life=x.shark?2800:x.junk?2200:[0,2500,2000,1600,1250][x.r];
-    cur={x,t0:now(),life,px:15+Math.random()*70,py:15+Math.random()*45,vx:(Math.random()<.5?-1:1)*(x.r>=3?44:x.r===2?34:26),ph:Math.random()*6,turn:now()+400+Math.random()*700};
+  const spawn=async()=>{if(!$('#mdw'))return stop();if(!(await useItem('honey'))){msg('꿀이 다 떨어졌어요. 채집 탭에서 꿀을 사 주세요');const b=$('#bbtn');b.hidden=false;b.textContent='닫기';b.onclick=closeSheet;return}const hb=$('#bhoney');if(hb)hb.textContent='꿀 '+(((me().inv||{}).honey)||0)+'개';busy=false;const x=bugRoll();const life=x.shark?2500:x.junk?2000:[0,2100,1700,1350,1050][x.r];
+    cur={x,t0:now(),life,px:15+Math.random()*70,py:15+Math.random()*45,vx:(Math.random()<.5?-1:1)*(x.r>=3?52:x.r===2?40:30),ph:Math.random()*6,turn:now()+400+Math.random()*700};
     bg.innerHTML=bugPic(x.k);bg.hidden=false;bg.className='mbug in'+(x.a&&(x.a.sh==='bfly'||x.a.sh==='moth'||x.a.sh==='dfly'||x.a.sh==='wasp'||x.a.sh==='firefly')?' fly':'');msg(x.r>=3?'반짝! 뭔가 특별한 게 나타났어요':'곤충이 나타났어요! 눌러서 잡아요');
     const step=()=>{if(!cur||!$('#mdw'))return;const e=(now()-cur.t0)/1000;cur.px+=cur.vx*.016*(cur.x.junk?0:1);if(cur.px<8||cur.px>88)cur.vx*=-1;if(!cur.x.junk&&now()>cur.turn){cur.turn=now()+350+Math.random()*700;if(Math.random()<.45)cur.vx*=-1;cur.py=clamp(cur.py+(Math.random()-.5)*22,12,62)}const yy=cur.py+Math.sin(e*(bg.classList.contains('fly')?5:3)+cur.ph)*(bg.classList.contains('fly')?11:3);
       bg.style.left=cur.px+'%';bg.style.top=yy+'%';bg.style.transform=`translate(-50%,-50%) scaleX(${cur.vx>0?-1:1})`;if(now()-cur.t0>cur.life){flee('놓쳤어요... 날아가 버렸어요');return}raf=requestAnimationFrame(step)};step()};
@@ -3027,7 +3027,7 @@ function bugGame(){
   let remain=bugLeft();const useSwing=async()=>{let ok=false;await Store.tx('users/'+S.me+'/bug',f=>{f=f||{};if(f.until>now()){ok=false;return}if(f.until){delete f.until;f.left=BUG_N}const l=f.left==null?BUG_N:f.left;if(l<=0){ok=false;return}f.left=l-1;remain=f.left;if(f.left<=0)f.until=now()+BUG_REST;ok=true;return f});if(!ok)remain=0;return ok};
   bg.addEventListener('click',async e=>{e.stopPropagation();if(!cur||busy)return;busy=true;stop();const x=cur.x;cur=null;
     md.insertAdjacentHTML('beforeend',`<div class="mnet" style="left:${bg.style.left};top:${bg.style.top}">🥅</div>`);setTimeout(()=>{const n=md.querySelector('.mnet');if(n)n.remove()},500);
-    const esc_=x.r?[0,.15,.25,.35,.45][x.r]:0;if(Math.random()<esc_){bg.className='mbug out';msg(`앗! ${x.n}${iGa(x.n).slice(-1)} 잠자리채를 피했어요`);await useSwing();return after()}
+    const esc_=x.r?[0,.2,.3,.42,.52][x.r]:0;if(Math.random()<esc_){bg.className='mbug out';msg(`앗! ${x.n}${iGa(x.n).slice(-1)} 잠자리채를 피했어요`);await useSwing();return after()}
     bg.hidden=true;await useSwing();
     if(x.shark){const c=activeCat();msg('말벌에 쏘였어요!');if(c){await catTx(c.id,c=>{c.sick={k:'sting',at:now()};c.st.mood=clamp(c.st.mood-20);c.st.energy=clamp(c.st.energy-15)});dyAdd(c.id,'sting')}
       log(`${ownerName(S.me)}님의 ${c?c.name:'고양이'}${c?iGa(c.name).slice(-1):'가'} 채집하다 말벌에 쏘였어요!`);md.classList.add('shake');setTimeout(()=>md.classList.remove('shake'),600);
