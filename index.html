@@ -209,8 +209,8 @@ html.pet,html.pet body{background:transparent!important;overflow:hidden;height:1
 html.pet body::before{display:none}
 html.pet .app{max-width:none;padding:0;min-height:0}
 #desk{position:fixed;inset:0;pointer-events:none;overflow:hidden}
-.dcat{position:absolute;left:0;bottom:0;width:100px;pointer-events:auto;cursor:pointer;will-change:transform;touch-action:manipulation}
-.dcat.friend{width:80px}
+.dcat{position:absolute;left:0;bottom:0;width:86px;pointer-events:auto;cursor:pointer;will-change:transform;touch-action:manipulation}
+.dcat.friend{width:68px}
 .dcat .body{transform-origin:50% 100%}
 .dcat.walk .body{animation:hop .52s ease-in-out infinite}
 @keyframes hop{50%{transform:translateY(-4px) rotate(1.2deg)}}
@@ -399,9 +399,9 @@ button,[role="button"],.catwrap,.pcat,.lb,.mc,.sp{touch-action:manipulation}
 .cmdgrid button span{font-size:1.6rem;line-height:1}
 .cmdgrid button.ok{background:#dff5e8;border-color:#7cc9a0}.cmdgrid button.bad{background:#ffe3ea;border-color:#f08aa5}
 .cmdskip{width:100%;margin-top:8px}
-.aqbld{position:absolute;right:5%;top:21%;width:22%;max-width:96px;z-index:30;background:none;border:0;padding:0;cursor:pointer}
+.aqbld{position:absolute;right:3%;top:22.5%;width:28%;max-width:120px;z-index:30;background:none;border:0;padding:0;cursor:pointer}
 .aqbld svg{width:100%;display:block;filter:drop-shadow(0 3px 3px rgba(59,51,70,.25))}
-.aqbld.bugb{right:auto;left:27%;top:20%;width:20%}
+.aqbld.bugb{right:auto;left:3%;top:22.5%;width:28%}
 .aqbld.bugb .lbl{color:#3f7f3a}
 #aqua.bugm{background:#2d2218}
 #aqua.bugm .aqhead,#aqua.bugm .aqctl,#aqua.bugm .aqwho,#aqua.bugm .aqjump{background:#3b2c1f}
@@ -502,7 +502,7 @@ html.noscroll,html.noscroll body{overflow:hidden}
 .mailbox svg{width:100%;display:block;filter:drop-shadow(0 2px 2px rgba(59,51,70,.25))}
 .mailbox .ex{position:absolute;top:-6px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#e2453c;color:#fff;font-size:12px;display:grid;place-items:center;box-shadow:0 0 0 2px #fff;animation:nbj 1s ease-in-out infinite}
 /* notice board */
-.nboard{position:absolute;left:5%;top:30%;width:17%;max-width:74px;z-index:140;background:none;border:0;padding:0;cursor:pointer}
+.nboard{position:absolute;left:41.5%;top:25%;width:17%;max-width:74px;z-index:140;background:none;border:0;padding:0;cursor:pointer}
 .nboard svg{width:100%;display:block;filter:drop-shadow(0 3px 3px rgba(59,51,70,.25))}
 .nboard .ex{position:absolute;top:-6px;right:-4px;width:24px;height:24px;border-radius:50%;background:#e2453c;color:#fff;font-family:var(--display);font-size:16px;display:grid;place-items:center;box-shadow:0 0 0 2px #fff;animation:nbj 1s ease-in-out infinite}
 @keyframes nbj{50%{transform:translateY(-4px)}}
@@ -1323,7 +1323,20 @@ function openRoomEditor(keep){
   svg.addEventListener('pointermove',e=>{if(!drag)return;const p=pt(e);const x=Math.round(clamp(p.x+drag.dx,0,400)),y=Math.round(clamp(p.y+drag.dy,0,300));S.rpos[drag.k]=[x,y];drag.g.innerHTML=furnAt(drag.k,x,y,(me().room||{})[drag.k])});
   const end=()=>{if(drag){drag.g.classList.remove('drag');drag=null}};svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
 }
-const plazaBG=`<svg class="bg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="pz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe6f7"/><stop offset="1" stop-color="#e8f7f2"/></linearGradient></defs><rect width="400" height="400" fill="url(#pz)"/><circle cx="330" cy="60" r="26" fill="#fff4c4"/><path d="M40 70 q14 -12 28 0 q14 -12 28 0" fill="#fff" opacity=".9"/><path d="M220 46 q12 -10 24 0 q12 -10 24 0" fill="#fff" opacity=".9"/><path d="M0 150 Q100 110 200 140 T400 130 V400 H0z" fill="#a9dca0"/><path d="M0 170 Q120 150 240 168 T400 160 V400 H0z" fill="#95d08b"/>${[[40,160],[90,150],[330,150],[370,162]].map(([x,y])=>`<rect x="${x-4}" y="${y-10}" width="8" height="22" fill="#9a6a4d"/><circle cx="${x}" cy="${y-24}" r="22" fill="#6fbf6a"/><circle cx="${x-10}" cy="${y-30}" r="10" fill="#86d07f"/>`).join('')}<ellipse cx="200" cy="250" rx="160" ry="70" fill="#f1e2c3"/><ellipse cx="200" cy="250" rx="140" ry="58" fill="#f7ecd5"/><g transform="translate(200,232)"><ellipse rx="44" ry="13" fill="#9fd6ef" stroke="#7fb8d4" stroke-width="3"/><rect x="-6" y="-30" width="12" height="28" fill="#d8dfe6"/><ellipse cy="-30" rx="18" ry="6" fill="#d8dfe6"/><path d="M0 -36 q-14 -10 -22 8 M0 -36 q14 -10 22 8" stroke="#9fd6ef" stroke-width="3" fill="none"/></g><g fill="#ff9fb3">${[[60,320],[80,340],[320,330],[345,312],[150,360],[260,372]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4"/><circle cx="${x+6}" cy="${y+3}" r="3" fill="#ffd166"/>`).join('')}</g></svg>`;
+const plazaBG=`<svg class="bg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="pz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe6f7"/><stop offset="1" stop-color="#e8f7f2"/></linearGradient><pattern id="cob" width="22" height="14" patternUnits="userSpaceOnUse"><rect width="22" height="14" fill="#efe1c4"/><path d="M0 7 H22 M11 0 V7 M0 7 V14 M22 7 V14" stroke="#dcc9a4" stroke-width="1.4"/></pattern></defs>
+<rect width="400" height="400" fill="url(#pz)"/><circle cx="345" cy="58" r="24" fill="#fff4c4"/><path d="M40 62 q14 -12 28 0 q14 -12 28 0" fill="#fff" opacity=".9"/><path d="M200 40 q12 -10 24 0 q12 -10 24 0" fill="#fff" opacity=".9"/>
+<path d="M0 132 Q70 96 150 122 Q230 92 300 118 Q360 100 400 116 V200 H0Z" fill="#bfe3c8"/>
+${[[120,118,'#ffb3a7'],[150,112,'#ffd88a'],[248,110,'#a8d4ff'],[276,116,'#ffb3c9']].map(([x,y,c])=>`<rect x="${x-7}" y="${y-8}" width="14" height="10" fill="#fff8ec"/><path d="M${x-9} ${y-8} L${x} ${y-16} L${x+9} ${y-8}Z" fill="${c}"/>`).join('')}
+<path d="M0 150 Q100 130 200 146 T400 142 V400 H0z" fill="#a9dca0"/><path d="M0 200 Q120 186 240 198 T400 192 V400 H0z" fill="#95d08b"/>
+<path d="M0 168 H400 V194 H0Z" fill="url(#cob)"/><path d="M0 168 H400" stroke="#c9b48f" stroke-width="2"/><path d="M0 194 H400" stroke="#c9b48f" stroke-width="2"/>
+<path d="M186 194 L176 226 H224 L214 194Z" fill="url(#cob)"/>
+<ellipse cx="200" cy="286" rx="158" ry="66" fill="#e3cfa6"/><ellipse cx="200" cy="286" rx="150" ry="60" fill="url(#cob)"/>
+<path d="M58 194 Q40 230 64 258 M342 194 Q360 230 336 258" stroke="#efe1c4" stroke-width="14" fill="none" stroke-linecap="round"/>
+${[[122,168],[278,168]].map(([x,y])=>`<rect x="${x-2}" y="${y-44}" width="4" height="44" fill="#4b4f6b"/><path d="M${x-8} ${y-44} h16 l-3 -10 h-10z" fill="#ffe8a0" stroke="#4b4f6b" stroke-width="2"/><ellipse cx="${x}" cy="${y}" rx="7" ry="2.5" fill="#4b4f6b"/>`).join('')}
+${[[16,214],[384,210],[30,330],[372,326]].map(([x,y])=>`<rect x="${x-4}" y="${y-10}" width="8" height="22" fill="#9a6a4d"/><circle cx="${x}" cy="${y-26}" r="22" fill="#6fbf6a"/><circle cx="${x-10}" cy="${y-32}" r="10" fill="#86d07f"/>`).join('')}
+${[[96,218],[300,216]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="18" ry="10" fill="#7cc46b"/><circle cx="${x-6}" cy="${y-3}" r="2.4" fill="#ff8fab"/><circle cx="${x+6}" cy="${y-2}" r="2.4" fill="#ffd166"/>`).join('')}
+<g transform="translate(200,276)"><ellipse rx="46" ry="14" fill="#9fd6ef" stroke="#7fb8d4" stroke-width="3"/><rect x="-6" y="-30" width="12" height="28" fill="#d8dfe6"/><ellipse cy="-30" rx="18" ry="6" fill="#d8dfe6"/><path d="M0 -36 q-14 -10 -22 8 M0 -36 q14 -10 22 8" stroke="#9fd6ef" stroke-width="3" fill="none"/></g>
+<g fill="#ff9fb3">${[[60,372],[90,388],[320,380],[345,366],[150,384],[250,392]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4"/><circle cx="${x+6}" cy="${y+3}" r="3" fill="#ffd166"/>`).join('')}</g></svg>`;
 
 /* ================= state ================= */
 const S={me:null,users:{},cats:{},props:{},feed:[],view:'home',screen:'gate',subs:[],tab:{shop:'food',deco:'wear'},bubble:null,happyUntil:0,seenFeed:0};
