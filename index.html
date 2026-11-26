@@ -905,7 +905,7 @@ function tick(c,t){
     let md=sl?.5:3;if(s.hunger<20)md+=3;if(s.clean<20)md+=2;
     {const wx=wxOf(kstDay(x)),E=c.eq||{};if(!sl){if(wx==='rain'&&E.body!=='raincoat')md+=1.5;else if(wx==='snow'&&!['beanie','santa'].includes(E.hat)&&E.neck!=='scarf')md+=1;else if(wx==='sun')md=Math.max(0,md-.5)}if(wx==='wind')s.clean=clamp(s.clean-1.5*h)}
     s.mood=clamp(s.mood-md*h);
-    s.energy=clamp(s.energy+(sl?3000:-65)*h);
+    {const pp=c.preg&&c.preg.due?clamp((x-c.preg.at)/(c.preg.due-c.preg.at),0,1)/100:0;s.energy=clamp(s.energy+(sl?3000:-65*(1+pp*100*.8+(c.preg?.4:0)))*h)}
     {const Dx=kstDay(x);if(c.sickDay!==Dx){c.sickDay=Dx;const rr=seeded(strHash('sick-'+c.id+Dx));if(rr()<.08&&!c.sick)c.sickPlan=Date.parse(Dx+'T00:00:00+09:00')+(8+rr()*12)*HOUR}}
     if(c.sickPlan&&x>=c.sickPlan){if(!c.sick)c.sick={k:'cold',at:x};c.sickPlan=null}
     if(s.clean<15)c.dirtH=(c.dirtH||0)+h;else if(c.dirtH)c.dirtH=Math.max(0,c.dirtH-h);
@@ -1200,7 +1200,7 @@ ${eq.aura&&AB[eq.aura]||''}
 ${ear?both(`<path d="${ear[0]}" fill="${P==='point'?pc:coat}" stroke="${line}" stroke-width="3" stroke-linejoin="round"/><path d="${ear[1]}" fill="#f7b3c2"/>`):''}
 ${capeBack}<ellipse cx="100" cy="${by}" rx="${brx}" ry="${bry}" fill="${coat}" stroke="${line}" stroke-width="3"/>
 <g clip-path="url(#${id}b)">${pat}</g>
-${eq.body&&clothes[eq.body]||''}
+${(()=>{const pg=c.preg;if(!pg||!pg.due)return'';const q=Math.max(0,Math.min(1,(now()-pg.at)/(pg.due-pg.at)));const bx=brx*(.5+.32*q),bh=bry*(.42+.3*q),cy=by+bry*.28;return`<ellipse cx="100" cy="${cy}" rx="${bx}" ry="${bh}" fill="${coat}" stroke="${line}" stroke-width="2.5"/><ellipse cx="100" cy="${cy+bh*.1}" rx="${bx*.7}" ry="${bh*.68}" fill="${shade(coat,.22)}" opacity=".7"/>${q>.4?`<path d="M100,${cy+2} c-3,-5 -9,-2 -6,3 l6,6 6,-6 c3,-5 -3,-8 -6,-3z" fill="#ff8fab" opacity=".85"/>`:''}${q>.6?`<path d="M146,62 q-5,8 0,11 q5,-3 0,-11z" fill="#8cc4f0" stroke="#5fa3d6" stroke-width="1"/>`:''}`})()}${eq.body&&clothes[eq.body]||''}
 ${both(`<ellipse cx="${100-pawDX}" cy="${pawY}" rx="12" ry="8" fill="${coat}" stroke="${line}" stroke-width="2.5"/>`)}
 <g clip-path="url(#${id}p)">${pat}</g>
 <ellipse cx="100" cy="92" rx="52" ry="45" fill="${coat}" stroke="${line}" stroke-width="3"/>
@@ -3302,7 +3302,7 @@ function viewHome(){
   const expr=sleeping?'sleep':(fxk&&fxk.k==='pill')?'ouch':c.sick?'sick':S.happyUntil>t||(fxk&&['eat','play','ex'].includes(fxk.k))?'happy':c.st.mood<25?'sulky':'normal';
   const g=growthNext(c);
   const pers=personality(c);
-  const line=sleeping?'쿨... 쿨...':c.sick?'아파옹... 알약 줘':c.st.hunger<30?'배고파옹...':c.st.clean<30?'몸이 꼬질꼬질해':c.st.mood<25?'흥! (삐짐)':c.st.energy<20?'졸려...':Math.random()<.6?ptLine(c,'talk'):c.aff>=80?pick(['주인 최고냥!','오늘도 같이 있자옹']):pick(['냐옹','놀아줘!','오늘 뭐 해?','골골...']);
+  const line=sleeping?'쿨... 쿨...':c.sick?'아파옹... 알약 줘':c.preg&&Math.random()<.6?pick(['배가 점점 무거워옹...','아기가 발로 찼다냥!','조금만 쉬고 싶다냥','헥헥... 몸이 무겁다옹','아기야 잘 크고 있지?','츄르가 너무 땡긴다냥']):c.st.hunger<30?'배고파옹...':c.st.clean<30?'몸이 꼬질꼬질해':c.st.mood<25?'흥! (삐짐)':c.st.energy<20?'졸려...':Math.random()<.6?ptLine(c,'talk'):c.aff>=80?pick(['주인 최고냥!','오늘도 같이 있자옹']):pick(['냐옹','놀아줘!','오늘 뭐 해?','골골...']);
   const bub=S.bubble&&S.bubble.until>t?S.bubble.t:line;
   const cdTxt=k=>c.cd[k]>t?`<small class="num">${Math.ceil((c.cd[k]-t)/MIN)}분</small>`:'';
   const dis=sleeping?'disabled':'';
