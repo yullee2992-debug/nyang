@@ -2105,13 +2105,15 @@ function viewVisit(){
   const o=S.visit,u=S.users[o];if(!u)return'<div class="empty">집을 찾지 못했어요.</div>';
   const mine=o===S.me,D=kstDay(),today=Object.keys(((u.visits||{})[D])||{}).length,total=u.visitTotal||0;
   const cats=Object.values(S.cats).filter(c=>c&&c.owner===o).sort((a,b)=>(a.id===u.main?-1:b.id===u.main?1:a.born-b.born)).slice(0,4).map(live);
-  const posx=[50,22,78,36];
+  const guests=[['spVisit','같이 사는 중'],['kidVisit','놀러 옴']].map(([k,l])=>{const v=u[k];const c=v&&v.until>now()&&S.cats[v.id];return c&&!cats.some(x=>x.id===c.id)?Object.assign(live(c),{_tag:l}):null}).filter(Boolean);
+  cats.splice(1,0,...guests);cats.length=Math.min(cats.length,5);
+  const posx=[50,22,78,36,64];
   const book=Object.entries(u.book||{}).map(([k,b])=>Object.assign({k},b)).sort((a,b)=>b.at-a.at).slice(0,40);
   const myToday=book.filter(b=>b.by===S.me&&kstDay(b.at)===D).length;
   const ov=!mine&&userV(u)!==myV();
   return`<div class="row" style="justify-content:space-between"><h2>${esc(u.name)}의 집${ov?` <span class="chip">${esc(vilNameOf(userV(u)))} 주민</span>`:''}</h2><button class="btn small ghost" data-a="go" data-v="${mine?'home':'plaza'}">${mine?'우리집으로':'광장으로'}</button></div>
   <p class="grow" style="margin:0">오늘 방문 ${today}명 · 누적 방문 ${total}명</p>
-  <div class="scene">${roomScene(u)}${cats.map((c,i)=>`<div class="catwrap" style="left:${posx[i]}%;width:${i?22:30}%;bottom:${i?6:4}%;z-index:${i?1:2};cursor:default">${c.status==='runaway'?'':catSVG(c,{expr:c.sleepUntil>now()?'sleep':'normal'})}</div>`).join('')}</div>
+  <div class="scene">${roomScene(u)}${cats.map((c,i)=>`<div class="catwrap" style="left:${posx[i]}%;width:${i?(c.stage==='kitten'?18:22):30}%;bottom:${i?6:4}%;z-index:${i?1:2};cursor:default">${c._tag?`<span class="kidtag">${esc(c.name)} · ${c._tag}</span>`:''}${c.status==='runaway'?'':catSVG(c,{expr:c.sleepUntil>now()?'sleep':'normal'})}</div>`).join('')}</div>
   <div class="row" style="margin-top:8px"><button class="btn small ghost" style="flex:1" data-a="dex" data-v="${o}">🐟 ${mine?'내':esc(u.name)+'님의'} 낚시 도감 (${FISHDEX.filter(x=>myDex(o)[x.k]).length}/${FISHDEX.length})</button></div>
   <div class="sect">방명록 · ${book.length}개</div>
   ${mine?'':`<div class="panel stack"><textarea id="bookt" maxlength="100" rows="2" placeholder="${esc(u.name)}님에게 한마디 (100자까지)" aria-label="방명록 내용" style="width:100%;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;font-family:var(--body);font-size:16px;resize:none"></textarea><div class="row"><span class="grow" style="flex:1">오늘 이 집에 ${myToday}/2개 남겼어요</span><button class="btn small" data-a="bookw" data-v="${o}" ${myToday>=2?'disabled':''}>남기기</button></div></div>`}
