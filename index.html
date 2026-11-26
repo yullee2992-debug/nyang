@@ -1940,6 +1940,7 @@ async function decline(pid){await Store.set('proposals/'+pid+'/status','declined
 function babyCheck(c,sp){
   if(!c.spouse||!sp)return'결혼한 고양이만 아기를 가질 수 있어요';
   if(now()-c.marriedAt<2*DAY)return`결혼하고 2일이 지나야 해요 (${dur(c.marriedAt+2*DAY-now())} 남음)`;
+  {const pa=[c.id,sp.id].sort().join();const kit=Object.values(S.cats).filter(x=>x&&x.parents&&[x.parents.a,x.parents.b].sort().join()===pa).map(live).find(x=>x.stage==='kitten');if(kit)return`${kit.name}${iGa(kit.name).slice(-1)} 청소년냥이 되어야 다음 아기를 가질 수 있어요`}
   const last=Math.max(c.lastBabyAt||0,sp.lastBabyAt||0);if(now()-last<5*DAY)return`다음 아기까지 ${dur(last+5*DAY-now())} 남았어요`;
   if(c.status==='runaway'||sp.status==='runaway')return'가출 중인 고양이가 있어요';
   if(c.st.mood<70)return`${c.name}의 기분이 70 이상이어야 해요`;
