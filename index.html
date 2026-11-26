@@ -3624,7 +3624,7 @@ document.addEventListener('click',async e=>{
     case'dwalkall':document.querySelectorAll('.dcat').forEach(e=>setWalk(e.dataset.v,true));toast('모두 돌아다니기 시작했어요');break;
     case'dset':if(DK&&DK.setSetting){await DK.setSetting(el.dataset.k,!!v);openSettings()}break;
     case'dquit':DK&&DK.quit&&DK.quit();break;
-    case'dpet':{if(now()<deskSuppress)break;deskClicked=v;const s=DS[v];if(v==='guest'||(s&&s.away)){DK&&DK.openMain();break}if(s&&s.mine)pet(e);else if(s&&s.sleep){deskSay(v,sleepLine(live(S.cats[v])||{}),2600)}else{spawnHeart(e);deskHand(v,'pet');friendPet(v)}break}
+    case'dpet':{if(now()<deskSuppress)break;deskClicked=v;const s=DS[v];if(s&&s.visit){deskSay(v,`${ownerName(s.visit)}님 집에 놀러 가 있어요. 우클릭해서 데려올 수 있어요`,3000);break}if(v==='guest'||(s&&s.away)){DK&&DK.openMain();break}if(s&&s.mine)pet(e);else if(s&&s.sleep){deskSay(v,sleepLine(live(S.cats[v])||{}),2600)}else{spawnHeart(e);deskHand(v,'pet');friendPet(v)}break}
     case'create':S.createMode='new';S.draft={look:Object.assign(randomLook(),{gender:null}),step:'fur'};S.draft.odd=S.draft.look.eyeL!==S.draft.look.eyeR;S.screen='create';render();break;
     case'loginform':S.screen='login';render();break;
     case'accswitch':goAccounts();break;
@@ -3810,8 +3810,9 @@ const LETTER=`<svg viewBox="0 0 200 210"><g transform="translate(40,90)"><rect w
 function deskList(){
   const out=[];
   if(!S.me||!me()){out.push({id:'guest',cat:GUEST,mine:true,guest:true});return out}
-  const m=activeCat();if(m){const v=live(m);out.push({id:m.id,cat:v,mine:true,away:v.status==='runaway'})}
-  for(const k of deskCalled){const u=S.users[k];if(!u||k===S.me)continue;const c=S.cats[u.main];if(!c)continue;const v=live(c);if(v.status!=='runaway')out.push({id:c.id,cat:v,mine:false,owner:k})}
+  const m=activeCat();if(m){const v=live(m),aw=awayAt(m.id);out.push({id:m.id,cat:v,mine:true,away:v.status==='runaway'||!!aw,visit:aw?aw.host:null})}
+  for(const f of [spHere(),kidHere()])if(f&&!out.some(x=>x.id===f.id))out.push({id:f.id,cat:f,mine:false,owner:f.owner,fam:1});
+  for(const k of deskCalled){const u=S.users[k];if(!u||k===S.me)continue;const c=S.cats[u.main];if(!c||out.some(x=>x.id===c.id))continue;const v=live(c);if(v.status!=='runaway'&&!awayAt(c.id))out.push({id:c.id,cat:v,mine:false,owner:k})}
   return out.slice(0,10);
 }
 const PILLOW=`<svg viewBox="0 0 120 44"><path d="M10 14 Q6 4 20 5 Q60 0 100 5 Q114 4 110 14 Q114 28 110 36 Q60 44 10 36 Q6 28 10 14Z" fill="#fff" stroke="#c9cfe0" stroke-width="2.4" stroke-linejoin="round"/><path d="M24 12 Q60 8 96 12" stroke="#e4e8f3" stroke-width="2" fill="none"/><path d="M10 14 l-6 -4 M110 14 l6 -4 M10 36 l-6 4 M110 36 l6 4" stroke="#c9cfe0" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -3856,9 +3857,9 @@ function renderDesk(){
     const sig=it.away?'away':JSON.stringify([c.look,c.eq,c.stage,expr]);
     if(s.sig!==sig){s.sig=sig;el.querySelector('.flip').innerHTML=it.away?LETTER:expr==='sleep'?sleepCatSVG(c):catSVG(c,{expr})}
     s.mood=c.st?c.st.mood:60;s.aff=c.aff||0;s.ptype=it.guest?'aloof':ptypeOf(c);
-    s.sleep=!!sleeping||!!it.away;s.mine=it.mine;s.away=!!it.away;s.guest=!!it.guest;s.owner=it.owner||c.owner;s.name=c.name;
+    s.sleep=!!sleeping||!!it.away;s.mine=it.mine;s.away=!!it.away;s.visit=it.visit||null;s.fam=!!it.fam;s.guest=!!it.guest;s.owner=it.owner||c.owner;s.name=c.name;
     el.querySelector('.zz').hidden=!sleeping;el.classList.toggle('sleeping',!!sleeping);
-    const nm=el.querySelector('.nm');if(nm)nm.textContent=title(c);
+    const nm=el.querySelector('.nm');if(nm)nm.textContent=it.fam?c.name+' · 놀러 온 가족':title(c);
     el.title=it.guest?'눌러서 냥이마을 열기':it.away?`${c.name}${iGa(c.name).slice(-1)} 집을 나갔어요`:`${title(c)} · 누르면 쓰다듬기 · 끌어서 옮기기 · 오른쪽 버튼은 메뉴`;
     if(it.away&&!s.told){s.told=1;setTimeout(()=>deskSay(it.id,`${c.name}${iGa(c.name).slice(-1)} 집을 나갔어요... 눌러서 찾으러 가요`,8000),600)}
   }
@@ -4015,6 +4016,7 @@ function openDeskMenu(id){
   const it=(a,l,extra='')=>`<button data-a="dmenu" data-v="${a}" data-id="${id}">${l}${extra?`<small>${extra}</small>`:''}</button>`;
   let html='';
   if(s.guest)html=it('open','냥이마을 열기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
+  else if(s.visit)html=`<p>${esc(s.name)}${eunNeun(s.name).slice(-1)} ${esc(ownerName(s.visit))}님 집에 가 있어요</p>`+it('callback','지금 데려오기')+it('open','냥이마을 열기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.away)html=`<p>${esc(s.name)}${iGa(s.name).slice(-1)} 집을 나갔어요</p>`+it('open','찾으러 가기')+'<hr>'+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else if(s.mine)html=`<p>${esc(s.name)}${s.sleep?' (자는 중)':''}</p>`+(s.sleep?it('wake','깨우기'):'')+((live(S.cats[id])||{}).sick?it('pill','알약 먹이기',(inv.pill||0)+'개'):'')+it('churu','츄르 주기',(inv.churu||0)+'개')+it('kibble','밥 주기','사료 '+(inv.kibble||0)+'개')+it('play','놀아주기')+it('acts','동작 시키기')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('call','친구 부르기')+(deskCalled.length?it('sendall','친구 모두 돌려보내기',deskCalled.length+'마리'):'')+'<hr>'+it('open','냥이마을 열기')+it('hide','고양이 숨기기')+it('quit','냥이마을 종료');
   else html=`<p>${esc(ownerName(s.owner))}의 ${esc(s.name)}</p>`+it('fpet','쓰다듬기',(()=>{const b=bondInfo(myBond(S.cats[id]));return b.name})())+it('talk','말 걸기')+it('flowers','꽃 선물')+it('foods','간식 선물')+it('walk',walkOn(id)?'돌아다니기 끄기':'돌아다니기 켜기')+it('sendhome','집으로 돌려보내기')+'<hr>'+it('call','친구 부르기')+it('open','냥이마을 열기');
@@ -4049,6 +4051,7 @@ async function deskAction(a,id,e){
   const s=DS[id];closeDeskMenu();deskClicked=id;
   switch(a){
     case'open':DK&&DK.openMain();break;
+    case'callback':await callBack(id);setTimeout(renderDesk,400);break;
     case'hide':DK&&DK.setPetVisible&&DK.setPetVisible(false);break;
     case'quit':DK&&DK.quit&&DK.quit();break;
     case'churu':await feed('churu');break;
