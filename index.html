@@ -951,7 +951,7 @@ function ptypeOf(c){
 }
 const ptLine=(c,kind)=>pick((PT[ptypeOf(c)]||PT.aloof)[kind]);
 function bumpTr(c,o){c.tr=c.tr||{};for(const k in o)c.tr[k]=(c.tr[k]||0)+o[k]}
-function famChips(c){let h='';const sp=c.spouse&&S.cats[c.spouse];if(sp)h+=`<span class="chip gold">💍 ${esc(sp.name)}의 배우자</span>`;
+function famChips(c){let h='';if(c.preg)h+=`<span class="chip pink">🤰 ${c.preg.due>now()?'출산까지 '+dur(c.preg.due-now()):'곧 태어나요!'}</span>`;const sp=c.spouse&&S.cats[c.spouse];if(sp)h+=`<span class="chip gold">💍 ${esc(sp.name)}의 배우자</span>`;
   const pa=c.parents&&S.cats[c.parents.a],pb=c.parents&&S.cats[c.parents.b];if(pa||pb)h+=`<span class="chip gold">🍼 ${[pa,pb].filter(Boolean).map(x=>esc(x.name)).join('·')}의 아기</span>`;return h}
 const QUIRKS=['박스 성애자','꾹꾹이 장인','창밖 구경러','츄르 감별사','꼬리 사냥꾼','새벽 우다다','식빵 굽기 장인','골골송 가수','발라당 전문가','눈치 백단','밀당 고수','집사 바라기','명당 탐색가','택배 상자 검수관','양말 도둑','물 마시기 장인','이불 속 탐험가','종이봉투 수집가','키보드 위 낮잠러','벌레 사냥꾼','햇빛 일광욕러','숨숨집 애호가','방울 소리 반응러','높은 곳 정복자','혼잣말 냐옹러','발 냄새 감별사','기지개 장인','꼬리 흔들기 달인','털실 해체 전문가','소파 스크래처'];
 function personality(c){
@@ -1947,20 +1947,39 @@ function babyCheck(c,sp){
   if((me().coins||0)<800)return'아기 준비물 비용 800코인이 필요해요';
   return null;
 }
+const PREG_MS=2*DAY;
+function pregOf(c){if(!c)return null;if(c.preg)return{mom:c,p:c.preg};const sp=c.spouse&&S.cats[c.spouse];if(sp&&sp.preg)return{mom:sp,p:sp.preg};return null}
 function babySheet(id){
-  const c=live(S.cats[id]),sp=live(S.cats[c.spouse]);const why=babyCheck(c,sp);if(why)return toast(why);
-  const L=inherit(c.look,sp.look);const preview={look:L,stage:'kitten'};
-  openSheet(`<h2>아기 고양이가 찾아왔어요</h2><p class="lead">${esc(c.name)}${waGwa(c.name).slice(-1)} ${esc(sp.name)}를 닮은 아기예요. 준비물 비용으로 800코인이 들어요.</p>
-  <div class="creator"><div class="preview">${catSVG(preview,{still:false})}</div></div>
-  <div class="field" style="margin-top:12px"><label for="bn">아기 이름</label><input id="bn" maxlength="8" placeholder="예: 콩떡"></div><p class="err" id="be"></p>
-  <button class="btn block" id="bok">우리 가족이 됐어요</button>`);
+  const c=live(S.cats[id]),sp=c.spouse&&live(S.cats[c.spouse]);if(!sp)return toast('결혼한 고양이만 아기를 가질 수 있어요');
+  const pg=pregOf(c);
+  if(pg){const left=pg.p.due-now();
+    if(left>0)return openSheet(`<h2>🤰 ${esc(pg.mom.name)}${iGa(pg.mom.name).slice(-1)} 아기를 품고 있어요</h2><p class="lead">출산까지 <b>${dur(left)}</b> 남았어요. 어떤 아기일지는 태어나는 날 알 수 있어요!</p><div class="bar" style="height:10px;margin:8px 0 14px"><i style="width:${Math.min(100,(1-left/PREG_MS)*100)}%;background:#ff9fb3"></i></div><p class="grow">태어나면 ${esc(ownerName(pg.p.owner))}님이 아기 이름을 지어 줄 수 있어요.</p><button class="btn block" data-a="close">기다릴게요</button>`);
+    if(pg.p.owner!==S.me)return toast(`아기가 태어날 준비가 됐어요! ${ownerName(pg.p.owner)}님이 맞이해 줄 거예요`);
+    const preview={look:pg.p.look,stage:'kitten'};
+    openSheet(`<div class="celebc"><div class="confetti">${confettiHTML()}</div><h2>아기가 태어났어요!</h2><p class="lead">${esc(c.name)}${waGwa(c.name).slice(-1)} ${esc(sp.name)}를 닮은 ${pg.p.look.gender==='m'?'남자':'여자'} 아기예요.</p>
+    <div class="creator"><div class="preview">${catSVG(preview,{still:false})}</div></div>
+    <div class="field" style="margin-top:12px"><label for="bn">아기 이름</label><input id="bn" maxlength="8" placeholder="예: 콩떡"></div><p class="err" id="be"></p>
+    <button class="btn block" id="bok">우리 가족이 됐어요</button></div>`);
+    $('#bok').onclick=async()=>{
+      const n=$('#bn').value.trim();if(!n){$('#be').textContent='아기 이름을 지어주세요.';return}$('#bok').disabled=true;
+      let ok=false;await Store.tx('cats/'+pg.mom.id+'/preg',x=>{if(!x||x.owner!==S.me||x.due>now()){ok=false;return}ok=true;return null});if(!ok){$('#be').textContent='이미 태어났거나 아직 준비 중이에요.';return}
+      const k=newCat(S.me,n,pg.p.look,{aff:40,parents:{a:c.id,b:sp.id}});
+      await Store.update({['cats/'+k.id]:k});
+      log(`${title(c)}${waGwa(c.name).slice(-1)} ${title(sp)} 사이에 아기 ${n}${iGa(n).slice(-1)} 태어났어요!`);
+      closeSheet();toast(`${n}${iGa(n).slice(-1)} 태어났어요!`,3000);
+    };return}
+  const why=babyCheck(c,sp);if(why)return toast(why);
+  openSheet(`<h2>아기를 가질까요?</h2><p class="lead">${esc(c.name)}${waGwa(c.name).slice(-1)} ${esc(sp.name)}에게 아기가 찾아와요. 준비물 비용으로 <b>800코인</b>이 들어요.</p>
+  <div class="list"><div class="item"><div class="tx"><b>🤰 임신 기간 2일</b><span>2일 뒤에 아기가 태어나요</span></div></div><div class="item"><div class="tx"><b>🎁 어떤 아기일까?</b><span>생김새와 성별은 지금 딱 한 번 정해지고, 태어나는 날 공개돼요</span></div></div></div>
+  <p class="err" id="be"></p><button class="btn block" id="bok" style="margin-top:10px">아기 갖기 (800코인)</button>`);
   $('#bok').onclick=async()=>{
-    const n=$('#bn').value.trim();if(!n){$('#be').textContent='아기 이름을 지어주세요.';return}
-    const r=await Store.tx('users/'+S.me+'/coins',v=>{if((v||0)<800)return;return v-800});if(!r.committed){$('#be').textContent='코인이 부족해요.';return}
-    const k=newCat(S.me,n,L,{aff:40,parents:{a:c.id,b:sp.id}});const t=now();
-    await Store.update({['cats/'+k.id]:k,[`cats/${c.id}/lastBabyAt`]:t,[`cats/${sp.id}/lastBabyAt`]:t});
-    log(`${title(c)}${waGwa(c.name).slice(-1)} ${title(sp)} 사이에 아기 ${n}${iGa(n).slice(-1)} 태어났어요!`);
-    closeSheet();toast(`${n}${iGa(n).slice(-1)} 태어났어요!`,3000);
+    $('#bok').disabled=true;const mom=sp.look.gender==='f'&&c.look.gender!=='f'?sp:c;
+    const r=await Store.tx('users/'+S.me+'/coins',v=>{if((v||0)<800)return;return v-800});if(!r.committed){$('#be').textContent='코인이 부족해요.';$('#bok').disabled=false;return}
+    const L=inherit(c.look,sp.look),t=now();let ok=false;
+    await Store.tx('cats/'+mom.id+'/preg',x=>{if(x){ok=false;return}ok=true;return{at:t,due:t+PREG_MS,look:L,owner:S.me,dad:mom.id===c.id?sp.id:c.id}});
+    if(!ok){await addCoins(800);$('#be').textContent='이미 아기를 품고 있어요.';return}
+    await Store.update({[`cats/${c.id}/lastBabyAt`]:t,[`cats/${sp.id}/lastBabyAt`]:t});
+    log(`🤰 ${title(mom)}${iGa(mom.name).slice(-1)} 아기를 품었어요! 2일 뒤에 태어나요`);closeSheet();toast('아기가 찾아왔어요! 2일 뒤에 태어나요',3500);
   };
 }
 
@@ -3320,7 +3339,7 @@ function viewCats(){
   const u=me(),cats=myCats();
   return`<div class="list">${cats.map(c0=>{const c=live(c0);const sp=c.spouse&&S.cats[c.spouse];
     return`<div class="item" style="align-items:flex-start"><div class="thumb" style="width:72px;height:72px;flex-basis:72px">${catSVG(c,{still:true})}</div><div class="tx"><b>${esc(c.name)}${c.id===u.main?' <span class="chip gold">광장 대표</span>':''}</b><span>${STAGE[c.stage]} · Lv.${c.lv} · ${c.look.gender==='m'?'수컷':'암컷'} · ${personality(c).join(' · ')}${c.status==='runaway'?' · 가출 중':''}</span>${sp?`<span style="display:block">${esc(title(sp))}${waGwa(sp.name).slice(-1)} 결혼했어요</span>`:''}${c.parents?`<span style="display:block">부모: ${esc((S.cats[c.parents.a]||{}).name||'?')} · ${esc((S.cats[c.parents.b]||{}).name||'?')}</span>`:''}
-    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button><button class="btn small ghost" data-a="diary" data-v="${c.id}">일기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?`<button class="btn small teal" data-a="baby" data-v="${c.id}">아기 갖기</button>`:''}${sp&&c.owner===S.me?(()=>{const w=wedOfCat(c);const ph=w&&wedPhase(w);return`<button class="btn small" style="background:#ff9fb3" data-a="wedopen" data-v="${c.id}">${!w?'결혼식 준비':ph==='done'?'결혼식 앨범':ph==='live'?'결혼식 진행 중':'결혼식 준비'}</button>`})():''}</div></div></div>`}).join('')}</div>
+    <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small" data-a="active" data-v="${c.id}">돌보기</button><button class="btn small ghost" data-a="diary" data-v="${c.id}">일기</button>${c.id!==u.main?`<button class="btn small ghost" data-a="main" data-v="${c.id}">대표로 정하기</button>`:''}${sp?(()=>{const pg=pregOf(c);return`<button class="btn small teal" data-a="baby" data-v="${c.id}">${pg?(pg.p.due<=now()?'🍼 아기 맞이하기':`🤰 임신 중 · ${dur(pg.p.due-now())}`):'아기 갖기'}</button>`})():''}${sp&&c.owner===S.me?(()=>{const w=wedOfCat(c);const ph=w&&wedPhase(w);return`<button class="btn small" style="background:#ff9fb3" data-a="wedopen" data-v="${c.id}">${!w?'결혼식 준비':ph==='done'?'결혼식 앨범':ph==='live'?'결혼식 진행 중':'결혼식 준비'}</button>`})():''}</div></div></div>`}).join('')}</div>
   ${viewBadges()}
   ${viewCols()}
   ${viewStrayAlbum()}
