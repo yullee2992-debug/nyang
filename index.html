@@ -1203,7 +1203,7 @@ ${eq.aura&&AB[eq.aura]||''}
 ${ear?both(`<path d="${ear[0]}" fill="${P==='point'?pc:coat}" stroke="${line}" stroke-width="3" stroke-linejoin="round"/><path d="${ear[1]}" fill="#f7b3c2"/>`):''}
 ${capeBack}<ellipse cx="100" cy="${by}" rx="${brx}" ry="${bry}" fill="${coat}" stroke="${line}" stroke-width="3"/>
 <g clip-path="url(#${id}b)">${pat}</g>
-${(()=>{const pg=c.preg;if(!pg||!pg.due)return'';const q=Math.max(0,Math.min(1,(now()-pg.at)/(pg.due-pg.at)));const bx=brx*(.5+.32*q),bh=bry*(.42+.3*q),cy=by+bry*.28;return`<ellipse cx="100" cy="${cy}" rx="${bx}" ry="${bh}" fill="${coat}" stroke="${line}" stroke-width="2.5"/><ellipse cx="100" cy="${cy+bh*.1}" rx="${bx*.7}" ry="${bh*.68}" fill="${shade(coat,.22)}" opacity=".7"/>${q>.4?`<path d="M100,${cy+2} c-3,-5 -9,-2 -6,3 l6,6 6,-6 c3,-5 -3,-8 -6,-3z" fill="#ff8fab" opacity=".85"/>`:''}${q>.6?`<path d="M146,62 q-5,8 0,11 q5,-3 0,-11z" fill="#8cc4f0" stroke="#5fa3d6" stroke-width="1"/>`:''}`})()}${!c.preg&&eq.body&&clothes[eq.body]||''}
+${(()=>{const pg=c.preg;if(!pg||!pg.due)return'';const q=Math.max(0,Math.min(1,(now()-pg.at)/(pg.due-pg.at)));const bx=brx*(.5+.32*q),bh=bry*(.42+.3*q),cy=by+bry*.28;return`<ellipse cx="100" cy="${cy}" rx="${bx}" ry="${bh}" fill="${coat}" stroke="${line}" stroke-width="2.5"/><ellipse cx="100" cy="${cy+bh*.1}" rx="${bx*.7}" ry="${bh*.68}" fill="${shade(coat,.22)}" opacity=".7"/>${q>.4?`<path d="M100,${cy+2} c-3,-5 -9,-2 -6,3 l6,6 6,-6 c3,-5 -3,-8 -6,-3z" fill="#ff8fab" opacity=".85"/>`:''}${q>.6?`<path d="M146,62 q-5,8 0,11 q5,-3 0,-11z" fill="#8cc4f0" stroke="#5fa3d6" stroke-width="1"/>`:''}`})()}${(!c.preg||o.eq)&&eq.body&&clothes[eq.body]||''}
 ${both(`<ellipse cx="${100-pawDX}" cy="${pawY}" rx="12" ry="8" fill="${coat}" stroke="${line}" stroke-width="2.5"/>`)}
 <g clip-path="url(#${id}p)">${pat}</g>
 <ellipse cx="100" cy="92" rx="52" ry="45" fill="${coat}" stroke="${line}" stroke-width="3"/>
@@ -2541,7 +2541,7 @@ const fsOn=()=>{try{if(localStorage.getItem('nyang-fs')==='1')return true}catch(
 const FS_SLOTS=[['hat','모자'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
 const FS_REW=[{c:500,s:5,it:'fscrown'},{c:300,s:3},{c:150,s:1}],FS_JOIN={c:50,s:0};
 function fsEntries(wk){return vEntries().map(([k,u])=>u&&u.fs&&u.fs[wk]&&S.cats[u.fs[wk].cat]?Object.assign({o:k},u.fs[wk]):null).filter(Boolean).sort((a,b)=>Object.keys(b.v||{}).length-Object.keys(a.v||{}).length||a.at-b.at)}
-const fsLook=e=>Object.assign({},live(S.cats[e.cat]),{eq:e.of||{}});
+const fsLook=e=>Object.assign({},live(S.cats[e.cat]),{eq:e.of||{},preg:null});
 function fsPick(){const c=S.fsPick&&S.cats[S.fsPick.cat]&&S.cats[S.fsPick.cat].owner===S.me?S.fsPick:{cat:(activeCat()||{}).id,of:{}};S.fsPick=c;return c}
 function viewFS(){
   const fmt=d=>{const x=new Date(Date.parse(d+'T00:00:00+09:00')+9*HOUR);return`${x.getUTCMonth()+1}월 ${x.getUTCDate()}일`};
