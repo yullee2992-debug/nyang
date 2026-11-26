@@ -497,6 +497,9 @@ html.noscroll,html.noscroll body{overflow:hidden}
 .catwrap.spw{left:72%;width:25%;max-width:135px;bottom:4%;cursor:pointer;z-index:3}
 .catwrap.kidw{left:33%;width:19%;max-width:105px;bottom:5%;cursor:pointer;z-index:4}
 .kidtag{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-family:var(--display);font-size:11px;background:#ffe3ec;color:#c94a6a;border-radius:9px;padding:1px 7px;white-space:nowrap;z-index:2}
+.catwrap.away{display:none}
+.awaynote{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);z-index:5;background:rgba(255,255,255,.94);border-radius:16px;padding:10px 14px;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center;box-shadow:0 2px 10px rgba(59,51,70,.15);width:max-content;max-width:86%}
+.awaynote b{font-family:var(--display);font-weight:400}.awaynote span{font-size:.8rem;color:var(--muted)}
 .oxq{background:var(--paper);border:1.5px solid var(--line);border-radius:18px;padding:18px 16px;text-align:center;font-family:var(--display);font-size:1.25rem;line-height:1.5;min-height:110px;display:grid;place-items:center}
 .oxb{display:flex;gap:12px;margin-top:12px}.oxb button{flex:1;font-family:var(--display);font-size:2.2rem;padding:14px 0;border-radius:18px;border:2px solid var(--line);background:#fff}
 .oxb .o{color:#2f86c9;border-color:#bfe0f7}.oxb .x{color:#e2456f;border-color:#ffd0dc}
@@ -1955,6 +1958,8 @@ const PREG_MS=2*DAY,KID_MS=2*HOUR;
 function myKids(){const mine=myCats();return Object.values(S.cats).filter(k=>k&&k.parents&&k.owner!==S.me&&k.status!=='runaway'&&mine.some(m=>(m.id===k.parents.a&&m.spouse===k.parents.b)||(m.id===k.parents.b&&m.spouse===k.parents.a)))}
 function mySpouses(){return myCats().map(m=>m.spouse&&S.cats[m.spouse]).filter(sp=>sp&&sp.owner!==S.me&&sp.status!=='runaway')}
 function spHere(){const v=(me()||{}).spVisit;if(!v||v.until<now())return null;const k=S.cats[v.id];return k?live(k):null}
+function awayAt(id){for(const [k,u] of Object.entries(S.users)){if(!u)continue;for(const f of ['spVisit','kidVisit']){const v=u[f];if(v&&v.id===id&&v.until>now()){const c=S.cats[id];if(c&&c.owner!==k)return{host:k,until:v.until,f}}}}return null}
+async function callBack(id){const a=awayAt(id);if(!a)return;await Store.set(`users/${a.host}/${a.f}`,null);const c=S.cats[id];toast(`${c?c.name:'냥이'}${c?iGa(c.name).slice(-1):'가'} 집으로 돌아왔어요`)}
 function famHere(){return!!(kidHere()||spHere())}
 function birthOrd(k){if(!k||!k.parents)return'';const pa=[k.parents.a,k.parents.b].sort().join();const sib=Object.values(S.cats).filter(x=>x&&x.parents&&[x.parents.a,x.parents.b].sort().join()===pa).sort((a,b)=>(a.born||0)-(b.born||0));const i=sib.findIndex(x=>x.id===k.id);return['첫째','둘째','셋째','넷째','다섯째','여섯째','일곱째'][i]||(i+1)+'째'}
 function kidHere(){const v=(me()||{}).kidVisit;if(!v||v.until<now())return null;const k=S.cats[v.id];return k?live(k):null}
@@ -1969,9 +1974,9 @@ function openKids(){const L=myKids(),SP=mySpouses(),v=(me()||{}).kidVisit,here=k
   <button class="btn ghost block" style="margin-top:10px" data-a="close">닫기</button>`)}
 async function kidCall(id){const k=S.cats[id];if(!k)return;await Store.set(`users/${S.me}/kidVisit`,{id,until:now()+KID_MS});closeSheet();toast(`${k.name}${iGa(k.name).slice(-1)} 놀러 왔어요! 2시간 동안 같이 있어요`,3000);const lg='kid'+id+kstDay();if(!S[lg]){S[lg]=1;log(`${ownerName(S.me)}님이 아기 ${k.name}${eulReul(k.name).slice(-1)} 집에 데려왔어요 👶`)}}
 async function kidSend(){const k=kidHere();await Store.set(`users/${S.me}/kidVisit`,null);closeSheet();if(k)toast(`${k.name}${iGa(k.name).slice(-1)} 집으로 돌아갔어요. 또 놀러 와!`)}
-async function spCall(id){const k=S.cats[id];if(!k)return;await Store.set(`users/${S.me}/spVisit`,{id,until:now()+KID_MS});closeSheet();toast(`${k.name}${iGa(k.name).slice(-1)} 우리 집에 왔어요! 2시간 동안 같이 살아요 💕`,3000)}
+async function spCall(id){const k=S.cats[id];if(!k)return;{const ov=(S.users[k.owner]||{}).spVisit;if(ov&&ov.until>now()&&S.cats[ov.id]&&S.cats[ov.id].owner===S.me)await Store.set(`users/${k.owner}/spVisit`,null)}await Store.set(`users/${S.me}/spVisit`,{id,until:now()+KID_MS});closeSheet();toast(`${k.name}${iGa(k.name).slice(-1)} 우리 집에 왔어요! 2시간 동안 같이 살아요 💕`,3000)}
 async function spSend(){const k=spHere();await Store.set(`users/${S.me}/spVisit`,null);closeSheet();if(k)toast(`${k.name}${iGa(k.name).slice(-1)} 집으로 돌아갔어요`)}
-async function spGo(myId){const c=S.cats[myId],sp=c&&S.cats[c.spouse];if(!sp)return;await Store.set(`users/${sp.owner}/spVisit`,{id:myId,until:now()+KID_MS});closeSheet();toast(`${c.name}${eulReul(c.name).slice(-1)} ${ownerName(sp.owner)}님 집에 보냈어요. 2시간 동안 ${sp.name}${waGwa(sp.name).slice(-1)} 같이 있어요 💕`,3500);const lg='spgo'+myId+kstDay();if(!S[lg]){S[lg]=1;log(`💕 ${title(c)}${iGa(c.name).slice(-1)} ${title(sp)}네 집에 놀러 갔어요`)}}
+async function spGo(myId){const c=S.cats[myId],sp=c&&S.cats[c.spouse];if(!sp)return;const mv=(me()||{}).spVisit;if(mv&&mv.id===sp.id)await Store.set(`users/${S.me}/spVisit`,null);await Store.set(`users/${sp.owner}/spVisit`,{id:myId,until:now()+KID_MS});closeSheet();toast(`${c.name}${eulReul(c.name).slice(-1)} ${ownerName(sp.owner)}님 집에 보냈어요. 2시간 동안 ${sp.name}${waGwa(sp.name).slice(-1)} 같이 있어요 💕`,3500);const lg='spgo'+myId+kstDay();if(!S[lg]){S[lg]=1;log(`💕 ${title(c)}${iGa(c.name).slice(-1)} ${title(sp)}네 집에 놀러 갔어요`)}}
 function pregOf(c){if(!c)return null;if(c.preg)return{mom:c,p:c.preg};const sp=c.spouse&&S.cats[c.spouse];if(sp&&sp.preg)return{mom:sp,p:sp.preg};return null}
 function babySheet(id){
   const c=live(S.cats[id]),sp=c.spouse&&live(S.cats[c.spouse]);if(!sp)return toast('결혼한 고양이만 아기를 가질 수 있어요');
@@ -2104,7 +2109,7 @@ async function writeBook(owner){
 function viewVisit(){
   const o=S.visit,u=S.users[o];if(!u)return'<div class="empty">집을 찾지 못했어요.</div>';
   const mine=o===S.me,D=kstDay(),today=Object.keys(((u.visits||{})[D])||{}).length,total=u.visitTotal||0;
-  const cats=Object.values(S.cats).filter(c=>c&&c.owner===o).sort((a,b)=>(a.id===u.main?-1:b.id===u.main?1:a.born-b.born)).slice(0,4).map(live);
+  const cats=Object.values(S.cats).filter(c=>c&&c.owner===o&&!awayAt(c.id)).sort((a,b)=>(a.id===u.main?-1:b.id===u.main?1:a.born-b.born)).slice(0,4).map(live);
   const guests=[['spVisit','같이 사는 중'],['kidVisit','놀러 옴']].map(([k,l])=>{const v=u[k];const c=v&&v.until>now()&&S.cats[v.id];return c&&!cats.some(x=>x.id===c.id)?Object.assign(live(c),{_tag:l}):null}).filter(Boolean);
   cats.splice(1,0,...guests);cats.length=Math.min(cats.length,5);
   const posx=[50,22,78,36,64];
@@ -3316,7 +3321,7 @@ function viewHome(){
   const qq=qNorm(clone(u.q)),qIds=dailyIds(qq.d),qDone=qIds.filter(k=>qq.dc[k]).length,qCan=qClaimable(u);
   const wxb=`<div class="wxbar">${isWeekend()?'<span class="chip gold">주말 경험치 2배!</span>':''}<span class="chip">${PHN[dayPhase()]} · ${WXI[wxOf(kstDay())]} ${WXN[wxOf(kstDay())]} · ${wxTip(c)}</span>${qCan?`<button class="btn small" data-a="goquest">퀘스트 보상 받기 ⭐</button>`:qDone<3||!qq.da?`<button class="btn small ghost" data-a="goquest">오늘의 퀘스트 ${qDone}/3 · ⭐ 모으기</button>`:'<span class="chip gold">오늘 퀘스트 완료!</span>'}</div>`;
   return`${inst}${sw}<div class="scene">${roomScene(u)}${skyHTML(false)}${strayHTML()}${mailboxHTML()}<span class="hint">고양이를 눌러 쓰다듬어 주세요</span>${sleeping?'<span class="zz">z Z</span>':''}
-  <div class="catwrap${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping sg-'+c.stage:''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}${sleeping?`<div class="pillow">${PILLOW}</div>`:''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div>${sleeping?`<div class="blanket">${BLANKET}</div>`:''}</div>${kidHTML()}</div>${myKids().length||mySpouses().length?`<div class="row" style="margin:-4px 0 0;justify-content:flex-end"><button class="btn small" style="background:#ffb3c9" data-a="kids">👨‍👩‍👧 가족 부르기${famHere()?' · 같이 있어요':''}</button></div>`:''}
+  ${(()=>{const a=awayAt(c.id);return a?`<div class="awaynote"><b>${esc(c.name)}${eunNeun(c.name).slice(-1)} 지금 ${esc(ownerName(a.host))}님 집에 가 있어요</b><span>${dur(a.until-now())} 뒤에 돌아와요</span><button class="btn small" data-a="callback" data-v="${c.id}">지금 데려오기</button></div>`:''})()}<div class="catwrap${awayAt(c.id)?' away':''}${S.homeAct&&S.homeAct.until>now()?' act-'+S.homeAct.k:''}${fxk?' fx-'+fxk.k:''}${sleeping?' sleeping sg-'+c.stage:''}" data-a="pet" role="button" tabindex="0" aria-label="${esc(c.name)} 쓰다듬기" style="left:${S.homeX||50}%"><div class="bubble">${esc(bub)}</div>${fxk?fxProps(fxk.k,fxk.food):''}${sleeping?`<div class="pillow">${PILLOW}</div>`:''}<div class="flip" style="transform:scaleX(${S.homeFlip||1})">${catSVG(c,{expr})}</div>${sleeping?`<div class="blanket">${BLANKET}</div>`:''}</div>${kidHTML()}</div>${myKids().length||mySpouses().length?`<div class="row" style="margin:-4px 0 0;justify-content:flex-end"><button class="btn small" style="background:#ffb3c9" data-a="kids">👨‍👩‍👧 가족 부르기${famHere()?' · 같이 있어요':''}</button></div>`:''}
   ${wxb}
   ${c.sick?`<div class="panel row" style="background:#ffe3e3;border-color:#ffc4c4;gap:10px;padding:10px 12px"><span style="flex:1;min-width:0;font-size:.9rem"><b style="font-family:var(--display);font-weight:400;color:#c43d3d">${esc(c.name)}${iGa(c.name).slice(-1)} 아파요 (${SICK[c.sick.k]||'감기'})</b><br>기분이 빨리 떨어지고 놀 수 없어요.${c.sick.k==='skin'?' 목욕을 자주 시켜 주세요.':c.sick.k==='bite'?' 낚시하다 상어에게 물렸어요. 알약을 먹여야 나아요.':''}</span><button class="btn small" data-a="pill">알약 먹이기 · ${(u.inv||{}).pill||0}개</button></div>`:''}
   <div class="panel stack"><div class="stats">${statBar('배부름',c.st.hunger,'var(--hunger)')}${statBar('기분',c.st.mood,'var(--mood)')}${statBar('청결',c.st.clean,'var(--clean)')}${statBar('기력',c.st.energy,'var(--energy)')}</div>
@@ -3602,6 +3607,7 @@ document.addEventListener('click',async e=>{
     case'dex':openDex(v,el.dataset.k||'fish');break;
     case'buggo':bugGame();break;
     case'kids':openKids();break;
+    case'callback':await callBack(v);break;
     case'kidcall':await kidCall(v);break;
     case'kidsend':await kidSend();break;
     case'spcall':await spCall(v);break;
