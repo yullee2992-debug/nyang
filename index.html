@@ -1200,7 +1200,7 @@ ${eq.aura&&AB[eq.aura]||''}
 ${ear?both(`<path d="${ear[0]}" fill="${P==='point'?pc:coat}" stroke="${line}" stroke-width="3" stroke-linejoin="round"/><path d="${ear[1]}" fill="#f7b3c2"/>`):''}
 ${capeBack}<ellipse cx="100" cy="${by}" rx="${brx}" ry="${bry}" fill="${coat}" stroke="${line}" stroke-width="3"/>
 <g clip-path="url(#${id}b)">${pat}</g>
-${(()=>{const pg=c.preg;if(!pg||!pg.due)return'';const q=Math.max(0,Math.min(1,(now()-pg.at)/(pg.due-pg.at)));const bx=brx*(.5+.32*q),bh=bry*(.42+.3*q),cy=by+bry*.28;return`<ellipse cx="100" cy="${cy}" rx="${bx}" ry="${bh}" fill="${coat}" stroke="${line}" stroke-width="2.5"/><ellipse cx="100" cy="${cy+bh*.1}" rx="${bx*.7}" ry="${bh*.68}" fill="${shade(coat,.22)}" opacity=".7"/>${q>.4?`<path d="M100,${cy+2} c-3,-5 -9,-2 -6,3 l6,6 6,-6 c3,-5 -3,-8 -6,-3z" fill="#ff8fab" opacity=".85"/>`:''}${q>.6?`<path d="M146,62 q-5,8 0,11 q5,-3 0,-11z" fill="#8cc4f0" stroke="#5fa3d6" stroke-width="1"/>`:''}`})()}${eq.body&&clothes[eq.body]||''}
+${(()=>{const pg=c.preg;if(!pg||!pg.due)return'';const q=Math.max(0,Math.min(1,(now()-pg.at)/(pg.due-pg.at)));const bx=brx*(.5+.32*q),bh=bry*(.42+.3*q),cy=by+bry*.28;return`<ellipse cx="100" cy="${cy}" rx="${bx}" ry="${bh}" fill="${coat}" stroke="${line}" stroke-width="2.5"/><ellipse cx="100" cy="${cy+bh*.1}" rx="${bx*.7}" ry="${bh*.68}" fill="${shade(coat,.22)}" opacity=".7"/>${q>.4?`<path d="M100,${cy+2} c-3,-5 -9,-2 -6,3 l6,6 6,-6 c3,-5 -3,-8 -6,-3z" fill="#ff8fab" opacity=".85"/>`:''}${q>.6?`<path d="M146,62 q-5,8 0,11 q5,-3 0,-11z" fill="#8cc4f0" stroke="#5fa3d6" stroke-width="1"/>`:''}`})()}${!c.preg&&eq.body&&clothes[eq.body]||''}
 ${both(`<ellipse cx="${100-pawDX}" cy="${pawY}" rx="12" ry="8" fill="${coat}" stroke="${line}" stroke-width="2.5"/>`)}
 <g clip-path="url(#${id}p)">${pat}</g>
 <ellipse cx="100" cy="92" rx="52" ry="45" fill="${coat}" stroke="${line}" stroke-width="3"/>
@@ -1848,7 +1848,7 @@ async function buy(id){
   if(!r.committed)return toast(why||'구매하지 못했어요');
   toast(`${it.n} 구매 완료!`);
 }
-async function equip(slot,id){const c=activeCat();if(!c)return;await catTx(c.id,c=>{if(id)c.eq[slot]=id;else delete c.eq[slot]});schedule();setTimeout(openDeco,80)}
+async function equip(slot,id){const c=activeCat();if(!c)return;if(slot==='body'&&id&&c.preg)return toast('임신 중이라 배가 불러서 옷이 안 맞아요. 아기가 태어나면 다시 입을 수 있어요',3500);await catTx(c.id,c=>{if(id)c.eq[slot]=id;else delete c.eq[slot]});schedule();setTimeout(openDeco,80)}
 async function setRoom(slot,val){await Store.tx('users/'+S.me+'/room',r=>{r=r||{};if(slot==='bg')r.bg=val;else r[slot]=val;return r});setTimeout(openDeco,80)}
 function dyePick(color){S.dyePick=S.dyePick||{};S.dyePick[S.dyeT==='pcolor'?'pcolor':'coat']=color;S.dyeConfirm=false;openDeco()}
 async function dyeApply(){
@@ -3236,6 +3236,7 @@ function openDeco(){
   if(tab==='wear'){
     const slots=[['hat','머리'],['body','옷'],['neck','목'],['face','얼굴'],['aura','배경 효과'],['mpet','미니펫']];
     body=slots.map(([s,lab])=>{const own=Object.keys(ITEMS).filter(k=>ITEMS[k].t===s&&inv[k]);
+      if(s==='body'&&c.preg)return`<div class="opt"><h3>${lab}</h3><p class="grow">🤰 임신 중이라 배가 불러서 옷을 입을 수 없어요. 아기가 태어나면 입던 옷을 다시 입어요.</p></div>`;
       return`<div class="opt"><h3>${lab}</h3>${own.length?`<div class="ch">${own.map(k=>`<button class="${c.eq[s]===k?'on':''}" data-a="equip" data-s="${s}" data-v="${c.eq[s]===k?'':k}">${ITEMS[k].n}</button>`).join('')}</div>`:`<p class="grow">아직 없어요. 상점에서 사 오세요.</p>`}</div>`}).join('');
   }else if(tab==='dye'){
     const n=inv.dye||0;
